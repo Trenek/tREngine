@@ -1,0 +1,42 @@
+set(ENGINE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/models"
+            "${CMAKE_CURRENT_SOURCE_DIR}/assets/models/loader"
+            "${CMAKE_CURRENT_SOURCE_DIR}/assets/models/animate"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures"
+            "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures/functions"
+    "${CMAKE_CURRENT_SOURCE_DIR}/basicThings"
+    "${CMAKE_CURRENT_SOURCE_DIR}/descriptors"
+    "${CMAKE_CURRENT_SOURCE_DIR}/bufferDefinitions"
+    "${CMAKE_CURRENT_SOURCE_DIR}/buffers"
+        "${CMAKE_CURRENT_SOURCE_DIR}/buffers/bufferOperations"
+    "${CMAKE_CURRENT_SOURCE_DIR}/engineCore"
+        "${CMAKE_CURRENT_SOURCE_DIR}/engineCore/GraphicsSetup"
+            "${CMAKE_CURRENT_SOURCE_DIR}/engineCore/GraphicsSetup/functions"
+                "${CMAKE_CURRENT_SOURCE_DIR}/engineCore/GraphicsSetup/functions/commonOperations"
+                "${CMAKE_CURRENT_SOURCE_DIR}/engineCore/GraphicsSetup/functions/imageOperations"
+                "${CMAKE_CURRENT_SOURCE_DIR}/engineCore/GraphicsSetup/functions/depthHelpers"
+            "${CMAKE_CURRENT_SOURCE_DIR}/engineCore/GraphicsSetup/queueFamilyIndices"
+            "${CMAKE_CURRENT_SOURCE_DIR}/engineCore/GraphicsSetup/swapChain"
+            "${CMAKE_CURRENT_SOURCE_DIR}/engineCore/GraphicsSetup/swapChainSupportDetails"
+        "${CMAKE_CURRENT_SOURCE_DIR}/engineCore/deltaTimeManager"
+        "${CMAKE_CURRENT_SOURCE_DIR}/engineCore/windowManager"
+        "${CMAKE_CURRENT_SOURCE_DIR}/engineCore/soundManager"
+        "${CMAKE_CURRENT_SOURCE_DIR}/engineCore/resourceManager"
+    "${CMAKE_CURRENT_SOURCE_DIR}/pipeline"
+        "${CMAKE_CURRENT_SOURCE_DIR}/pipeline/functions"
+    "${CMAKE_CURRENT_SOURCE_DIR}/entities"
+        "${CMAKE_CURRENT_SOURCE_DIR}/entities/string"
+        "${CMAKE_CURRENT_SOURCE_DIR}/entities/model"
+    "${CMAKE_CURRENT_SOURCE_DIR}/renderPass"
+        "${CMAKE_CURRENT_SOURCE_DIR}/renderPass/core"
+            "${CMAKE_CURRENT_SOURCE_DIR}/renderPass/core/functions"
+        "${CMAKE_CURRENT_SOURCE_DIR}/renderPass/obj"
+            "${CMAKE_CURRENT_SOURCE_DIR}/renderPass/obj/camera"
+)
+
+list(TRANSFORM ENGINE_DIRECTORIES APPEND "/*.c" OUTPUT_VARIABLE ENGINE_FILES)
+file(GLOB ENGINE_FILES ${ENGINE_FILES})
+
+set(ENGINE_FILES ${ENGINE_FILES} PARENT_SCOPE)
+set(ENGINE_DIRECTORIES ${ENGINE_DIRECTORIES} PARENT_SCOPE)
