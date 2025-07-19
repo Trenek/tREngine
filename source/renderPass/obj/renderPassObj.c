@@ -24,7 +24,6 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
         .updateCameraBuffer = builder.updateCameraBuffer,
         .camera = builder.camera
     };
-    glm_vec3_normalize(result->camera.direction);
 
     memcpy(result->data, builder.data, sizeof(struct pipelineConnection) * builder.qData);
     memcpy(result->color, builder.color, sizeof(double) * 4);

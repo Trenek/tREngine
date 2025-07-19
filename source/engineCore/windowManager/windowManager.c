@@ -1,4 +1,5 @@
 #include <malloc.h>
+#include <string.h>
 
 #include "windowManager.h"
 
@@ -35,6 +36,26 @@ uint8_t getKeyState(struct WindowManager *windowControl, int key) {
 
 uint8_t getMouseState(struct WindowManager *windowControl, int key) {
     return updateKeyState(&windowControl->data->mouseButton[key]);
+}
+
+double getScrollYChange(struct WindowManager *windowControl) {
+    return windowControl->data->scrollChange[1];
+}
+
+void updateWindow(struct WindowManager *windowControl) {
+    memcpy(windowControl->data->prevMousePos, windowControl->data->mousePos, sizeof(double [2]));
+    memset(windowControl->data->scrollChange, 0, sizeof(double[2]));
+
+    glfwPollEvents();
+}
+
+void getDeltaPos(struct WindowManager *windowControl, double delta[2]) {
+    delta[0] = windowControl->data->mousePos[0] - windowControl->data->prevMousePos[0];
+    delta[1] = windowControl->data->mousePos[1] - windowControl->data->prevMousePos[1];
+}
+
+void setCursorMode(struct WindowManager *windowControl, int mode) {
+    glfwSetInputMode(windowControl->window, GLFW_CURSOR, mode);
 }
 
 bool shouldWindowClose(struct WindowManager windowControl) {

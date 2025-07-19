@@ -38,9 +38,7 @@ static int countMeshes(uint16_t n, cgltf_node x[n]) {
     int quantity = 0;
 
     for (uint16_t i = 0; i < n; i += 1) {
-        if (x[i].mesh != NULL) {
-            quantity += 1;
-        }
+        quantity += x[i].mesh != NULL;
     }
 
     return quantity;
@@ -65,8 +63,16 @@ static void loadFromAccessor(cgltf_accessor *accessor, void *local, size_t size,
     }
 }
 
+static void loadIndicesFromAccessor(cgltf_accessor *accessor, uint16_t *local, uint16_t quantity) {
+    if (accessor != NULL) {
+        loadFromAccessor(accessor, local, sizeof(uint16_t), quantity);
+    }
+    else for (uint16_t i = 0; i < quantity; i += 1) {
+        local[i] = i;
+    }
+}
+
 static struct Mesh loadMesh(cgltf_mesh *mesh) {
-    struct Mesh result = { 0 };
     cgltf_primitive *primitive = mesh->primitives;
     
     cgltf_accessor *index_accessor = primitive->indices;
@@ -77,8 +83,11 @@ static struct Mesh loadMesh(cgltf_mesh *mesh) {
     cgltf_accessor *joint_accessor = getAccessor(cgltf_attribute_type_joints, primitive);
     cgltf_accessor *weight_accessor = getAccessor(cgltf_attribute_type_weights, primitive);
 
-    result.indicesQuantity = index_accessor->count;
-    result.verticesQuantity = vertex_accessor->count;
+    struct Mesh result = {
+        .indicesQuantity = (index_accessor == NULL ? vertex_accessor : index_accessor)->count,
+        .verticesQuantity = vertex_accessor->count,
+    };
+
     result.vertices = calloc(result.verticesQuantity, sizeof(struct AnimVertex));
     result.indices = calloc(result.indicesQuantity, sizeof(uint16_t));
 
@@ -87,7 +96,7 @@ static struct Mesh loadMesh(cgltf_mesh *mesh) {
     float localColor[result.verticesQuantity][3];
     float localNormal[result.verticesQuantity][3];
 
-    loadFromAccessor(index_accessor, result.indices, sizeof(uint16_t), result.indicesQuantity);
+    loadIndicesFromAccessor(index_accessor, result.indices, result.indicesQuantity);
     loadFromAccessor(vertex_accessor, localPosition, sizeof(float[3]), result.verticesQuantity);
     loadFromAccessor(texture_accessor, localTexture, sizeof(float[2]), result.verticesQuantity);
     loadFromAccessor(color_accessor, localColor, sizeof(float[3]), result.verticesQuantity);
@@ -104,8 +113,8 @@ static struct Mesh loadMesh(cgltf_mesh *mesh) {
         BFR(result.vertices)[i] = (struct AnimVertex) {
             .pos = {
                 [0] = vertex_accessor == NULL ? 0.0f : localPosition[i][0],
-                [1] = vertex_accessor == NULL ? 0.0f : localPosition[i][1],
-                [2] = vertex_accessor == NULL ? 0.0f : localPosition[i][2]
+                [1] = vertex_accessor == NULL ? 0.0f : localPosition[i][2],
+                [2] = vertex_accessor == NULL ? 0.0f : localPosition[i][1]
             },
             .norm = {
                 [0] = normal_accessor == NULL ? 1.0f : localNormal[i][0],

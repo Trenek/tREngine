@@ -3,17 +3,23 @@
 
 #include <cglm.h>
 
-struct camera {
-    vec3 pos;
-    vec3 direction;
+union camera {
+    struct FirstPerson {
+        vec3 pos;
+        vec3 direction;
+    } fP;
+    struct ThirdPerson {
+        vec3 center;
+        vec3 relativePos;
+    } tP;
 };
 
 struct WindowManager;
 typedef struct VkExtent2D VkExtent2D;
 
-void moveCamera(struct WindowManager *windowControl, struct camera *camera, float deltaTime);
+void moveThirdPersonCamera(struct WindowManager *windowControl, union camera *camera, float deltaTime);
 
-void updateFirstPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, vec3 cameraPos, vec3 center);
-void updateThirdPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, vec3 cameraPos, vec3 center);
+void updateFirstPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, union camera camera);
+void updateThirdPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, union camera camera);
 
 #endif

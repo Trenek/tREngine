@@ -21,10 +21,10 @@ struct pipelineConnection {
 struct renderPassBuilder {
     double coordinates[4];
     double color[4];
-    struct camera camera;
+    union camera camera;
     struct renderPassCore *renderPass;
     
-    void (*updateCameraBuffer)(void *buffersMapped, VkExtent2D swapChainExtent, vec3 cameraPos, vec3 direction);
+    void (*updateCameraBuffer)(void *buffersMapped, VkExtent2D swapChainExtent, union camera camera);
 
     struct pipelineConnection *data;
     size_t qData;
@@ -36,8 +36,8 @@ struct renderPassObj {
     double color[4];
     
     struct renderPassCore *renderPass;
-    struct camera camera;
-    void (*updateCameraBuffer)(void *buffersMapped, VkExtent2D swapChainExtent, vec3 cameraPos, vec3 direction);
+    union camera camera;
+    void (*updateCameraBuffer)(void *buffersMapped, VkExtent2D swapChainExtent, union camera camera);
 
     struct pipelineConnection *data;
     size_t qData;

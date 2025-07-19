@@ -32,6 +32,20 @@ static void mouseCallback(GLFWwindow *window, int button, int action, int) {
     stateCallback(&GET(window)->mouseButton[button], action);
 }
 
+static void scrollCallback(GLFWwindow *window, double xOffset, double yOffset) {
+    double *posChange = GET(window)->scrollChange;
+
+    posChange[0] = xOffset;
+    posChange[1] = yOffset;
+}
+
+static void cursorPositionCallback(GLFWwindow *window, double xPos, double yPos) {
+    double *pos = GET(window)->mousePos;
+
+    pos[0] = xPos;
+    pos[1] = yPos;
+}
+
 static void setIcon(GLFWwindow *window, const char *name) {
     GLFWimage image[1];
     image[0].pixels = stbi_load(name, &image[0].width, &image[0].height, 0, 4);
@@ -55,6 +69,8 @@ GLFWwindow *createWindow(struct windowData *data, const char *name, const char *
     glfwSetFramebufferSizeCallback(result, framebufferResizeCallback);
     glfwSetKeyCallback(result, keyCallback);
     glfwSetMouseButtonCallback(result, mouseCallback);
+    glfwSetScrollCallback(result, scrollCallback);
+    glfwSetCursorPosCallback(result, cursorPositionCallback);
 
     return result;
 }
