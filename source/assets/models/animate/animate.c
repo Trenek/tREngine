@@ -85,46 +85,50 @@ static void interpolateData(struct timeFrame *frames, float deltaTime, float *da
     }
 }
 
-static void calculateJointData(size_t index, struct jointData *data, mat4 out, float deltaTime) {
-    glm_mat4_identity(out);
+static void calculateJointData(size_t index, struct skinData *skinData, struct timeFrame (*data)[4], mat4 out, float deltaTime) {
+    if (skinData != NULL && skinData->jointData[index].father >= 0) {
+        calculateJointData(skinData->jointData[index].father, skinData, data, out, deltaTime);
+    }
 
-    if (data[index].isJoint) {
-        if (data[index].father >= 0) {
-            calculateJointData(data[index].father, data, out, deltaTime);
+    if (data[index][0].qData) {
+        vec4 interpolatedData; {
+            interpolateData(&data[index][0], deltaTime, interpolatedData);
         }
 
-        if (data[index].transformation[0].qData) {
-            vec4 interpolatedData; {
-                interpolateData(&data[index].transformation[0], deltaTime, interpolatedData);
-            }
+        glm_translate(out, interpolatedData);
+    }
 
-            glm_translate(out, interpolatedData);
+    if (data[index][1].qData) {
+        vec4 interpolatedData; {
+            interpolateData(&data[index][1], deltaTime, interpolatedData);
         }
 
-        if (data[index].transformation[1].qData) {
-            vec4 interpolatedData; {
-                interpolateData(&data[index].transformation[1], deltaTime, interpolatedData);
-            }
+        glm_quat_rotate(out, interpolatedData, out);
+    }
 
-            glm_quat_rotate(out, interpolatedData, out);
+    if (data[index][2].qData) {
+        vec4 interpolatedData; {
+            interpolateData(&data[index][2], deltaTime, interpolatedData);
         }
 
-        if (data[index].transformation[2].qData) {
-            vec4 interpolatedData; {
-                interpolateData(&data[index].transformation[2], deltaTime, interpolatedData);
-            }
-
-            glm_scale(out, interpolatedData);
-        }
+        glm_scale(out, interpolatedData);
     }
 }
 
 void animate(struct Entity *model, struct actualModel *actualModel, size_t animID, float deltaTime) {
-    struct jointData (*data)[actualModel->qJoint] = actualModel->anim;
+    struct timeFrame (*data)[4] = &actualModel->anim[animID];
+    struct skinData *skinData = actualModel->skin;
+
     mat4 *mat = model->buffer[2];
 
-    for (uint32_t i = 0; i < actualModel->qJoint; i += 1) {
-        calculateJointData(i, data[animID], mat[i], deltaTime);
-        glm_mat4_mul(mat[i], data[animID][i].inverseMatrix, mat[i]);
+    for (uint32_t i = 0; i < actualModel->qNode; i += 1) {
+        glm_mat4_identity(mat[i]);
+        
+        if (actualModel->anim) {
+            calculateJointData(i, skinData, data, mat[i], deltaTime);
+            if (skinData != NULL && skinData->jointID[i] >= 0) {
+                glm_mat4_mul(mat[i], skinData->jointData[skinData->jointID[i]].inverseMatrix, mat[i]);
+            }
+        }
     }
 }

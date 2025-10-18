@@ -8,13 +8,13 @@ int sgn(float x) {
 }
 
 void moveThirdPersonCamera(struct WindowManager *windowControl, union camera *camera, float deltaTime) {
-    float x = camera->tP.relativePos[0] - camera->tP.center[0];
-    float y = camera->tP.relativePos[1] - camera->tP.center[1];
-    float z = camera->tP.relativePos[2] - camera->tP.center[2];
+    double x = camera->tP.relativePos[0] - camera->tP.center[0];
+    double y = camera->tP.relativePos[1] - camera->tP.center[1];
+    double z = camera->tP.relativePos[2] - camera->tP.center[2];
 
-    float r = sqrt(x * x + y * y + z * z);
-    float theta = acos(z / r);
-    float phi = sgn(y) * acos(x / sqrt(x * x + y * y));
+    double r = sqrt(x * x + y * y + z * z);
+    double theta = acos(z / r);
+    double phi = sgn(y) * acos(x / sqrt(x * x + y * y));
 
     float speed = deltaTime * (1 + 3 * isKeyPressed(windowControl, GLFW_KEY_LEFT_SHIFT));
     bool isMouseUsed = isMouseKeyPressed(windowControl, GLFW_MOUSE_BUTTON_LEFT);

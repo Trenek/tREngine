@@ -39,26 +39,22 @@ struct Entity *createModel(struct ModelBuilder builder, struct GraphicsSetup *gr
 
     size_t range[] = {
         builder.modelData->meshQuantity * sizeof(mat4),
-        builder.modelData->qJoint * sizeof(mat4)
+        builder.modelData->qNode * sizeof(mat4)
     };
 
-    struct toCleanup *anim = NULL;
+    struct toCleanup *anim = malloc(sizeof(struct toCleanup));
 
-    if (builder.modelData->qAnim) {
-        anim = malloc(sizeof(struct toCleanup));
+    anim->device = graphics->device;
+    createBuffers(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, range[1], anim->anim.buffers, anim->anim.buffersMemory, anim->anim.buffersMapped, graphics->device, graphics->physicalDevice, graphics->surface);
 
-        anim->device = graphics->device;
-        createBuffers(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, range[1], anim->anim.buffers, anim->anim.buffersMemory, anim->anim.buffersMapped, graphics->device, graphics->physicalDevice, graphics->surface);
-
-        for (size_t j = 0; j < MAX_FRAMES_IN_FLIGHT; j += 1) {
-            for (size_t i = 0; i < builder.modelData->qJoint; i += 1) {
-                glm_mat4_identity(((mat4**)anim->anim.buffersMapped)[j][i]);
-            }
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
+        for (size_t j = 0; j < builder.modelData->qNode; j += 1) {
+            glm_mat4_identity(((mat4**)anim->anim.buffersMapped)[i][j]);
         }
-
-        buff[1] = &anim->anim.buffers;
-        mapp[1] = &anim->anim.buffersMapped;
     }
+
+    buff[1] = &anim->anim.buffers;
+    mapp[1] = &anim->anim.buffersMapped;
 
     size_t qBuff = 2 - (buff[1] == NULL);
 

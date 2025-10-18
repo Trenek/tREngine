@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "MY_ASSERT.h"
 #include "resourceManager.h"
 
 void addResource(struct ResourceManager *this, const char *name, void *mem, void (*cleanup)(void *)) {
@@ -67,6 +68,8 @@ void *findResource(struct ResourceManager *this, const char *resource) {
             result = this->resources[i].this;
         }
     }
+
+    MY_ASSERT(result != NULL);
 
     return result;
 }

@@ -11,80 +11,53 @@
     .numOfAttributes = sizeof(x##AttributeDescriptions) / sizeof(VkVertexInputAttributeDescription), \
     .attributeDescription = x##AttributeDescriptions
 
-struct Vertex {
+struct GLTFVertex {
     vec3 pos;
-    vec3 color;
-    vec2 texCoord;
-};
-
-[[maybe_unused]]
-static VkVertexInputAttributeDescription VertexAttributeDescriptions[] = {
-    [0] = {
-        .binding = 0,
-        .location = 0,
-        .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct Vertex, pos)
-    },
-    [1] = {
-        .binding = 0,
-        .location = 1,
-        .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct Vertex, color)
-    },
-    [2] = {
-        .binding = 0,
-        .location = 2,
-        .format = VK_FORMAT_R32G32_SFLOAT,
-        .offset = offsetof(struct Vertex, texCoord)
-    }
-};
-
-struct AnimVertex {
-    vec3 pos;
-    vec3 color;
-    vec2 texCoord;
-    int bone[4];
-    vec4 weights;
     vec3 norm;
+    vec3 color;
+    vec2 texCoord;
+
+    ivec4 bone;
+    vec4 weights;
 };
 
 [[maybe_unused]]
-static VkVertexInputAttributeDescription AnimVertexAttributeDescriptions[] = {
+static VkVertexInputAttributeDescription GLTFVertexAttributeDescriptions[] = {
     [0] = {
         .binding = 0,
         .location = 0,
         .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct AnimVertex, pos)
+        .offset = offsetof(struct GLTFVertex, pos)
     },
     [1] = {
         .binding = 0,
         .location = 1,
         .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct AnimVertex, color)
+        .offset = offsetof(struct GLTFVertex, norm)
     },
     [2] = {
         .binding = 0,
         .location = 2,
-        .format = VK_FORMAT_R32G32_SFLOAT,
-        .offset = offsetof(struct AnimVertex, texCoord)
+        .format = VK_FORMAT_R32G32B32_SFLOAT,
+        .offset = offsetof(struct GLTFVertex, color)
     },
     [3] = {
         .binding = 0,
         .location = 3,
-        .format = VK_FORMAT_R32G32B32A32_SINT,
-        .offset = offsetof(struct AnimVertex, bone)
+        .format = VK_FORMAT_R32G32_SFLOAT,
+        .offset = offsetof(struct GLTFVertex, texCoord)
     },
     [4] = {
         .binding = 0,
         .location = 4,
-        .format = VK_FORMAT_R32G32B32A32_SFLOAT,
-        .offset = offsetof(struct AnimVertex, weights)
+        .format = VK_FORMAT_R32G32B32A32_SINT,
+        .offset = offsetof(struct GLTFVertex, bone)
     },
     [5] = {
         .binding = 0,
         .location = 5,
-        .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct AnimVertex, norm)
+        .format = VK_FORMAT_R32G32B32A32_SFLOAT,
+        .offset = offsetof(struct GLTFVertex, weights)
     },
 };
 

@@ -4,6 +4,11 @@
 
 struct GraphicsSetup;
 
+struct NodeTransform {
+    mat4 matrix;
+    vec4 weight;
+};
+
 struct Mesh {
     void *vertices;
     size_t sizeOfVertex;
@@ -18,26 +23,26 @@ struct Mesh {
     VkDeviceMemory indexBufferMemory;
 };
 
-struct timePoint {
-    float time;
-    float *values;
-};
-
 struct timeFrame {
     size_t qData;
     size_t qValues;
     int interpolationType;
 
-    struct timePoint *data;
+    struct timePoint {
+        float time;
+        float *values;
+    } *data;
 };
 
-struct jointData {
-    struct timeFrame transformation[3];
+struct skinData {
+    struct jointData2 {
+        mat4 inverseMatrix;
 
-    mat4 inverseMatrix;
-    int16_t father;
+        int nodeID;
+        int father;
+    } *jointData;
 
-    int16_t isJoint;
+    int *jointID;
 };
 
 struct colisionBox {
@@ -52,9 +57,11 @@ struct actualModel {
 
     struct buffer localMesh;
 
+    size_t qNode;
     size_t qAnim;
-    size_t qJoint;
-    void *anim; // struct jointData
+    size_t qSkin;
+    struct timeFrame (*anim)[4];
+    struct skinData *skin;
 
     uint32_t meshQuantity;
     struct Mesh *mesh;

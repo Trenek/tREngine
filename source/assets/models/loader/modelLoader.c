@@ -30,26 +30,6 @@ struct actualModel *loadModel(const char *filePath, struct GraphicsSetup *graphi
     return result;
 }
 
-void freeTransformation(struct timeFrame transformation) {
-    if (transformation.data != NULL) {
-        free(transformation.data->values);
-    }
-
-    free(transformation.data);
-}
-
-void freeAnimations(size_t qAnim, size_t qJoints, struct jointData animation[qAnim][qJoints]) {
-    for (size_t i = 0; i < qAnim; i += 1) {
-        for (size_t j = 0; j < qJoints; j += 1) {
-            freeTransformation(animation[i][j].transformation[0]);
-            freeTransformation(animation[i][j].transformation[1]);
-            freeTransformation(animation[i][j].transformation[2]);
-        }
-    }
-
-    free(animation);
-}
-
 void cleanupColisionBox(size_t qBox, struct colisionBox *box) {
     for (uint32_t i = 0; i < qBox; i += 1) {
         free(box[i].name);
@@ -72,7 +52,7 @@ void destroyActualModel(void *modelPtr) {
     }
     free(model->mesh);
 
-    freeAnimations(model->qAnim, model->qJoint, model->anim);
+    // freeAnimations(model->qAnim, model->qSkin, model->anim);
 
     cleanupColisionBox(model->qHitbox, model->hitBox);
     cleanupColisionBox(model->qHurtBox, model->hurtBox);
