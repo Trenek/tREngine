@@ -51,6 +51,7 @@ void destroyActualModel(void *modelPtr) {
         free(model->mesh[j].indices);
     }
     free(model->mesh);
+    free(model->textureData);
 
     // freeAnimations(model->qAnim, model->qSkin, model->anim);
 

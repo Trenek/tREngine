@@ -71,6 +71,8 @@ struct actualModel {
 
     struct colisionBox *hitBox;
     struct colisionBox *hurtBox;
+
+    char *textureData;
 };
 
 struct actualModel *loadModel(const char *filePath, struct GraphicsSetup *graphics);

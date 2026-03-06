@@ -70,22 +70,17 @@ static cgltf_accessor *getAccessor(cgltf_attribute_type type, cgltf_primitive* p
         }
     }
 
-    /*
-    size_t r = 0;
-    for (size_t i = 0; i < primitive->targets_count; i += 1) {
-        for (size_t j = 0; j < primitive->targets[i].attributes_count; j += 1) {
-            r += (primitive->targets[i].attributes[j].type == type);
-        }
-    }
-    printf("\n\n%zu\n\n", r);
-    */
-
     return result;
 }
 
 static void loadFromAccessor(cgltf_accessor *accessor, void *local, size_t size, uint16_t quantity) {
     if (accessor != NULL) {
-        memcpy(local, getAccessorOffset(accessor), size * quantity);
+        if (accessor->stride == 0 || accessor->stride == size) {
+            memcpy(local, getAccessorOffset(accessor), size * quantity);
+        }
+        else for (cgltf_size i = 0; i < quantity; i += 1) {
+            memcpy((char *)local + i * size, (char *)getAccessorOffset(accessor) + i * accessor->stride, size);
+        }
         applySparce(accessor, local, size);
     }
 }
@@ -380,6 +375,10 @@ void gltfLoadModel(const char *filePath, struct actualModel *model, VkDevice dev
         model->meshQuantity = countMeshes(data->nodes_count, data->nodes);
         model->mesh = calloc(model->meshQuantity, sizeof(struct Mesh));
 
+        if (data->images_count > 0) {
+            model->textureData = calloc(strlen(data->images[0].uri) + 1, sizeof(char));
+            memcpy(model->textureData, data->images[0].uri, sizeof(char) * strlen(data->images[0].uri));
+        }
         createBuffers(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, model->meshQuantity * sizeof(mat4), model->localMesh.buffers, model->localMesh.buffersMemory, model->localMesh.buffersMapped, device, physicalDevice, surface);
 
         int i = 0;

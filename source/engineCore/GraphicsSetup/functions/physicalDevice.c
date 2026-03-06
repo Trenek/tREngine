@@ -65,10 +65,6 @@ static int isDevicePreferable(VkPhysicalDevice device, VkSurfaceKHR surface) {
         (deviceFeatures.geometryShader ? 1 : 0);
 }
 
-void printLogical(bool a) {
-    printf("%s\n", a ? "Tak" : "Nie");
-}
-
 static bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
     VkPhysicalDeviceProperties deviceProperties;
     VkPhysicalDeviceFeatures deviceFeatures;
