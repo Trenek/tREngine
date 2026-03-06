@@ -5,7 +5,7 @@
 
 #include "Vertex.h"
 
-typedef float vec2[2];
+#include "isClockWise.h"
 
 enum PointState {
     REGULAR_INSIDE_ON_LEFT,
@@ -24,9 +24,6 @@ const char *names[] = {
     "SPLIT",
     "MERGE"
 };
-
-bool isCounterClockwise(size_t N, vec2 *v);
-float getAngle(vec2 A, vec2 B, vec2 C);
 
 struct Point {
     vec2 pos;
@@ -99,8 +96,6 @@ static size_t getLeft(size_t qT, struct Point **T, struct Point *this) {
 
     return max;
 }
-
-bool isInBetween(vec2 A, vec2 B, vec2 C, vec2 D);
 
 static void getProper(struct Point **lesser, struct Point **bigger, int N, struct Point *polygon) {
     struct Point **temp = lesser;

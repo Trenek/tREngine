@@ -1,9 +1,9 @@
 #define TINYOBJ_LOADER_C_IMPLEMENTATION
 #include <freetype/freetype.h>
-#include <cglm.h>
 #include <stdint.h>
 #include <assert.h>
 
+#include "isClockWise.h"
 #include "actualModel.h"
 #include "myMalloc.h"
 
@@ -13,7 +13,8 @@
 
 #define BFR(x) ((struct FontVertex *)(x))
 
-bool isCounterClockwise(size_t N, vec2 *v);
+// #define SIZE face->max_advance_width
+#define SIZE 1
 
 static void lerp_l(vec2 out, FT_Vector from, FT_Vector to, float t) {
     out[0] = glm_lerp(from.x, to.x, t);
@@ -330,8 +331,8 @@ static struct contour createContour(FT_Face face, size_t start_point, size_t end
 
         new.vertices[i][0] = (struct FontVertex) {
             .pos = {
-                onLine[i][0] / face->max_advance_width,
-                onLine[i][1] / face->max_advance_width,
+                onLine[i][0] / SIZE,
+                onLine[i][1] / SIZE,
             },
             .color = { 0.0, 0.0, 0.0 },
             .bezzier = { i & 1, i & 1 },
@@ -339,8 +340,8 @@ static struct contour createContour(FT_Face face, size_t start_point, size_t end
         };
         new.vertices[i][1] = (struct FontVertex) {
             .pos = {
-                offLine[i][0] / face->max_advance_width,
-                offLine[i][1] / face->max_advance_width,
+                offLine[i][0] / SIZE,
+                offLine[i][1] / SIZE,
             },
             .color = { 0.0, 0.0, 0.0 },
             .bezzier = { 0.5f, 0.0f },
@@ -561,16 +562,16 @@ static void generateTriangles(struct contour *tree, struct Mesh *mesh, size_t qO
 static void loadCharacter(FT_Face face, struct Mesh *mesh, char character, float *space) {
     size_t qOnlinePoints = 0;
 
-    IF (0 == FT_Load_Glyph(face, FT_Get_Char_Index(face, character), FT_LOAD_NO_BITMAP), "No Glyph") {
+    IF (0 == FT_Load_Glyph(face, FT_Get_Char_Index(face, character), FT_LOAD_NO_BITMAP), "No Glyph")
+    IF (0 == FT_Set_Char_Size(face, 0, 150 * 64 + 32, 0, 0), "Something Wrong") {
         FT_GlyphSlot slot = face->glyph;
         FT_Outline *outline = &slot->outline;
 
-        *space = (float)(slot->advance.x) / face->max_advance_width;
+        *space = (float)(slot->advance.x) / SIZE;
 
         struct contour contours[outline->n_contours] = {};
-        struct contour *tree = contours;
+        struct contour *tree = loadBezier(face, mesh, contours, &qOnlinePoints);
 
-        tree = loadBezier(face, mesh, contours, &qOnlinePoints);
         generateTriangles(tree, mesh, qOnlinePoints);
 
         for (int i = 0; i < outline->n_contours; i += 1) {
@@ -587,7 +588,7 @@ static float loadSpaceOffset(FT_Face face) {
     IF (0 == FT_Load_Glyph(face, FT_Get_Char_Index(face, ' '), FT_LOAD_NO_BITMAP), "No Glyph") {
         FT_GlyphSlot slot = face->glyph;
 
-        result = (float)slot->advance.x / face->max_advance_width;
+        result = (float)slot->advance.x / SIZE;
     }
 
     return result;
@@ -634,8 +635,8 @@ void LoadCharacter(struct actualModel *model, FT_Face face) {
 }
 
 void ttfLoadModel(const char *objectPath, struct actualModel *model, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
-    FT_Library library;
-    FT_Face face;
+    FT_Library library = nullptr;
+    FT_Face face = nullptr;
 
     model->meshQuantity = strlen(buffer);
     model->mesh = malloc(sizeof(struct Mesh) * (model->meshQuantity));
@@ -651,13 +652,11 @@ void ttfLoadModel(const char *objectPath, struct actualModel *model, VkDevice de
         surface
     );
 
-    IF (0 == FT_Init_FreeType(&library), "No Library") {
-        IF (0 == FT_New_Face(library, objectPath, 0, &face), "No Face") {
-            IF (0 == FT_Set_Pixel_Sizes(face, 100, 100), "Size Error") {
-                LoadCharacter(model, face);
-            }
-            FT_Done_Face(face);
-        }
-        FT_Done_FreeType(library);
+    IF (0 == FT_Init_FreeType(&library), "No Library")
+    IF (0 == FT_New_Face(library, objectPath, 0, &face), "No Face") {
+        LoadCharacter(model, face);
     }
+
+    FT_Done_Face(face);
+    FT_Done_FreeType(library);
 }
