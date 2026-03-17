@@ -122,10 +122,12 @@ static void updateBuffers(size_t currentFrame, size_t qRenderPass, struct render
 }
 
 static VkResult localDrawFrame(struct EngineCore *vulkan, uint16_t qRenderPass, struct renderPassObj *renderPass[qRenderPass]) {
-    VkResult result = VK_TRUE;
-
     uint32_t imageIndex = 0;
     static uint32_t currentFrame = 0;
+
+    VkResult result =
+        vkWaitForFences(vulkan->graphics.device, 1, &vulkan->graphics.inFlightFence[currentFrame], VK_TRUE, UINT64_MAX) |
+        vkAcquireNextImageKHR(vulkan->graphics.device, vulkan->graphics.swapChain.this, UINT64_MAX, vulkan->graphics.imageAvailableSemaphore[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
     VkSemaphore waitSemaphores[] = {
         vulkan->graphics.imageAvailableSemaphore[currentFrame]
@@ -136,7 +138,7 @@ static VkResult localDrawFrame(struct EngineCore *vulkan, uint16_t qRenderPass, 
     };
 
     VkSemaphore signalSemaphores[] = {
-        vulkan->graphics.renderFinishedSemaphore[currentFrame]
+        vulkan->graphics.swapChain.renderFinishedSemaphore[imageIndex]
     };
 
     VkSubmitInfo submitInfo = {
@@ -156,7 +158,7 @@ static VkResult localDrawFrame(struct EngineCore *vulkan, uint16_t qRenderPass, 
 
     VkPresentInfoKHR presentInfo = {
         .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-        .waitSemaphoreCount = sizeof(waitSemaphores) / sizeof(VkSemaphore),
+        .waitSemaphoreCount = sizeof(signalSemaphores) / sizeof(VkSemaphore),
         .pWaitSemaphores = signalSemaphores,
         .swapchainCount = sizeof(swapChains) / sizeof(VkSwapchainKHR),
         .pSwapchains = swapChains,
@@ -164,9 +166,6 @@ static VkResult localDrawFrame(struct EngineCore *vulkan, uint16_t qRenderPass, 
         .pResults = NULL // optional
     };
 
-    vkWaitForFences(vulkan->graphics.device, 1, &vulkan->graphics.inFlightFence[currentFrame], VK_TRUE, UINT64_MAX);
-
-    result = vkAcquireNextImageKHR(vulkan->graphics.device, vulkan->graphics.swapChain.this, UINT64_MAX, vulkan->graphics.imageAvailableSemaphore[currentFrame], VK_NULL_HANDLE, &imageIndex);
     if (VK_SUCCESS == result) {
         updateBuffers(currentFrame, qRenderPass, renderPass, vulkan->graphics.swapChain.extent);
 

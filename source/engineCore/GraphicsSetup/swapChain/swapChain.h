@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.h>
 
 struct swapChain {
+    VkSemaphore *renderFinishedSemaphore;
     VkImage *images;
     uint32_t imagesCount;
     VkFormat imageFormat;

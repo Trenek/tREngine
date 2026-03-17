@@ -7,6 +7,8 @@
 #include "swapChainSupportDetails.h"
 #include "queueFamilyIndices.h"
 
+#include "graphicsFunctions.h"
+
 #define BETWEEN(x, MIN, MAX) (x) >= (MIN) && (x) <= (MAX)
 #define CLOSEST_A(x, MIN, MAX) ((MAX) - (x) > (x) - (MIN)) ? (MIN) : (MAX)
 #define CLOSEST(x, MIN, MAX) BETWEEN(x, MIN, MAX) ? x : CLOSEST_A(x, MIN, MAX)
@@ -98,6 +100,10 @@ struct swapChain createSwapChain(GLFWwindow *window, VkSurfaceKHR surface, VkPhy
 
     swapChain.imageFormat = surfaceFormat.format;
     swapChain.extent = extent;
+    swapChain.renderFinishedSemaphore = malloc(sizeof(VkSemaphore) * imageCount);
+    for (size_t i = 0; i < imageCount; i += 1) {
+        swapChain.renderFinishedSemaphore[i] = createSemaphore(device);
+    }
 
     return swapChain;
 }
@@ -105,5 +111,10 @@ struct swapChain createSwapChain(GLFWwindow *window, VkSurfaceKHR surface, VkPhy
 void freeSwapChain(VkDevice device, struct swapChain *swapChain) {
     vkDestroySwapchainKHR(device, swapChain->this, NULL);
 
+    for (size_t i = 0; i < swapChain->imagesCount; i += 1) {
+        vkDestroySemaphore(device, swapChain->renderFinishedSemaphore[i], NULL);
+    }
+
+    free(swapChain->renderFinishedSemaphore);
     free(swapChain->images);
 }

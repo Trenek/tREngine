@@ -24,7 +24,6 @@ struct GraphicsSetup {
     VkCommandPool transferCommandPool;
 
     VkSemaphore imageAvailableSemaphore[MAX_FRAMES_IN_FLIGHT];
-    VkSemaphore renderFinishedSemaphore[MAX_FRAMES_IN_FLIGHT];
     VkFence inFlightFence[MAX_FRAMES_IN_FLIGHT];
 
     VkImage depthImage;

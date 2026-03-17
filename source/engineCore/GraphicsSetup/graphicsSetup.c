@@ -8,7 +8,6 @@
 static void cleanupSwapChain(struct GraphicsSetup *graphics) {
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
         vkDestroySemaphore(graphics->device, graphics->imageAvailableSemaphore[i], NULL);
-        vkDestroySemaphore(graphics->device, graphics->renderFinishedSemaphore[i], NULL);
         vkDestroyFence(graphics->device, graphics->inFlightFence[i], NULL);
     }
 
@@ -38,7 +37,6 @@ void recreateSwapChainGraphics(GLFWwindow *window, struct GraphicsSetup *graphic
 
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
         graphics->imageAvailableSemaphore[i] = createSemaphore(graphics->device);
-        graphics->renderFinishedSemaphore[i] = createSemaphore(graphics->device);
         graphics->inFlightFence[i] = createFence(graphics->device);
     }
 }
@@ -63,7 +61,6 @@ struct GraphicsSetup setupGraphics(GLFWwindow *window) {
 
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
         graphics.imageAvailableSemaphore[i] = createSemaphore(graphics.device);
-        graphics.renderFinishedSemaphore[i] = createSemaphore(graphics.device);
         graphics.inFlightFence[i] = createFence(graphics.device);
     }
 
@@ -75,7 +72,6 @@ void cleanupGraphics(struct GraphicsSetup graphics) {
 
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
         vkDestroySemaphore(graphics.device, graphics.imageAvailableSemaphore[i], NULL);
-        vkDestroySemaphore(graphics.device, graphics.renderFinishedSemaphore[i], NULL);
         vkDestroyFence(graphics.device, graphics.inFlightFence[i], NULL);
     }
 

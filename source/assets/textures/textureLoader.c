@@ -48,7 +48,7 @@ static struct Data loadTexture(const char *texturePath, VkDevice device, VkPhysi
     return result;
 }
 
-struct Textures *loadTextures(struct GraphicsSetup *graphics, uint32_t texturesQuantity, const char *texturePath[static texturesQuantity]) {
+struct Textures *loadTextures(struct GraphicsSetup *graphics, uint32_t texturesQuantity, char *texturePath[static texturesQuantity]) {
     struct Textures *texture = calloc(1, sizeof(struct Textures));
     *texture = (struct Textures) {
         .device = &graphics->device,

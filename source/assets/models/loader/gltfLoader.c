@@ -126,7 +126,7 @@ static struct Mesh loadMesh(cgltf_mesh *mesh) {
 
     for (size_t i = 0; i < result.verticesQuantity; i += 1) {
         cgltf_uint joints[4] = {};
-        cgltf_float weights[4] = {};
+        cgltf_float weights[4] = { 1 };
         if (joint_accessor && weight_accessor) {
             cgltf_accessor_read_uint(joint_accessor, i, joints, 4);
             cgltf_accessor_read_float(weight_accessor, i, weights, 4);
