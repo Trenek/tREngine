@@ -458,7 +458,7 @@ static void doHigherResolution(struct contour *contours, int max) {
     }
 }
 
-static struct contour *loadBezier(FT_Face face, struct Mesh *mesh, struct contour *contours, size_t *outPQuantity) {
+static struct contour *loadBezier(FT_Face face, struct MeshInput *mesh, struct contour *contours, size_t *outPQuantity) {
     struct contour *tree = NULL;
     FT_Outline *outline = &face->glyph->outline;
     
@@ -539,7 +539,7 @@ static struct contour *loadBezier(FT_Face face, struct Mesh *mesh, struct contou
 
 void triangulate(size_t q, size_t vertexQuantity[q], size_t *vertexIDs[q], struct FontVertex *vertex, uint16_t (*triangles)[3]);
 
-static void generateTriangles(struct contour *tree, struct Mesh *mesh, size_t qOnlinePoints) {
+static void generateTriangles(struct contour *tree, struct MeshInput *mesh, size_t qOnlinePoints) {
     size_t ntq = countTriangles(tree);
 
     mesh->indicesQuantity += 3 * ntq;
@@ -559,7 +559,7 @@ static void generateTriangles(struct contour *tree, struct Mesh *mesh, size_t qO
     }
 }
 
-static void loadCharacter(FT_Face face, struct Mesh *mesh, char character, float *space) {
+static void loadCharacter(FT_Face face, struct MeshInput *mesh, char character, float *space) {
     size_t qOnlinePoints = 0;
 
     IF (0 == FT_Load_Glyph(face, FT_Get_Char_Index(face, character), FT_LOAD_NO_BITMAP), "No Glyph")
@@ -611,7 +611,7 @@ size_t getGlyphID(char a) {
         buffer[i] == 0 ? i - 1 : i;
 }
 
-void LoadCharacter(struct actualModel *model, FT_Face face) {
+void LoadCharacter(struct ModelInput *model, FT_Face face) {
     float space = 0;
     mat4 **glyphOffset = (mat4 **)model->localMesh.buffersMapped;
 
@@ -634,7 +634,7 @@ void LoadCharacter(struct actualModel *model, FT_Face face) {
     }
 }
 
-void ttfLoadModel(const char *objectPath, struct actualModel *model, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
+void ttfLoadModel(const char *objectPath, struct ModelInput *model, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
     FT_Library library = nullptr;
     FT_Face face = nullptr;
 

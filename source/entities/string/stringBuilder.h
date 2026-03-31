@@ -2,7 +2,7 @@
 #define STRING_BUILDER
 #include <vulkan/vulkan.h>
 
-struct actualModel;
+struct Model;
 struct GraphicsSetup;
 
 struct StringBuilder {
@@ -13,7 +13,7 @@ struct StringBuilder {
     void (*instanceUpdater)(void *instancePtr, void *instanceBufferPtr, uint32_t instanceCount, float deltaTime);
 
     const char *string;
-    struct actualModel *modelData;
+    struct Model *modelData;
 
     VkDescriptorSetLayout objectLayout;
     int center;

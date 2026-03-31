@@ -4,7 +4,7 @@
 
 #include "definitions.h"
 
-struct actualModel;
+struct Model;
 
 struct EntityBuilder {
     uint32_t instanceCount;

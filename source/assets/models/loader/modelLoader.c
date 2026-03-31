@@ -8,55 +8,43 @@
 
 #include "MY_ASSERT.h"
 
-struct actualModel *loadModel(const char *filePath, struct GraphicsSetup *graphics) {
-    struct actualModel *result = calloc(1, sizeof(struct actualModel));
+struct Model *loadModel(const char *filePath, struct GraphicsSetup *graphics) {
+    struct Model *result = calloc(1, sizeof(struct Model));
+    struct ModelInput input = {};
 
-    void (*fun)(const char *, struct actualModel *, VkDevice, VkPhysicalDevice, VkSurfaceKHR) =
-        NULL != strstr(filePath, ".obj") ? objLoadModel : 
+    void (*fun)(const char *, struct ModelInput *, VkDevice, VkPhysicalDevice, VkSurfaceKHR) =
         NULL != strstr(filePath, ".ttf") ? ttfLoadModel :
-        NULL != strstr(filePath, ".gltf") ? gltfLoadModel :
-        NULL != strstr(filePath, ".glb") ? gltfLoadModel :
         NULL;
     assert(NULL != fun);
 
-    fun(filePath, result, graphics->device, graphics->physicalDevice, graphics->surface);
+    fun(filePath, &input, graphics->device, graphics->physicalDevice, graphics->surface);
+
+    result->device = graphics->device;
+    result->localMesh = input.localMesh;
+    result->meshQuantity = input.meshQuantity;
+    result->mesh = malloc(sizeof(struct Mesh) * result->meshQuantity);
 
     for (uint32_t i = 0; i < result->meshQuantity; i += 1) {
-        result->device = graphics->device;
-        result->mesh[i].vertexBuffer = createVertexBuffer(&result->mesh[i].vertexBufferMemory, graphics->device, graphics->physicalDevice, graphics->surface, graphics->commandPool, graphics->transferQueue, result->mesh[i].verticesQuantity, result->mesh[i].vertices, result->mesh[i].sizeOfVertex);
-        result->mesh[i].indexBuffer = createIndexBuffer(&result->mesh[i].indexBufferMemory, graphics->device, graphics->physicalDevice, graphics->surface, graphics->commandPool, graphics->transferQueue, result->mesh[i].verticesQuantity, result->mesh[i].indicesQuantity, result->mesh[i].indices, result->mesh[i].sizeOfVertex);
+        result->mesh[i].indicesQuantity = input.mesh[i].indicesQuantity;
+        result->mesh[i].vertexBuffer = createVertexBuffer(&result->mesh[i].vertexBufferMemory, graphics->device, graphics->physicalDevice, graphics->surface, graphics->commandPool, graphics->transferQueue, input.mesh[i].verticesQuantity, input.mesh[i].vertices, input.mesh[i].sizeOfVertex);
+        result->mesh[i].indexBuffer = createIndexBuffer(&result->mesh[i].indexBufferMemory, graphics->device, graphics->physicalDevice, graphics->surface, graphics->commandPool, graphics->transferQueue, input.mesh[i].verticesQuantity, input.mesh[i].indicesQuantity, input.mesh[i].indices, input.mesh[i].sizeOfVertex);
+
+        free(input.mesh[i].vertices);
+        free(input.mesh[i].indices);
     }
+
+    free(input.mesh);
 
     return result;
 }
 
-void cleanupColisionBox(size_t qBox, struct colisionBox *box) {
-    for (uint32_t i = 0; i < qBox; i += 1) {
-        free(box[i].name);
-        free(box[i].vertex);
-    }
-    free(box);
-}
-
 void destroyActualModel(void *modelPtr) {
-    struct actualModel *model = modelPtr;
+    struct Model *model = modelPtr;
 
     for (uint32_t j = 0; j < model->meshQuantity; j += 1) {
         destroyBuffer(model->device, model->mesh[j].indexBuffer, model->mesh[j].indexBufferMemory);
         destroyBuffer(model->device, model->mesh[j].vertexBuffer, model->mesh[j].vertexBufferMemory);
     }
-
-    for (uint32_t j = 0; j < model->meshQuantity; j += 1) {
-        free(model->mesh[j].vertices);
-        free(model->mesh[j].indices);
-    }
-    free(model->mesh);
-    free(model->textureData);
-
-    // freeAnimations(model->qAnim, model->qSkin, model->anim);
-
-    cleanupColisionBox(model->qHitbox, model->hitBox);
-    cleanupColisionBox(model->qHurtBox, model->hurtBox);
 
     destroyBuffers(model->device, model->localMesh.buffers, model->localMesh.buffersMemory);
 
