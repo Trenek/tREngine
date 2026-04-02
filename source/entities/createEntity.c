@@ -78,10 +78,10 @@ void destroyEntity(void *modelPtr) {
     free(model);
 }
 
-void destroyEntityArray(uint16_t num, struct Entity *modelArray[num], struct GraphicsSetup *graphics) {
+void destroyEntityArray(size_t num, struct Entity *modelArray[num], struct GraphicsSetup *graphics) {
     vkDeviceWaitIdle(graphics->device);
 
-    for (uint16_t i = 0; i < num; i += 1) {
+    for (size_t i = 0; i < num; i += 1) {
         destroyEntity(modelArray[i]);
     }
 }

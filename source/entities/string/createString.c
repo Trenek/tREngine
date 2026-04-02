@@ -1,12 +1,10 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <cglm.h>
+#include <cglm/cglm.h>
 
-#include "affine-pre.h"
 #include "graphicsSetup.h"
 
-#include "mat4.h"
 #include "stringBuilder.h"
 #include "entity.h"
 #include "entityBuilder.h"
@@ -55,7 +53,7 @@ struct Entity *createString(struct StringBuilder builder, struct GraphicsSetup *
     createBuffers(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, meshQuantity * sizeof(mat4), info->localMesh.buffers, info->localMesh.buffersMemory, info->localMesh.buffersMapped, graphics->device, graphics->physicalDevice, graphics->surface);
 
     mat4 **thisBuffer = (void *)info->localMesh.buffersMapped;
-    mat4 **transform = (void *)builder.modelData->localMesh.buffersMapped;
+    mat4 **transform = (void *)builder.modelData->localMesh->buffersMapped;
 
     uint32_t i = 0;
     const char *buffer = builder.string;

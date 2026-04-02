@@ -1,7 +1,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include <cglm.h>
+#include <cglm/cglm.h>
 
 union camera {
     struct FirstPerson {

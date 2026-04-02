@@ -1,7 +1,7 @@
 #ifndef INSTANCE_H
 #define INSTANCE_H
 
-#include <cglm.h>
+#include <cglm/cglm.h>
 
 #define INS(x, y) \
     .instanceSize = sizeof(struct x), \

@@ -28,7 +28,7 @@ const char *names[] = {
 struct Point {
     vec2 pos;
     int helpVal;
-    uint16_t id;
+    uint32_t id;
 
     struct Point *next;
     struct Point *prev;
@@ -256,7 +256,7 @@ static bool isLeft(vec2 a, vec2 b, vec2 c) {
     return (b[0] - a[0]) * (c[1] - a[1]) > (b[1] - a[1]) * (c[0] - a[0]);
 }
 
-static void TriangulateMonotone(size_t N, struct Point **u, uint16_t (**triangles)[3]) {
+static void TriangulateMonotone(size_t N, struct Point **u, uint32_t (**triangles)[3]) {
     size_t S[N];
     size_t top = 1;
     struct Point *c = NULL;
@@ -324,7 +324,7 @@ static void TriangulateMonotone(size_t N, struct Point **u, uint16_t (**triangle
     }
 }
 
-static void TriangulatePolygon(size_t N, struct Point *polygon, uint16_t (*triangles)[3]) {
+static void TriangulatePolygon(size_t N, struct Point *polygon, uint32_t (*triangles)[3]) {
     struct Point *end;
     struct Point *monotone[N];
     size_t qTab = 0;
@@ -357,7 +357,7 @@ static size_t sum(int q, size_t arr[q]) {
     return result;
 }
 
-void triangulate(size_t q, size_t vertexQuantity[q], size_t *vertexIDs[q], struct FontVertex *vertex, uint16_t (*triangles)[3]) {
+void triangulate(size_t q, size_t vertexQuantity[q], size_t *vertexIDs[q], struct FontVertex *vertex, uint32_t (*triangles)[3]) {
     struct Point polygon[2 * sum(q, vertexQuantity)];
     size_t actualVertexQuantity = 0;
 

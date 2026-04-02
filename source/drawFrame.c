@@ -11,7 +11,7 @@
 
 #include "MY_ASSERT.h"
 
-static void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, VkExtent2D swapChainExtent, uint32_t currentFrame, uint16_t qRenderPass, struct renderPassObj *renderPass[qRenderPass]) {
+static void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, VkExtent2D swapChainExtent, uint32_t currentFrame, size_t qRenderPass, struct renderPassObj *renderPass[qRenderPass]) {
     VkCommandBufferBeginInfo beginInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .flags = 0,
@@ -86,7 +86,7 @@ static void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageInd
                     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass[i]->data[j].pipe->pipelineLayout, 0, 3, sets, 0, NULL);
                     for (uint32_t l = 0; l < renderPass[i]->data[j].entity[k]->meshQuantity; l += 1) {
                         vkCmdBindVertexBuffers(commandBuffer, 0, 1, &renderPass[i]->data[j].entity[k]->mesh[l].vertexBuffer, (VkDeviceSize[]){ 0 });
-                        vkCmdBindIndexBuffer(commandBuffer, renderPass[i]->data[j].entity[k]->mesh[l].indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+                        vkCmdBindIndexBuffer(commandBuffer, renderPass[i]->data[j].entity[k]->mesh[l].indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
                         vkCmdPushConstants(commandBuffer, renderPass[i]->data[j].pipe->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(struct MeshPushConstants), &(struct MeshPushConstants) { .meshID = l });
                         vkCmdDrawIndexed(commandBuffer, renderPass[i]->data[j].entity[k]->mesh[l].indicesQuantity, renderPass[i]->data[j].entity[k]->instanceCount, 0, 0, 0);
@@ -121,7 +121,7 @@ static void updateBuffers(size_t currentFrame, size_t qRenderPass, struct render
     }
 }
 
-static VkResult localDrawFrame(struct EngineCore *vulkan, uint16_t qRenderPass, struct renderPassObj *renderPass[qRenderPass]) {
+static VkResult localDrawFrame(struct EngineCore *vulkan, size_t qRenderPass, struct renderPassObj *renderPass[qRenderPass]) {
     uint32_t imageIndex = 0;
     static uint32_t currentFrame = 0;
 
@@ -186,7 +186,7 @@ static VkResult localDrawFrame(struct EngineCore *vulkan, uint16_t qRenderPass, 
     return result;
 }
 
-void drawFrame(struct EngineCore *vulkan, uint16_t qRenderPass, struct renderPassObj **renderPass, uint16_t qRenderPassCore, struct renderPassCore **renderPassCore) {
+void drawFrame(struct EngineCore *vulkan, size_t qRenderPass, struct renderPassObj **renderPass, size_t qRenderPassCore, struct renderPassCore **renderPassCore) {
     updateDeltaTime(&vulkan->deltaTime);
 
     switch (localDrawFrame(vulkan, qRenderPass, renderPass)) {

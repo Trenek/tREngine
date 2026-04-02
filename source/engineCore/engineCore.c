@@ -1,7 +1,7 @@
 #include "engineCore.h"
 #include "renderPassCore.h"
 
-void recreateSwapChain(struct EngineCore *engine, uint16_t qRenderPassCore, struct renderPassCore **renderPassCore) {
+void recreateSwapChain(struct EngineCore *engine, size_t qRenderPassCore, struct renderPassCore **renderPassCore) {
     int width = 0;
     int height = 0;
 
@@ -14,7 +14,7 @@ void recreateSwapChain(struct EngineCore *engine, uint16_t qRenderPassCore, stru
     vkDeviceWaitIdle(engine->graphics.device);
 
     recreateSwapChainGraphics(engine->window.window, &engine->graphics);
-    for (uint16_t i = 0; i < qRenderPassCore; i += 1) {
+    for (size_t i = 0; i < qRenderPassCore; i += 1) {
         recreateRenderPassCore(renderPassCore[i], &engine->graphics);
     }
 }

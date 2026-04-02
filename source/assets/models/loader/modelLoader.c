@@ -14,6 +14,7 @@ struct Model *loadModel(const char *filePath, struct GraphicsSetup *graphics) {
 
     void (*fun)(const char *, struct ModelInput *, VkDevice, VkPhysicalDevice, VkSurfaceKHR) =
         NULL != strstr(filePath, ".ttf") ? ttfLoadModel :
+        NULL != strstr(filePath, ".obj") ? objLoadModel :
         NULL;
     assert(NULL != fun);
 
@@ -46,7 +47,11 @@ void destroyActualModel(void *modelPtr) {
         destroyBuffer(model->device, model->mesh[j].vertexBuffer, model->mesh[j].vertexBufferMemory);
     }
 
-    destroyBuffers(model->device, model->localMesh.buffers, model->localMesh.buffersMemory);
+    if (NULL != model->localMesh) {
+        destroyBuffers(model->device, model->localMesh->buffers, model->localMesh->buffersMemory);
+
+        free(model->localMesh);
+    }
 
     free(model);
 }

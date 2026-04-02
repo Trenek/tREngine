@@ -1,4 +1,4 @@
-#include <cglm.h>
+#include <cglm/cglm.h>
 
 #include "camera.h"
 #include "windowManager.h"
@@ -9,8 +9,8 @@ int sgn(float x) {
 
 void moveThirdPersonCamera(struct WindowManager *windowControl, union camera *camera, float deltaTime) {
     double x = camera->tP.relativePos[0] - camera->tP.center[0];
-    double y = camera->tP.relativePos[1] - camera->tP.center[1];
-    double z = camera->tP.relativePos[2] - camera->tP.center[2];
+    double z = camera->tP.relativePos[1] - camera->tP.center[1];
+    double y = camera->tP.relativePos[2] - camera->tP.center[2];
 
     double r = sqrt(x * x + y * y + z * z);
     double theta = acos(z / r);
@@ -26,18 +26,18 @@ void moveThirdPersonCamera(struct WindowManager *windowControl, union camera *ca
 
     setCursorMode(windowControl, isMouseUsed ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 
-    r     -= speed * isKeyPressed(windowControl, GLFW_KEY_UP);
-    r     += speed * isKeyPressed(windowControl, GLFW_KEY_DOWN);
+    r     -= speed * isKeyPressed(windowControl, GLFW_KEY_UP) * 10;
+    r     += speed * isKeyPressed(windowControl, GLFW_KEY_DOWN) * 10;
     theta -= speed * isKeyPressed(windowControl, GLFW_KEY_W);
     theta += speed * isKeyPressed(windowControl, GLFW_KEY_S);
-    phi   -= speed * isKeyPressed(windowControl, GLFW_KEY_A);
-    phi   += speed * isKeyPressed(windowControl, GLFW_KEY_D);
+    phi   -= speed * isKeyPressed(windowControl, GLFW_KEY_D);
+    phi   += speed * isKeyPressed(windowControl, GLFW_KEY_A);
 
     r     -= speed * getScrollYChange(windowControl);
     theta -= mouseSpeed * deltaPos[1];
     phi   -= mouseSpeed * deltaPos[0];
 
     camera->tP.relativePos[0] = camera->tP.center[0] + r * sin(theta) * cos(phi);
-    camera->tP.relativePos[1] = camera->tP.center[1] + r * sin(theta) * sin(phi);
-    camera->tP.relativePos[2] = camera->tP.center[2] + r * cos(theta);
+    camera->tP.relativePos[2] = camera->tP.center[2] + r * sin(theta) * sin(phi);
+    camera->tP.relativePos[1] = camera->tP.center[1] + r * cos(theta);
 }

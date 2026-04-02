@@ -36,6 +36,6 @@ struct EntityBuilder;
 
 struct Entity *createEntity(struct EntityBuilder modelBuilder, struct GraphicsSetup *graphics);
 void destroyEntity(void *modelPtr);
-void destroyEntityArray(uint16_t num, struct Entity *modelArray[num], struct GraphicsSetup *graphics);
+void destroyEntityArray(size_t num, struct Entity *modelArray[num], struct GraphicsSetup *graphics);
 
 #endif

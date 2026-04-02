@@ -1,54 +1,35 @@
+#include <assert.h>
 #include <stdlib.h>
-#include <string.h>
 
-#include "MY_ASSERT.h"
 #include "resourceManager.h"
 
-void addResource(struct ResourceManager *this, const char *name, void *mem, void (*cleanup)(void *)) {
-    this->qResources += 1;
-
-    if (this->resources) {
-        if (this->max < this->qResources) {
-            this->max = this->qResources;
-            this->resources = realloc(this->resources, sizeof(struct resource) * this->max);
-        }
+void addResource(struct ResourceManager *this, size_t id, void *mem, void (*cleanup)(void *)) {
+    if (NULL == this->resources) {
+        this->max = id + 1;
+        this->resources = malloc(sizeof(struct resource) * this->max);
     }
-    else {
-        this->max = this->qResources;
-        this->resources = calloc(this->max, sizeof(struct resource));
+    else if (this->max <= id) {
+        this->max = id + 1;
+        this->resources = realloc(this->resources, sizeof(struct resource) * this->max);
     }
 
-    this->resources[this->qResources - 1].this = mem;
-    this->resources[this->qResources - 1].cleanup = cleanup;
-    this->resources[this->qResources - 1].name = calloc(strlen(name) + 1, sizeof(char));
-    strcpy(this->resources[this->qResources - 1].name, name);
+    this->resources[id].this = mem;
+    this->resources[id].cleanup = cleanup;
 }
 
-void cleanupResource(struct ResourceManager *this, const char *name) {
-    size_t i = 0;
-
-    while (i < this->qResources && 0 != strcmp(this->resources[i].name, name)) i += 1;
-    if (i < this->qResources) {
-        if (this->resources[i].cleanup) {
-            this->resources[i].cleanup(this->resources[i].this);
-        }
-        free(this->resources[i].name);
-        while (i < this->qResources - 1) {
-            this->resources[i] = this->resources[i + 1];
-
-            i += 1;
-        }
-
-        this->qResources -= 1;
+void cleanupResource(struct ResourceManager *this, size_t id) {
+    if (this->resources[id].this)
+    if (this->resources[id].cleanup) {
+        this->resources[id].cleanup(this->resources[id].this);
     }
 }
 
 void cleanupResourcesOrg(struct ResourceManager *this) {
-    for (size_t i = 0; i < this->qResources; i += 1) {
+    for (size_t i = 0; i < this->max; i += 1) {
+        if (this->resources)
         if (this->resources[i].cleanup) {
             this->resources[i].cleanup(this->resources[i].this);
         }
-        free(this->resources[i].name);
     }
 
     free(this->resources);
@@ -60,16 +41,8 @@ void cleanupResourceManager(void *this) {
     free(this);
 }
 
-void *findResource(struct ResourceManager *this, const char *resource) {
-    void *result = NULL;
-    
-    for (size_t i = 0; result == NULL && i < this->qResources; i += 1) {
-        if (0 == strcmp(this->resources[i].name, resource)) {
-            result = this->resources[i].this;
-        }
-    }
+void *findResource(struct ResourceManager *this, size_t id) {
+    assert(id < this->max);
 
-    MY_ASSERT(result != NULL);
-
-    return result;
+    return this->resources[id].this;
 }

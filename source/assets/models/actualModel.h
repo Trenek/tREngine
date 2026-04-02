@@ -1,20 +1,21 @@
-#include <cglm.h>
+#include <cglm/cglm.h>
 
 #include "buffer.h"
 
 struct GraphicsSetup;
 
 struct MeshInput {
-    void *vertices;
     size_t sizeOfVertex;
-    uint16_t *indices;
+
     size_t verticesQuantity;
+    void *vertices;
 
     size_t indicesQuantity;
+    uint32_t *indices;
 };
 
 struct ModelInput {
-    struct buffer localMesh;
+    struct buffer *localMesh;
 
     uint32_t meshQuantity;
     struct MeshInput *mesh;
@@ -33,7 +34,7 @@ struct Mesh {
 struct Model {
     VkDevice device;
 
-    struct buffer localMesh;
+    struct buffer *localMesh;
 
     uint32_t meshQuantity;
     struct Mesh *mesh;

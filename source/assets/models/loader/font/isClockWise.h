@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#include <cglm.h>
+#include <cglm/cglm.h>
 
 bool isInBetween(vec2 C, vec2 B, vec2 A, vec2 D);
 float getAngle(vec2 A, vec2 B, vec2 C);

@@ -105,7 +105,7 @@ struct contour {
     struct contour *hole;
 
     struct FontVertex (*vertices)[2];
-    uint16_t (*indices)[3];
+    uint32_t (*indices)[3];
 
     struct FontVertex lastVertex;
 };
@@ -313,7 +313,7 @@ static struct contour createContour(FT_Face face, size_t start_point, size_t end
     struct contour new = {
         .N = N,
         .vertices = malloc(sizeof(struct FontVertex[2]) * N),
-        .indices = malloc(sizeof(uint16_t[3]) * N),
+        .indices = malloc(sizeof(uint32_t[3]) * N),
         .pointIDs = malloc(sizeof(size_t) * 2 * N),
         .qPointsIDs = 0
     };
@@ -367,7 +367,7 @@ static void addBezzier(struct contour *toAdd, size_t index) {
     toAdd->N += 1;
 
     toAdd->vertices = realloc(toAdd->vertices, toAdd->N * sizeof(struct FontVertex[2]));
-    toAdd->indices = realloc(toAdd->indices, toAdd->N * sizeof(uint16_t[3]));
+    toAdd->indices = realloc(toAdd->indices, toAdd->N * sizeof(uint32_t[3]));
     toAdd->pointIDs = realloc(toAdd->pointIDs, 2 * toAdd->N * sizeof(size_t));
 
     for (size_t i = toAdd->N - 1; i > index + 1; i -= 1) {
@@ -482,10 +482,10 @@ static struct contour *loadBezier(FT_Face face, struct MeshInput *mesh, struct c
     mesh->verticesQuantity = 4 * pQuantity + outline->n_contours;
     mesh->indicesQuantity = pQuantity * 3;
     mesh->vertices = malloc(sizeof(struct FontVertex) * mesh->verticesQuantity);
-    mesh->indices = malloc(sizeof(uint16_t) * mesh->indicesQuantity);
+    mesh->indices = malloc(sizeof(uint32_t) * mesh->indicesQuantity);
 
     struct FontVertex (*vertices)[2] = mesh->vertices;
-    uint16_t (*indices)[3] = (void *)mesh->indices;
+    uint32_t (*indices)[3] = (void *)mesh->indices;
 
     z = 0;
     for (int i = 0; i < outline->n_contours; i += 1) {
@@ -499,7 +499,7 @@ static struct contour *loadBezier(FT_Face face, struct MeshInput *mesh, struct c
         }
 
         memcpy(vertices + z, contours[i].vertices, sizeof(struct FontVertex[2]) * contours[i].N);
-        memcpy(indices + z, contours[i].indices, sizeof(uint16_t[3]) * contours[i].N);
+        memcpy(indices + z, contours[i].indices, sizeof(uint32_t[3]) * contours[i].N);
 
         z += contours[i].N;
     }
@@ -537,13 +537,13 @@ static struct contour *loadBezier(FT_Face face, struct MeshInput *mesh, struct c
     return tree;
 }
 
-void triangulate(size_t q, size_t vertexQuantity[q], size_t *vertexIDs[q], struct FontVertex *vertex, uint16_t (*triangles)[3]);
+void triangulate(size_t q, size_t vertexQuantity[q], size_t *vertexIDs[q], struct FontVertex *vertex, uint32_t (*triangles)[3]);
 
 static void generateTriangles(struct contour *tree, struct MeshInput *mesh, size_t qOnlinePoints) {
     size_t ntq = countTriangles(tree);
 
     mesh->indicesQuantity += 3 * ntq;
-    mesh->indices = realloc(mesh->indices, sizeof(uint16_t) * mesh->indicesQuantity);
+    mesh->indices = realloc(mesh->indices, sizeof(uint32_t) * mesh->indicesQuantity);
 
     size_t q = getPolygonQuantity(tree);
     size_t vq[q];
@@ -613,7 +613,7 @@ size_t getGlyphID(char a) {
 
 void LoadCharacter(struct ModelInput *model, FT_Face face) {
     float space = 0;
-    mat4 **glyphOffset = (mat4 **)model->localMesh.buffersMapped;
+    mat4 **glyphOffset = (mat4 **)model->localMesh->buffersMapped;
 
     for (size_t i = 0; i < model->meshQuantity; i += 1) {
         loadCharacter(face, &model->mesh[i], buffer[i], &space);
@@ -639,14 +639,15 @@ void ttfLoadModel(const char *objectPath, struct ModelInput *model, VkDevice dev
     FT_Face face = nullptr;
 
     model->meshQuantity = strlen(buffer);
-    model->mesh = malloc(sizeof(struct Mesh) * (model->meshQuantity));
+    model->mesh = malloc(sizeof(struct Mesh) * model->meshQuantity);
+    model->localMesh = malloc(sizeof(struct buffer));
 
     createBuffers(
         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
         model->meshQuantity * sizeof(mat4) + sizeof(mat4),
-        model->localMesh.buffers, 
-        model->localMesh.buffersMemory, 
-        model->localMesh.buffersMapped, 
+        model->localMesh->buffers, 
+        model->localMesh->buffersMemory, 
+        model->localMesh->buffersMapped, 
         device, 
         physicalDevice, 
         surface

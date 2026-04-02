@@ -3,7 +3,7 @@
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <cglm.h>
+#include <cglm/cglm.h>
 #include <vulkan/vulkan_core.h>
 
 #define Vert(x) \
@@ -11,53 +11,38 @@
     .numOfAttributes = sizeof(x##AttributeDescriptions) / sizeof(VkVertexInputAttributeDescription), \
     .attributeDescription = x##AttributeDescriptions
 
-struct GLTFVertex {
-    vec3 pos;
+struct ObjVertex {
+    vec3 geo;
+    vec3 tex;
     vec3 norm;
-    vec3 color;
-    vec2 texCoord;
-
-    ivec4 bone;
-    vec4 weights;
+    vec2 para;
 };
 
 [[maybe_unused]]
-static VkVertexInputAttributeDescription GLTFVertexAttributeDescriptions[] = {
+static VkVertexInputAttributeDescription ObjVertexAttributeDescriptions[] = {
     [0] = {
         .binding = 0,
         .location = 0,
         .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct GLTFVertex, pos)
+        .offset = offsetof(struct ObjVertex, geo)
     },
     [1] = {
         .binding = 0,
         .location = 1,
         .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct GLTFVertex, norm)
+        .offset = offsetof(struct ObjVertex, tex)
     },
     [2] = {
         .binding = 0,
         .location = 2,
         .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct GLTFVertex, color)
+        .offset = offsetof(struct ObjVertex, norm)
     },
     [3] = {
         .binding = 0,
         .location = 3,
         .format = VK_FORMAT_R32G32_SFLOAT,
-        .offset = offsetof(struct GLTFVertex, texCoord)
-    },
-    [4] = {
-        .binding = 0,
-        .location = 4,
-        .format = VK_FORMAT_R32G32B32A32_SINT,
-        .offset = offsetof(struct GLTFVertex, bone)
-    },
-    [5] = {
-        .binding = 0,
-        .location = 5,
-        .format = VK_FORMAT_R32G32B32A32_SFLOAT,
-        .offset = offsetof(struct GLTFVertex, weights)
+        .offset = offsetof(struct ObjVertex, para)
     },
 };
 

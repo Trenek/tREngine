@@ -50,7 +50,7 @@ VkBuffer createVertexBuffer(VkDeviceMemory *vertexBufferMemory, VkDevice device,
     return vertexBuffer;
 }
 
-VkBuffer createIndexBuffer(VkDeviceMemory *indexBufferMemory, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkCommandPool transferCommandPool, VkQueue transferQueue, uint32_t vertexQuantity, uint32_t indicesQuantity, uint16_t indices[static indicesQuantity], size_t sizeOfVertexBuffer) {
+VkBuffer createIndexBuffer(VkDeviceMemory *indexBufferMemory, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkCommandPool transferCommandPool, VkQueue transferQueue, uint32_t vertexQuantity, uint32_t indicesQuantity, uint32_t indices[static indicesQuantity], size_t sizeOfVertexBuffer) {
     VkBuffer indexBuffer = NULL;
 
     VkBuffer stagingBuffer = createBuffer(
@@ -69,8 +69,8 @@ VkBuffer createIndexBuffer(VkDeviceMemory *indexBufferMemory, VkDevice device, V
 
     void *data = NULL;
 
-    vkMapMemory(device, stagingBufferMemory, 0, /*bufferInfo.size*/ indicesQuantity * sizeof(uint16_t), 0, &data);
-    memcpy(data, indices, /*bufferInfo.size*/ indicesQuantity * sizeof(uint16_t));
+    vkMapMemory(device, stagingBufferMemory, 0, /*bufferInfo.size*/ indicesQuantity * sizeof(uint32_t), 0, &data);
+    memcpy(data, indices, /*bufferInfo.size*/ indicesQuantity * sizeof(uint32_t));
     vkUnmapMemory(device, stagingBufferMemory);
 
     indexBuffer = createBuffer(
@@ -87,7 +87,7 @@ VkBuffer createIndexBuffer(VkDeviceMemory *indexBufferMemory, VkDevice device, V
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
     );
 
-    copyBuffer(stagingBuffer, indexBuffer, indicesQuantity * sizeof(uint16_t), device, transferCommandPool, transferQueue);
+    copyBuffer(stagingBuffer, indexBuffer, indicesQuantity * sizeof(uint32_t), device, transferCommandPool, transferQueue);
 
     vkDestroyBuffer(device, stagingBuffer, NULL);
     vkFreeMemory(device, stagingBufferMemory, NULL);
