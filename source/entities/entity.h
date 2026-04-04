@@ -22,6 +22,10 @@ struct Entity {
     uint32_t meshQuantity;
     struct Mesh *mesh;
 
+    int destination;
+    size_t pushConstantsSize;
+    void *pushConstants;
+
     size_t qBuff;
 
     struct buffer uniformModel;

@@ -13,6 +13,10 @@ struct EntityBuilder {
     uint32_t meshQuantity;
     struct Mesh *mesh;
 
+    int destination;
+    size_t pushConstantsSize;
+    void *pushConstants;
+
     VkBuffer (**buff)[MAX_FRAMES_IN_FLIGHT];
     void *(**mapp)[MAX_FRAMES_IN_FLIGHT];
     bool *isChangable;

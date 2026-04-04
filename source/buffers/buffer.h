@@ -5,6 +5,8 @@
 #include "definitions.h"
 
 struct buffer {
+    size_t range;
+
     VkBuffer buffers[MAX_FRAMES_IN_FLIGHT];
     VkDeviceMemory buffersMemory[MAX_FRAMES_IN_FLIGHT];
     void *buffersMapped[MAX_FRAMES_IN_FLIGHT];

@@ -8,20 +8,22 @@
 
 #include "MY_ASSERT.h"
 
+#include "texture.h"
+
 struct Model *loadModel(const char *filePath, struct GraphicsSetup *graphics) {
     struct Model *result = calloc(1, sizeof(struct Model));
     struct ModelInput input = {};
 
-    void (*fun)(const char *, struct ModelInput *, VkDevice, VkPhysicalDevice, VkSurfaceKHR) =
+    void (*fun)(const char *, struct ModelInput *, struct GraphicsSetup *) =
         NULL != strstr(filePath, ".ttf") ? ttfLoadModel :
         NULL != strstr(filePath, ".obj") ? objLoadModel :
         NULL;
     assert(NULL != fun);
 
-    fun(filePath, &input, graphics->device, graphics->physicalDevice, graphics->surface);
+    fun(filePath, &input, graphics);
 
     result->device = graphics->device;
-    result->localMesh = input.localMesh;
+    result->buffers = input.buffers;
     result->meshQuantity = input.meshQuantity;
     result->mesh = malloc(sizeof(struct Mesh) * result->meshQuantity);
 
@@ -29,6 +31,8 @@ struct Model *loadModel(const char *filePath, struct GraphicsSetup *graphics) {
         result->mesh[i].indicesQuantity = input.mesh[i].indicesQuantity;
         result->mesh[i].vertexBuffer = createVertexBuffer(&result->mesh[i].vertexBufferMemory, graphics->device, graphics->physicalDevice, graphics->surface, graphics->commandPool, graphics->transferQueue, input.mesh[i].verticesQuantity, input.mesh[i].vertices, input.mesh[i].sizeOfVertex);
         result->mesh[i].indexBuffer = createIndexBuffer(&result->mesh[i].indexBufferMemory, graphics->device, graphics->physicalDevice, graphics->surface, graphics->commandPool, graphics->transferQueue, input.mesh[i].verticesQuantity, input.mesh[i].indicesQuantity, input.mesh[i].indices, input.mesh[i].sizeOfVertex);
+        result->qTextures = input.qTextures;
+        result->inputTextures = input.inputTextures;
 
         free(input.mesh[i].vertices);
         free(input.mesh[i].indices);
@@ -42,16 +46,19 @@ struct Model *loadModel(const char *filePath, struct GraphicsSetup *graphics) {
 void destroyActualModel(void *modelPtr) {
     struct Model *model = modelPtr;
 
-    for (uint32_t j = 0; j < model->meshQuantity; j += 1) {
-        destroyBuffer(model->device, model->mesh[j].indexBuffer, model->mesh[j].indexBufferMemory);
-        destroyBuffer(model->device, model->mesh[j].vertexBuffer, model->mesh[j].vertexBufferMemory);
+    for (uint32_t i = 0; i < model->meshQuantity; i += 1) {
+        destroyBuffer(model->device, model->mesh[i].indexBuffer, model->mesh[i].indexBufferMemory);
+        destroyBuffer(model->device, model->mesh[i].vertexBuffer, model->mesh[i].vertexBufferMemory);
     }
 
-    if (NULL != model->localMesh) {
-        destroyBuffers(model->device, model->localMesh->buffers, model->localMesh->buffersMemory);
+    if (NULL != model->buffers) {
+        destroyBuffers(model->device, model->buffers->buffers, model->buffers->buffersMemory);
 
-        free(model->localMesh);
+        free(model->buffers);
     }
-
-    free(model);
+    
+    for (size_t i = 0; i < model->qTextures; i += 1) {
+        free(model->inputTextures[i]);
+    }
+    free(model->inputTextures);
 }

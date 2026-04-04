@@ -6,6 +6,10 @@
 struct CameraBuffer {
     alignas(16) mat4 view;
     alignas(16) mat4 proj;
+
+    vec4 lightDirection;
+    vec4 lightColor;
+    vec4 cameraPos;
 };
 
 #endif

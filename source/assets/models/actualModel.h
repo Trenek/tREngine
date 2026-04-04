@@ -15,7 +15,10 @@ struct MeshInput {
 };
 
 struct ModelInput {
-    struct buffer *localMesh;
+    struct buffer *buffers;
+
+    size_t qTextures;
+    char **inputTextures;
 
     uint32_t meshQuantity;
     struct MeshInput *mesh;
@@ -34,7 +37,10 @@ struct Mesh {
 struct Model {
     VkDevice device;
 
-    struct buffer *localMesh;
+    struct buffer *buffers;
+
+    size_t qTextures;
+    char **inputTextures;
 
     uint32_t meshQuantity;
     struct Mesh *mesh;

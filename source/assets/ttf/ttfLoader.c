@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <assert.h>
 
+#include "graphicsSetup.h"
+
 #include "isClockWise.h"
 #include "actualModel.h"
 #include "myMalloc.h"
@@ -613,7 +615,7 @@ size_t getGlyphID(char a) {
 
 void LoadCharacter(struct ModelInput *model, FT_Face face) {
     float space = 0;
-    mat4 **glyphOffset = (mat4 **)model->localMesh->buffersMapped;
+    mat4 **glyphOffset = (mat4 **)model->buffers->buffersMapped;
 
     for (size_t i = 0; i < model->meshQuantity; i += 1) {
         loadCharacter(face, &model->mesh[i], buffer[i], &space);
@@ -634,23 +636,23 @@ void LoadCharacter(struct ModelInput *model, FT_Face face) {
     }
 }
 
-void ttfLoadModel(const char *objectPath, struct ModelInput *model, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
+void ttfLoadModel(const char *objectPath, struct ModelInput *model, struct GraphicsSetup *graphics) {
     FT_Library library = nullptr;
     FT_Face face = nullptr;
 
     model->meshQuantity = strlen(buffer);
     model->mesh = malloc(sizeof(struct Mesh) * model->meshQuantity);
-    model->localMesh = malloc(sizeof(struct buffer));
+    model->buffers = malloc(sizeof(struct buffer));
 
     createBuffers(
         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
         model->meshQuantity * sizeof(mat4) + sizeof(mat4),
-        model->localMesh->buffers, 
-        model->localMesh->buffersMemory, 
-        model->localMesh->buffersMapped, 
-        device, 
-        physicalDevice, 
-        surface
+        model->buffers->buffers, 
+        model->buffers->buffersMemory, 
+        model->buffers->buffersMapped, 
+        graphics->device, 
+        graphics->physicalDevice, 
+        graphics->surface
     );
 
     IF (0 == FT_Init_FreeType(&library), "No Library")

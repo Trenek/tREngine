@@ -17,6 +17,16 @@ static struct Data loadCubeMap(const char *texturePath[6], VkDevice device, VkPh
     return result;
 }
 
+static struct Data loadTexture(const char *texturePath, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkCommandPool commandPool, VkQueue queue) {
+    struct Data result = { 0 };
+
+    result.image = createTextureBuffer(&result.imageMemory, &result.mipLevels, texturePath, device, physicalDevice, surface, commandPool, queue);
+    result.imageView = createTextureImageView(device, result.image, result.mipLevels);
+    result.sampler = createTextureSampler(device, physicalDevice, result.mipLevels);
+
+    return result;
+}
+
 struct Textures *loadCubeMaps(struct GraphicsSetup *graphics, const char *texturePath[6]) {
     struct Textures *texture = calloc(1, sizeof(struct Textures));
     *texture = (struct Textures){
@@ -36,16 +46,6 @@ struct Textures *loadCubeMaps(struct GraphicsSetup *graphics, const char *textur
     bindTextureBuffersToDescriptorSets(desc->descriptorSets, graphics->device, 1, texture);
 
     return texture;
-}
-
-static struct Data loadTexture(const char *texturePath, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkCommandPool commandPool, VkQueue queue) {
-    struct Data result = { 0 };
-
-    result.image = createTextureBuffer(&result.imageMemory, &result.mipLevels, texturePath, device, physicalDevice, surface, commandPool, queue);
-    result.imageView = createTextureImageView(device, result.image, result.mipLevels);
-    result.sampler = createTextureSampler(device, physicalDevice, result.mipLevels);
-
-    return result;
 }
 
 struct Textures *loadTextures(struct GraphicsSetup *graphics, uint32_t texturesQuantity, char *texturePath[static texturesQuantity]) {

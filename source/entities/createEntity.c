@@ -18,6 +18,10 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
         .instance = malloc(builder.instanceSize * builder.instanceCount),
         .instanceUpdater = builder.instanceUpdater,
 
+        .pushConstantsSize = builder.pushConstantsSize,
+        .pushConstants = builder.pushConstants,
+        .destination = builder.destination,
+
         .buffer = calloc(builder.qBuff + 1, sizeof(void *)),
         .range = calloc(builder.qBuff + 1, sizeof(size_t)),
         .mapp = calloc(builder.qBuff + 1, sizeof(void *)),

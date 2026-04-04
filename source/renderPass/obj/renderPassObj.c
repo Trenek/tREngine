@@ -36,7 +36,6 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
     memcpy(result->coordinates, builder.coordinates, sizeof(double[4]));
 
     createBuffers(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(struct CameraBuffer), result->cameraBuffer, result->cameraBufferMemory, result->cameraBufferMapped, graphics->device, graphics->physicalDevice, graphics->surface);
-
     createDescriptorSets(result->cameraDescriptorSet, graphics->device, result->cameraDescriptorPool, result->cameraDescriptorSetLayout);
     bindCameraBuffersToDescriptorSets(result->cameraDescriptorSet, graphics->device, result->cameraBuffer);
 

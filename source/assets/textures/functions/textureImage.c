@@ -156,10 +156,10 @@ static struct textureData loadDefault(const char *) {
         .pixels = malloc(sizeof(char) * 4)
     };
 
-    data.pixels[0] = 100.0;
-    data.pixels[1] = 100.0;
-    data.pixels[2] = 100.0;
-    data.pixels[3] = 100.0;
+    data.pixels[0] = -1;
+    data.pixels[1] = -1;
+    data.pixels[2] = -1;
+    data.pixels[3] = -1;
 
     return data;
 }

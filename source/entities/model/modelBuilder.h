@@ -17,6 +17,7 @@ struct ModelBuilder {
     struct Model *modelData;
 
     VkDescriptorSetLayout objectLayout;
+    size_t textureOffset;
 };
 
 struct Entity *createModel(struct ModelBuilder builder, struct GraphicsSetup *graphics);

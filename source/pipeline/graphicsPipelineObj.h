@@ -9,11 +9,6 @@ struct graphicsPipelineBuilder {
     size_t qRenderPassCore;
     struct renderPassCore **renderPassCore;
 
-    VkDescriptorSetLayout objectLayout;
-    VkDescriptorSetLayout cameraLayout;
-
-    struct descriptor *texture;
-
     const char *vertexShader;
     const char *fragmentShader;
 
@@ -29,6 +24,8 @@ struct graphicsPipelineBuilder {
     VkCullModeFlags cullFlags;
 
     VkCompareOp operation;
+
+    VkPipelineLayout pipelineLayout;
 };
 
 struct renderPipeline {
@@ -38,7 +35,6 @@ struct renderPipeline {
 
 struct graphicsPipeline {
     VkDevice device;
-    struct descriptor *texture;
 
     VkPipelineLayout pipelineLayout;
     size_t qPipelines;

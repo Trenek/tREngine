@@ -11,6 +11,35 @@
 
 #include "MY_ASSERT.h"
 
+static void bindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t currentFrame, struct renderPassObj *renderPass, size_t j, size_t k) {
+    size_t qSet = renderPass->data[j].texture == NULL ? 2 : 3;
+    VkDescriptorSet set[qSet];
+
+    if (renderPass->data[j].texture) {
+        set[0] = renderPass->data[j].entity[k]->object.descriptorSets[currentFrame];
+        set[1] = renderPass->data[j].texture->descriptorSets[currentFrame];
+        set[2] = renderPass->cameraDescriptorSet[currentFrame];
+    }
+    else {
+        set[0] = renderPass->data[j].entity[k]->object.descriptorSets[currentFrame];
+        set[1] = renderPass->cameraDescriptorSet[currentFrame];
+    }
+
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[j].pipe->pipelineLayout, 0, qSet, set, 0, NULL);
+}
+
+static void drawEntity(VkCommandBuffer commandBuffer, struct Entity *entity, struct graphicsPipeline *pipe) {
+    for (uint32_t l = 0; l < entity->meshQuantity; l += 1) {
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, &entity->mesh[l].vertexBuffer, (VkDeviceSize[]){ 0 });
+        vkCmdBindIndexBuffer(commandBuffer, entity->mesh[l].indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+        if (0 != entity->pushConstantsSize) {
+            vkCmdPushConstants(commandBuffer, pipe->pipelineLayout, entity->destination, 0, entity->pushConstantsSize, (char *)entity->pushConstants + l * entity->pushConstantsSize);
+        }
+        vkCmdDrawIndexed(commandBuffer, entity->mesh[l].indicesQuantity, entity->instanceCount, 0, 0, 0);
+    }
+}
+
 static void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, VkExtent2D swapChainExtent, uint32_t currentFrame, size_t qRenderPass, struct renderPassObj *renderPass[qRenderPass]) {
     VkCommandBufferBeginInfo beginInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
@@ -78,19 +107,8 @@ static void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageInd
             for (uint32_t j = 0; j < renderPass[i]->qData; j += 1) {
                 vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass[i]->data[j].pipe->pipeline[renderPass[i]->data[j].pipeNum].pipeline);
                 for (uint32_t k = 0; k < renderPass[i]->data[j].qEntity; k += 1) {
-                    VkDescriptorSet sets[] = {
-                        renderPass[i]->data[j].entity[k]->object.descriptorSets[currentFrame],
-                        renderPass[i]->data[j].pipe->texture->descriptorSets[currentFrame],
-                        renderPass[i]->cameraDescriptorSet[currentFrame],
-                    };
-                    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass[i]->data[j].pipe->pipelineLayout, 0, 3, sets, 0, NULL);
-                    for (uint32_t l = 0; l < renderPass[i]->data[j].entity[k]->meshQuantity; l += 1) {
-                        vkCmdBindVertexBuffers(commandBuffer, 0, 1, &renderPass[i]->data[j].entity[k]->mesh[l].vertexBuffer, (VkDeviceSize[]){ 0 });
-                        vkCmdBindIndexBuffer(commandBuffer, renderPass[i]->data[j].entity[k]->mesh[l].indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-                        vkCmdPushConstants(commandBuffer, renderPass[i]->data[j].pipe->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(struct MeshPushConstants), &(struct MeshPushConstants) { .meshID = l });
-                        vkCmdDrawIndexed(commandBuffer, renderPass[i]->data[j].entity[k]->mesh[l].indicesQuantity, renderPass[i]->data[j].entity[k]->instanceCount, 0, 0, 0);
-                    }
+                    bindDescriptorSets(commandBuffer, currentFrame, renderPass[i], j, k);
+                    drawEntity(commandBuffer, renderPass[i]->data[j].entity[k], renderPass[i]->data[j].pipe);
                 }
             }
             vkCmdEndRenderPass(commandBuffer);

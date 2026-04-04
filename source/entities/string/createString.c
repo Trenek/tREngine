@@ -11,6 +11,8 @@
 
 #include "actualModel.h"
 
+#include "pushConstantsBuffer.h"
+
 size_t getGlyphID(char a);
 
 size_t count(const char *buffer) {
@@ -29,16 +31,18 @@ struct toCleanup {
     VkDevice device;
 
     struct Mesh *mesh;
+    void *pushConstants;
 
     struct buffer localMesh;
 };
 
-void cleanupFont(void *toCleanArg) {
+static void cleanupFont(void *toCleanArg) {
     struct toCleanup *toClean = toCleanArg;
 
     destroyBuffers(toClean->device, toClean->localMesh.buffers, toClean->localMesh.buffersMemory);
 
     free(toClean->mesh);
+    free(toClean->pushConstants);
 
     free(toClean);
 }
@@ -49,11 +53,14 @@ struct Entity *createString(struct StringBuilder builder, struct GraphicsSetup *
     struct toCleanup *info = malloc(sizeof(struct toCleanup));
     info->device = graphics->device;
     info->mesh = malloc(sizeof(struct Mesh) * meshQuantity);
+    info->pushConstants = malloc(sizeof(struct FontPushConstants) * meshQuantity);
+
+    struct FontPushConstants *pc = info->pushConstants;
 
     createBuffers(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, meshQuantity * sizeof(mat4), info->localMesh.buffers, info->localMesh.buffersMemory, info->localMesh.buffersMapped, graphics->device, graphics->physicalDevice, graphics->surface);
 
     mat4 **thisBuffer = (void *)info->localMesh.buffersMapped;
-    mat4 **transform = (void *)builder.modelData->localMesh->buffersMapped;
+    mat4 **transform = (void *)builder.modelData->buffers->buffersMapped;
 
     uint32_t i = 0;
     const char *buffer = builder.string;
@@ -61,6 +68,7 @@ struct Entity *createString(struct StringBuilder builder, struct GraphicsSetup *
     mat4 space; {
         glm_mat4_identity(space);
     }
+    for (uint32_t j = 0; j < meshQuantity; j += 1) pc[j].meshID = j;
     while (i < meshQuantity) {
         if (*buffer == ' ') {
             glm_mat4_mul(space, transform[0][getGlyphID(' ')], space);
@@ -128,6 +136,10 @@ struct Entity *createString(struct StringBuilder builder, struct GraphicsSetup *
         .instanceSize = builder.instanceSize,
         .instanceBufferSize = builder.instanceBufferSize,
         .instanceUpdater = builder.instanceUpdater,
+
+        .destination = VK_SHADER_STAGE_VERTEX_BIT,
+        .pushConstantsSize = sizeof(struct FontPushConstants),
+        .pushConstants = info->pushConstants,
 
         .additional = info,
         .cleanup = cleanupFont
