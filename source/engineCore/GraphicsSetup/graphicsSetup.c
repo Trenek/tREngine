@@ -11,6 +11,10 @@ static void cleanupSwapChain(struct GraphicsSetup *graphics) {
         vkDestroyFence(graphics->device, graphics->inFlightFence[i], NULL);
     }
 
+    for (size_t i = 0; i < graphics->swapChain.imagesCount; i += 1) {
+        vkDestroySemaphore(graphics->device, graphics->swapChain.renderFinishedSemaphore[i], NULL);
+    }
+
     vkDestroyImageView(graphics->device, graphics->colorImageView, NULL);
     vkDestroyImage(graphics->device, graphics->colorImage, NULL);
     vkFreeMemory(graphics->device, graphics->colorImageMemory, NULL);
