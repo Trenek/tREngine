@@ -1,12 +1,8 @@
 find_package(Vulkan REQUIRED)
 
-set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_MINIZIP ON CACHE BOOL "" FORCE)
-
 add_subdirectory(glfw EXCLUDE_FROM_ALL)
 add_subdirectory(cglm EXCLUDE_FROM_ALL)
 add_subdirectory(freetype EXCLUDE_FROM_ALL)
-add_subdirectory(miniaudio EXCLUDE_FROM_ALL)
 add_subdirectory(fast_obj EXCLUDE_FROM_ALL)
 
 set(INCLUDE_DIRECTORIES
@@ -19,7 +15,6 @@ set(LINK_LIBRARIES
     glfw
     cglm
     freetype
-    miniaudio
     fast_obj_lib
 )
 

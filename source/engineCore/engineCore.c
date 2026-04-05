@@ -22,7 +22,6 @@ void recreateSwapChain(struct EngineCore *engine, size_t qRenderPassCore, struct
 struct EngineCore setup(const char *name, const char *icon) {
     struct EngineCore engine = {
         .window = initWindowManager(name, icon),
-        .soundManager = initSoundManager(),
         .deltaTime = initDeltaTimeManager(),
         .resource = {}
     };
@@ -37,6 +36,5 @@ void cleanup(struct EngineCore engine) {
     cleanupResourcesOrg(&engine.resource);
 
     cleanupGraphics(engine.graphics);
-    cleanupSoundManager(engine.soundManager);
     cleanupWindowControl(engine.window);
 }

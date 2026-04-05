@@ -3,7 +3,6 @@
 
 #include "windowManager.h"
 #include "deltaTime.h"
-#include "soundManager.h"
 #include "resourceManager.h"
 
 #include "graphicsSetup.h"
@@ -12,7 +11,6 @@ struct renderPassCore;
 struct EngineCore {
     struct WindowManager window;
     struct DeltaTimeManager deltaTime;
-    struct SoundManager soundManager;
     struct ResourceManager resource;
 
     struct GraphicsSetup graphics;
