@@ -9,11 +9,10 @@
 #include "actualModel.h"
 #include "myMalloc.h"
 
-#include "Vertex.h"
+#include "ttf.h"
 
 #define IF(x, y) if (!(x)) printf("%s", y); else
 
-#define BFR(x) ((struct FontVertex *)(x))
 
 // #define SIZE face->max_advance_width
 #define SIZE 1
@@ -526,10 +525,10 @@ static struct contour *loadBezier(FT_Face face, struct MeshInput *mesh, struct c
         z += contours[i].N;
     }
 
-    memcpy(BFR(mesh->vertices) + 2 * pQuantity, mesh->vertices, sizeof(struct FontVertex) * 2 * pQuantity);
+    memcpy(FNT(mesh->vertices) + 2 * pQuantity, mesh->vertices, sizeof(struct FontVertex) * 2 * pQuantity);
 
     for (size_t i = 2 * pQuantity; i < 4 * pQuantity; i += 1) {
-        BFR(mesh->vertices)[i].inOut = 2;
+        FNT(mesh->vertices)[i].inOut = 2;
     }
 
     flatten(tree);

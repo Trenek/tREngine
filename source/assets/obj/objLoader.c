@@ -2,11 +2,9 @@
 #include <fast_obj.h>
 
 #include "actualModel.h"
-
-#include "Vertex.h"
 #include "graphicsSetup.h"
 
-#define OBJ(X) ((struct ObjVertex *)X)
+#include "obj.h"
 
 static size_t countV(fastObjMesh *obj, fastObjGroup grp) {
     size_t idx = 0;

@@ -7,7 +7,6 @@
 #include "graphicsPipelineObj.h"
 #include "entity.h"
 #include "actualModel.h"
-#include "pushConstantsBuffer.h"
 
 #include "MY_ASSERT.h"
 
@@ -127,7 +126,7 @@ static void updateModelBuffer(size_t currentFrame, struct Entity *model) {
 
 static void updateBuffers(size_t currentFrame, size_t qRenderPass, struct renderPassObj *renderPass[qRenderPass], VkExtent2D swapChainExtent) {
     for (uint32_t i = 0; i < qRenderPass; i += 1) {
-        renderPass[i]->updateCameraBuffer(renderPass[i]->cameraBufferMapped[currentFrame], (VkExtent2D) { 
+        renderPass[i]->updateCameraBuffer(renderPass[i]->cameraBuffer.buffersMapped[currentFrame], (VkExtent2D) { 
             .width = renderPass[i]->coordinates[2] * swapChainExtent.width,
             .height = renderPass[i]->coordinates[3] * swapChainExtent.height,
         }, renderPass[i]->camera);

@@ -6,8 +6,6 @@
 #include "pipelineFunctions.h"
 #include "graphicsSetup.h"
 
-#include "pushConstantsBuffer.h"
-
 struct graphicsPipeline *createObjGraphicsPipeline(struct graphicsPipelineBuilder builder, struct GraphicsSetup *graphics) {
     struct graphicsPipeline *graphicsPipe = calloc(1, sizeof(struct graphicsPipeline)); 
 

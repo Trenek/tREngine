@@ -12,7 +12,7 @@ struct descriptorSetLayout {
     VkDescriptorSetLayout descriptorSetLayout;
 };
 
-struct descriptorSetLayout *createDescriptorSetLayout(VkDescriptorSetLayout layout, VkDevice device);
+struct descriptorSetLayout *createDescriptorSetLayoutObj(VkDescriptorSetLayout layout, VkDevice device);
 void destroyDescriptorSetLayout(void *layoutPtr);
 
 struct descriptor {
@@ -25,7 +25,7 @@ VkDescriptorSetLayout createCameraDescriptorSetLayout(VkDevice device);
 VkDescriptorPool createCameraDescriptorPool(VkDevice device);
 void bindCameraBuffersToDescriptorSets(VkDescriptorSet descriptorSets[], VkDevice device, VkBuffer uniformBuffers[]);
 
-VkDescriptorSetLayout createObjectDescriptorSetLayout(VkDevice device, size_t qBindings, VkDescriptorSetLayoutBinding bindings[qBindings]);
+VkDescriptorSetLayout createDescriptorSetLayout(VkDevice device, size_t qBindings, VkDescriptorSetLayoutBinding bindings[qBindings]);
 VkDescriptorPool createObjectDescriptorPool(VkDevice device, size_t qBuff);
 void bindObjectBuffersToDescriptorSets(VkDescriptorSet descriptorSets[], VkDevice device, size_t qBuff, VkBuffer (*buff[qBuff])[MAX_FRAMES_IN_FLIGHT], size_t range[qBuff]);
 

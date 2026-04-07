@@ -7,10 +7,10 @@ int sgn(float x) {
     return x > 0 ? 1 : x < 0 ? -1 : 0;
 }
 
-void moveThirdPersonCamera(struct WindowManager *windowControl, union camera *camera, float deltaTime) {
-    double x = camera->tP.relativePos[0] - camera->tP.center[0];
-    double z = camera->tP.relativePos[1] - camera->tP.center[1];
-    double y = camera->tP.relativePos[2] - camera->tP.center[2];
+void moveThirdPersonCamera(struct WindowManager *windowControl, struct ThirdPerson *camera, float deltaTime) {
+    double x = camera->relativePos[0] - camera->center[0];
+    double z = camera->relativePos[1] - camera->center[1];
+    double y = camera->relativePos[2] - camera->center[2];
 
     double r = sqrt(x * x + y * y + z * z);
     double theta = acos(z / r);
@@ -37,7 +37,7 @@ void moveThirdPersonCamera(struct WindowManager *windowControl, union camera *ca
     theta -= mouseSpeed * deltaPos[1];
     phi   -= mouseSpeed * deltaPos[0];
 
-    camera->tP.relativePos[0] = camera->tP.center[0] + r * sin(theta) * cos(phi);
-    camera->tP.relativePos[2] = camera->tP.center[2] + r * sin(theta) * sin(phi);
-    camera->tP.relativePos[1] = camera->tP.center[1] + r * cos(theta);
+    camera->relativePos[0] = camera->center[0] + r * sin(theta) * cos(phi);
+    camera->relativePos[2] = camera->center[2] + r * sin(theta) * sin(phi);
+    camera->relativePos[1] = camera->center[1] + r * cos(theta);
 }

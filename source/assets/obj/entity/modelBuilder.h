@@ -7,6 +7,10 @@
 struct Model;
 struct GraphicsSetup;
 
+struct ObjPushConstants {
+    int textureOffset;
+};
+
 struct ModelBuilder {
     uint32_t instanceCount;
 

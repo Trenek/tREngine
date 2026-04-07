@@ -5,6 +5,7 @@
 
 #include "definitions.h"
 #include "camera.h"
+#include "buffer.h"
 
 struct Entity;
 struct graphicsPipeline;
@@ -21,13 +22,15 @@ struct pipelineConnection {
 struct renderPassBuilder {
     double coordinates[4];
     double color[4];
-    union camera camera;
     struct renderPassCore *renderPass;
-    
-    void (*updateCameraBuffer)(void *buffersMapped, VkExtent2D swapChainExtent, union camera camera);
+
+    struct ThirdPerson camera;
+    void (*updateCameraBuffer)(void *buffersMapped, VkExtent2D swapChainExtent, struct ThirdPerson);
 
     struct pipelineConnection *data;
     size_t qData;
+
+    VkDescriptorSetLayout cameraDescriptorSetLayout;
 };
 
 struct renderPassObj {
@@ -36,17 +39,14 @@ struct renderPassObj {
     double color[4];
     
     struct renderPassCore *renderPass;
-    union camera camera;
-    void (*updateCameraBuffer)(void *buffersMapped, VkExtent2D swapChainExtent, union camera camera);
 
     struct pipelineConnection *data;
     size_t qData;
 
-    VkBuffer cameraBuffer[MAX_FRAMES_IN_FLIGHT];
-    VkDeviceMemory cameraBufferMemory[MAX_FRAMES_IN_FLIGHT];
-    void *cameraBufferMapped[MAX_FRAMES_IN_FLIGHT];
+    struct ThirdPerson camera;
+    void (*updateCameraBuffer)(void *buffersMapped, VkExtent2D swapChainExtent, struct ThirdPerson camera);
 
-    VkDescriptorSetLayout cameraDescriptorSetLayout;
+    struct buffer cameraBuffer;
     VkDescriptorPool cameraDescriptorPool;
     VkDescriptorSet cameraDescriptorSet[MAX_FRAMES_IN_FLIGHT];
 };

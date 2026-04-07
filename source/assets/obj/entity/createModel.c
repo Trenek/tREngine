@@ -5,8 +5,6 @@
 #include "modelBuilder.h"
 #include "actualModel.h"
 
-#include "pushConstantsBuffer.h"
-
 struct toCleanup {
     void *pushConstants;
 };

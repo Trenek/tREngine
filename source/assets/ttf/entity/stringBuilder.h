@@ -5,6 +5,10 @@
 struct Model;
 struct GraphicsSetup;
 
+struct FontPushConstants {
+    int meshID;
+};
+
 struct StringBuilder {
     uint32_t instanceCount;
 

@@ -4,7 +4,7 @@
 
 #include "descriptor.h"
 
-struct descriptorSetLayout *createDescriptorSetLayout(VkDescriptorSetLayout layout, VkDevice device) {
+struct descriptorSetLayout *createDescriptorSetLayoutObj(VkDescriptorSetLayout layout, VkDevice device) {
     struct descriptorSetLayout *result = calloc(1, sizeof(struct descriptorSetLayout));
 
     *result = (struct descriptorSetLayout) {

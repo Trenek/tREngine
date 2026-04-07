@@ -11,8 +11,6 @@
 
 #include "actualModel.h"
 
-#include "pushConstantsBuffer.h"
-
 size_t getGlyphID(char a);
 
 size_t count(const char *buffer) {

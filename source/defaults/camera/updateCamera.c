@@ -4,7 +4,7 @@
 #include "camera.h"
 #include "cameraBufferObject.h"
 
-void updateFirstPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, union camera camera) {
+void updateFirstPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, struct FirstPerson camera) {
     struct CameraBuffer ubo;
 
     ubo.lightColor[0] = 1;
@@ -14,8 +14,8 @@ void updateFirstPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapCh
     ubo.lightDirection[1] = 1;
     ubo.lightDirection[2] = 1;
 
-    memcpy(ubo.cameraPos, camera.fP.pos, sizeof(vec3));
-    glm_look_rh_no(camera.fP.pos, camera.fP.direction, (vec3) { 0.0f, 1.0f, 0.0f }, ubo.view);
+    memcpy(ubo.cameraPos, camera.pos, sizeof(vec3));
+    glm_look_rh_no(camera.pos, camera.direction, (vec3) { 0.0f, 1.0f, 0.0f }, ubo.view);
     glm_perspective(glm_rad(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 10000.0f, ubo.proj);
 
     ubo.proj[1][1] *= -1;
@@ -23,7 +23,7 @@ void updateFirstPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapCh
     memcpy(uniformBuffersMapped, &ubo, sizeof(ubo));
 }
 
-void updateThirdPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, union camera camera) {
+void updateThirdPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, struct ThirdPerson camera) {
     struct CameraBuffer ubo;
 
     ubo.lightColor[0] = 1;
@@ -35,9 +35,9 @@ void updateThirdPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapCh
     ubo.lightDirection[2] = 1;
     ubo.lightDirection[3] = 0;
 
-    glm_vec3_add(camera.tP.center, camera.tP.relativePos, ubo.cameraPos);
+    glm_vec3_add(camera.center, camera.relativePos, ubo.cameraPos);
 
-    glm_lookat_rh_no(camera.tP.relativePos, camera.tP.center, (vec3) { 0.0f, 1.0f, 0.0f }, ubo.view);
+    glm_lookat_rh_no(camera.relativePos, camera.center, (vec3) { 0.0f, 1.0f, 0.0f }, ubo.view);
     glm_perspective(glm_rad(70.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10000.0f, ubo.proj);
 
     ubo.proj[1][1] *= -1;

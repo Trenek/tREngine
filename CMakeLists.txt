@@ -7,16 +7,6 @@ add_subdirectory(dependencies)
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-add_subdirectory(source)
-
-add_library(tREngine ${ENGINE_FILES})
-target_include_directories(tREngine PUBLIC
-    ${ENGINE_DIRECTORIES}
-    ${INCLUDE_DIRECTORIES}
-)
-target_link_libraries(tREngine PUBLIC ${LINK_LIBRARIES})
-
 set(COMPILE_OPTIONS
     -W
     -g
@@ -35,6 +25,15 @@ set(COMPILE_OPTIONS
     -D_GLIBCXX_DEBUG_PEDANTIC
     -D_UCRT
 )
+
+add_subdirectory(source)
+
+add_library(tREngine ${ENGINE_FILES})
+target_include_directories(tREngine PUBLIC
+    ${ENGINE_DIRECTORIES}
+    ${INCLUDE_DIRECTORIES}
+)
+target_link_libraries(tREngine PUBLIC ${LINK_LIBRARIES})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(COMPILE_OPTIONS 

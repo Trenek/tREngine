@@ -3,7 +3,7 @@
 #include "MY_ASSERT.h"
 #include "definitions.h"
 
-VkDescriptorSetLayout createObjectDescriptorSetLayout(VkDevice device, size_t qBindings, VkDescriptorSetLayoutBinding bindings[qBindings]) {
+VkDescriptorSetLayout createDescriptorSetLayout(VkDevice device, size_t qBindings, VkDescriptorSetLayoutBinding bindings[qBindings]) {
     VkDescriptorSetLayout descriptorSetLayout = NULL;
 
     VkDescriptorSetLayoutCreateInfo layoutInfo = {
