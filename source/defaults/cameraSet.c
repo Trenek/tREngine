@@ -53,27 +53,28 @@ VkDescriptorPool createCameraDescriptorPool(VkDevice device) {
     return descriptorPool;
 }
 
-void bindCameraBuffersToDescriptorSets(VkDescriptorSet descriptorSets[], VkDevice device, VkBuffer uniformBuffers[]) {
+void bindCameraBuffersToDescriptorSets(VkDescriptorSet descriptorSets[], VkDevice device, VkBuffer uniformBuffers) {
+    VkDescriptorBufferInfo bufferInfo[MAX_FRAMES_IN_FLIGHT];
+    VkWriteDescriptorSet descriptorWrites[MAX_FRAMES_IN_FLIGHT];
+
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
-        VkDescriptorBufferInfo bufferInfo = {
-            .buffer = uniformBuffers[i],
-            .offset = 0,
+        bufferInfo[i] = (VkDescriptorBufferInfo) {
+            .buffer = uniformBuffers,
+            .offset = i * sizeof(struct CameraBuffer),
             .range = sizeof(struct CameraBuffer)
         };
 
-        VkWriteDescriptorSet descriptorWrites[] = {
-            [0] = {
-                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                .dstSet = descriptorSets[i],
-                .dstBinding = 0,
-                .dstArrayElement = 0,
-                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                .descriptorCount = 1,
-                .pBufferInfo = &bufferInfo,
-                .pTexelBufferView = NULL
-            }
+        descriptorWrites[i] = (VkWriteDescriptorSet) {
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstSet = descriptorSets[i],
+            .dstBinding = 0,
+            .dstArrayElement = 0,
+            .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .descriptorCount = 1,
+            .pBufferInfo = &bufferInfo[i],
+            .pTexelBufferView = NULL
         };
-
-        vkUpdateDescriptorSets(device, sizeof(descriptorWrites) / sizeof(VkWriteDescriptorSet), descriptorWrites, 0, NULL);
     }
+
+    vkUpdateDescriptorSets(device, sizeof(descriptorWrites) / sizeof(VkWriteDescriptorSet), descriptorWrites, 0, NULL);
 }

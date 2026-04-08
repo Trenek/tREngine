@@ -37,7 +37,7 @@ VkCommandBuffer beginSingleTimeCommands(VkDevice device, VkCommandPool commandPo
     return commandBuffer;
 }
 
-void endSingleTimeCOmmands(VkCommandBuffer commandBuffer, VkDevice device, VkCommandPool commandPool, VkQueue queue) {
+void endSingleTimeCommands(VkCommandBuffer commandBuffer, VkDevice device, VkCommandPool commandPool, VkQueue queue) {
     vkEndCommandBuffer(commandBuffer);
 
     VkSubmitInfo submitInfo = {

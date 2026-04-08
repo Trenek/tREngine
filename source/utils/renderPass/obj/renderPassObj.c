@@ -13,6 +13,7 @@
 #include "graphicsPipelineObj.h"
 
 #include "cameraBufferObject.h"
+#include "bufferOperations.h"
 
 struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, struct GraphicsSetup *graphics) {
     struct renderPassObj *result = calloc(1, sizeof(struct renderPassObj));
@@ -36,7 +37,7 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
     }
     memcpy(result->coordinates, builder.coordinates, sizeof(double[4]));
 
-    createBuffers(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(struct CameraBuffer), result->cameraBuffer.buffers, result->cameraBuffer.buffersMemory, result->cameraBuffer.buffersMapped, graphics->device, graphics->physicalDevice, graphics->surface);
+    createBuffers(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(struct CameraBuffer), &result->cameraBuffer.buffers, &result->cameraBuffer.buffersMemory, result->cameraBuffer.buffersMapped, graphics->device, graphics->physicalDevice, graphics->surface);
 
     createDescriptorSets(result->cameraDescriptorSet, graphics->device, result->cameraDescriptorPool, builder.cameraDescriptorSetLayout);
     bindCameraBuffersToDescriptorSets(result->cameraDescriptorSet, graphics->device, result->cameraBuffer.buffers);
@@ -47,7 +48,7 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
 void destroyRenderPassObj(void *renderPassPtr) {
     struct renderPassObj *renderPass = renderPassPtr;
     vkDestroyDescriptorPool(renderPass->device, renderPass->cameraDescriptorPool, NULL);
-    destroyBuffers(renderPass->device, renderPass->cameraBuffer.buffers, renderPass->cameraBuffer.buffersMemory);
+    destroyBuffer(renderPass->device, renderPass->cameraBuffer.buffers, renderPass->cameraBuffer.buffersMemory);
 
     for (size_t i = 0; i < renderPass->qData; i += 1) {
         free(renderPass->data[i].entity);

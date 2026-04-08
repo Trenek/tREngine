@@ -21,7 +21,7 @@ struct Entity *createModel(struct ModelBuilder builder, struct GraphicsSetup *gr
 
     struct ObjPushConstants *pc = info->pushConstants = malloc(sizeof(struct ObjPushConstants) * builder.modelData->meshQuantity);
 
-    VkBuffer (*buff[])[MAX_FRAMES_IN_FLIGHT] = {
+    VkBuffer (*buff[]) = {
         &builder.modelData->buffers->buffers
     };
 

@@ -4,6 +4,7 @@
 #include "actualModel.h"
 #include "graphicsSetup.h"
 
+#include "bufferOperations.h"
 #include "obj.h"
 
 static size_t countV(fastObjMesh *obj, fastObjGroup grp) {
@@ -172,8 +173,8 @@ void objLoadModel(const char *objectPath, struct ModelInput *model, struct Graph
     createBuffers(
         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
         model->buffers[0].range,
-        model->buffers[0].buffers, 
-        model->buffers[0].buffersMemory, 
+        &model->buffers[0].buffers, 
+        &model->buffers[0].buffersMemory, 
         model->buffers[0].buffersMapped, 
         graphics->device, 
         graphics->physicalDevice, 

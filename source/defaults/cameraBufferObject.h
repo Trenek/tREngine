@@ -10,6 +10,7 @@ struct CameraBuffer {
     vec4 lightDirection;
     vec4 lightColor;
     vec4 cameraPos;
+    vec4 pad0;
 };
 
 #endif

@@ -17,7 +17,7 @@ struct EntityBuilder {
     size_t pushConstantsSize;
     void *pushConstants;
 
-    VkBuffer (**buff)[MAX_FRAMES_IN_FLIGHT];
+    VkBuffer (**buff);
     void *(**mapp)[MAX_FRAMES_IN_FLIGHT];
     bool *isChangable;
     size_t *range;

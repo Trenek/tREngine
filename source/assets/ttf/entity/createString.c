@@ -11,6 +11,8 @@
 
 #include "actualModel.h"
 
+#include "bufferOperations.h"
+
 size_t getGlyphID(char a);
 
 size_t count(const char *buffer) {
@@ -37,7 +39,7 @@ struct toCleanup {
 static void cleanupFont(void *toCleanArg) {
     struct toCleanup *toClean = toCleanArg;
 
-    destroyBuffers(toClean->device, toClean->localMesh.buffers, toClean->localMesh.buffersMemory);
+    destroyBuffer(toClean->device, toClean->localMesh.buffers, toClean->localMesh.buffersMemory);
 
     free(toClean->mesh);
     free(toClean->pushConstants);
@@ -55,7 +57,7 @@ struct Entity *createString(struct StringBuilder builder, struct GraphicsSetup *
 
     struct FontPushConstants *pc = info->pushConstants;
 
-    createBuffers(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, meshQuantity * sizeof(mat4), info->localMesh.buffers, info->localMesh.buffersMemory, info->localMesh.buffersMapped, graphics->device, graphics->physicalDevice, graphics->surface);
+    createBuffers(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, meshQuantity * sizeof(mat4), &info->localMesh.buffers, &info->localMesh.buffersMemory, info->localMesh.buffersMapped, graphics->device, graphics->physicalDevice, graphics->surface);
 
     mat4 **thisBuffer = (void *)info->localMesh.buffersMapped;
     mat4 **transform = (void *)builder.modelData->buffers->buffersMapped;
@@ -103,7 +105,7 @@ struct Entity *createString(struct StringBuilder builder, struct GraphicsSetup *
         }
     }
 
-    VkBuffer (*buff[])[MAX_FRAMES_IN_FLIGHT] = {
+    VkBuffer (*buff[]) = {
         &info->localMesh.buffers
     };
 

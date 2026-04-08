@@ -646,8 +646,8 @@ void ttfLoadModel(const char *objectPath, struct ModelInput *model, struct Graph
     createBuffers(
         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
         model->meshQuantity * sizeof(mat4) + sizeof(mat4),
-        model->buffers->buffers, 
-        model->buffers->buffersMemory, 
+        &model->buffers->buffers, 
+        &model->buffers->buffersMemory, 
         model->buffers->buffersMapped, 
         graphics->device, 
         graphics->physicalDevice, 

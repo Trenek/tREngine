@@ -55,7 +55,7 @@ void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkDev
 
     vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-    endSingleTimeCOmmands(commandBuffer, device, commandPool, queue);
+    endSingleTimeCommands(commandBuffer, device, commandPool, queue);
 }
 
 void destroyBuffer(VkDevice device, VkBuffer buffer, VkDeviceMemory bufferMemory) {

@@ -5,6 +5,7 @@
 
 #include "entity.h"
 #include "entityBuilder.h"
+#include "bufferOperations.h"
 
 struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *graphics) {
     struct Entity *result = calloc(1, sizeof(struct Entity));
@@ -39,9 +40,9 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
         result->buffer[i + 1] = builder.isChangable[i] ? calloc(1, builder.range[i]) : NULL;
     }
 
-    VkBuffer (*buff2[builder.qBuff + 1])[MAX_FRAMES_IN_FLIGHT];
+    VkBuffer (*buff2[builder.qBuff + 1]);
 
-    createBuffers(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, builder.instanceCount * builder.instanceBufferSize, result->uniformModel.buffers, result->uniformModel.buffersMemory, result->uniformModel.buffersMapped, graphics->device, graphics->physicalDevice, graphics->surface);
+    createBuffers(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, builder.instanceCount * builder.instanceBufferSize, &result->uniformModel.buffers, &result->uniformModel.buffersMemory, result->uniformModel.buffersMapped, graphics->device, graphics->physicalDevice, graphics->surface);
 
     result->mapp[0] = &result->uniformModel.buffersMapped;
     buff2[0] = &result->uniformModel.buffers;
@@ -75,7 +76,7 @@ void destroyEntity(void *modelPtr) {
     free(model->range);
     free(model->mapp);
 
-    destroyBuffers(model->device, model->uniformModel.buffers, model->uniformModel.buffersMemory);
+    destroyBuffer(model->device, model->uniformModel.buffers, model->uniformModel.buffersMemory);
 
     vkDestroyDescriptorPool(model->device, model->object.descriptorPool, NULL);
 

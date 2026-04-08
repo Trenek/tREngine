@@ -52,7 +52,7 @@ void destroyActualModel(void *modelPtr) {
     }
 
     if (NULL != model->buffers) {
-        destroyBuffers(model->device, model->buffers->buffers, model->buffers->buffersMemory);
+        destroyBuffer(model->device, model->buffers->buffers, model->buffers->buffersMemory);
 
         free(model->buffers);
     }
