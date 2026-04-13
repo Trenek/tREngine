@@ -153,13 +153,31 @@ static void loadMaterials(fastObjMesh *obj, struct Materials *materials[MAX_FRAM
     }
 }
 
+static void cleanupObjModelInfo(void *objInfoPtr) {
+    struct ObjModelInfo *objInfo = objInfoPtr;
+
+    if (NULL != objInfo->buffers) {
+        destroyBuffer(objInfo->device, objInfo->buffers->buffers, objInfo->buffers->buffersMemory);
+    }
+
+    free(objInfo->buffers);
+    free(objInfo->pushConstants);
+
+    free(objInfo);
+} 
+
 void objLoadModel(const char *objectPath, struct ModelInput *model, struct GraphicsSetup *graphics) {
     fastObjMesh *obj = fast_obj_read(objectPath);
 
+    struct ObjModelInfo *info = model->info = malloc(sizeof(struct ObjModelInfo));
+
+    model->cleanup = cleanupObjModelInfo;
     model->meshQuantity = obj->group_count;
     model->mesh = malloc(sizeof(struct Mesh) * model->meshQuantity);
-    model->buffers = malloc(sizeof(struct buffer));
-    model->buffers[0].range =
+
+    info->device = graphics->device;
+    info->buffers = malloc(sizeof(struct buffer));
+    info->buffers[0].range =
         sizeof(struct Materials) *
         (obj->material_count == 0 ? 1 : obj->material_count);
     model->qTextures = obj->texture_count;
@@ -172,16 +190,16 @@ void objLoadModel(const char *objectPath, struct ModelInput *model, struct Graph
 
     createBuffers(
         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-        model->buffers[0].range,
-        &model->buffers[0].buffers, 
-        &model->buffers[0].buffersMemory, 
-        model->buffers[0].buffersMapped, 
+        info->buffers[0].range,
+        &info->buffers[0].buffers, 
+        &info->buffers[0].buffersMemory, 
+        info->buffers[0].buffersMapped, 
         graphics->device, 
         graphics->physicalDevice, 
         graphics->surface
     );
 
-    loadMaterials(obj, (void *)model->buffers[0].buffersMapped);
+    loadMaterials(obj, (void *)info->buffers[0].buffersMapped);
     
     fast_obj_destroy(obj);
 }

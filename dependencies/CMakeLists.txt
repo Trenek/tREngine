@@ -5,9 +5,14 @@ add_subdirectory(cglm EXCLUDE_FROM_ALL)
 add_subdirectory(freetype EXCLUDE_FROM_ALL)
 add_subdirectory(fast_obj EXCLUDE_FROM_ALL)
 
+add_library(cgltf "${CMAKE_CURRENT_SOURCE_DIR}/cgltf.c")
+target_include_directories(cgltf PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/cgltf")
+
+add_library(stb "${CMAKE_CURRENT_SOURCE_DIR}/stb_image.c")
+target_include_directories(stb PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/stb")
+
 set(INCLUDE_DIRECTORIES
     "${Vulkan_INCLUDE_DIRS}"
-    "${CMAKE_CURRENT_SOURCE_DIR}/stb"
 )
 
 set(LINK_LIBRARIES
@@ -16,6 +21,8 @@ set(LINK_LIBRARIES
     cglm
     freetype
     fast_obj_lib
+    cgltf
+    stb
 )
 
 if (WIN32)

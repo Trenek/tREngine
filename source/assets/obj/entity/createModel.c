@@ -5,6 +5,8 @@
 #include "modelBuilder.h"
 #include "actualModel.h"
 
+#include "obj.h"
+
 struct toCleanup {
     void *pushConstants;
 };
@@ -16,17 +18,19 @@ static void cleanupPushConstants(void *toCleanArg) {
     free(toClean);
 }
 
-struct Entity *createModel(struct ModelBuilder builder, struct GraphicsSetup *graphics) {
+struct Entity *createModel(struct ObjBuilder builder, struct GraphicsSetup *graphics) {
     struct toCleanup *info = malloc(sizeof(struct toCleanup));
 
     struct ObjPushConstants *pc = info->pushConstants = malloc(sizeof(struct ObjPushConstants) * builder.modelData->meshQuantity);
 
+    struct ObjModelInfo *modelInfo = builder.modelData->info;
+
     VkBuffer (*buff[]) = {
-        &builder.modelData->buffers->buffers
+        &modelInfo->buffers->buffers
     };
 
     void *(*mapp[])[MAX_FRAMES_IN_FLIGHT] = {
-        &builder.modelData->buffers->buffersMapped
+        &modelInfo->buffers->buffersMapped
     };
 
     bool isChangable[] = {
@@ -34,7 +38,7 @@ struct Entity *createModel(struct ModelBuilder builder, struct GraphicsSetup *gr
     };
 
     size_t range[] = {
-        builder.modelData->buffers->range
+        modelInfo->buffers->range
     };
 
     size_t qBuff = 1;

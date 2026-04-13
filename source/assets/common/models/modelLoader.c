@@ -1,4 +1,7 @@
 #include <string.h>
+#include <stdlib.h>
+
+#include "buffer.h"
 
 #include "entityBuilder.h"
 #include "graphicsSetup.h"
@@ -17,13 +20,18 @@ struct Model *loadModel(const char *filePath, struct GraphicsSetup *graphics) {
     void (*fun)(const char *, struct ModelInput *, struct GraphicsSetup *) =
         NULL != strstr(filePath, ".ttf") ? ttfLoadModel :
         NULL != strstr(filePath, ".obj") ? objLoadModel :
+        NULL != strstr(filePath, ".glb") ? gltfLoadModel :
+        NULL != strstr(filePath, ".gltf") ? gltfLoadModel :
         NULL;
     assert(NULL != fun);
 
     fun(filePath, &input, graphics);
 
     result->device = graphics->device;
-    result->buffers = input.buffers;
+    result->cleanup = input.cleanup;
+    result->info = input.info;
+    result->qTextures = input.qTextures;
+    result->inputTextures = input.inputTextures;
     result->meshQuantity = input.meshQuantity;
     result->mesh = malloc(sizeof(struct Mesh) * result->meshQuantity);
 
@@ -31,8 +39,6 @@ struct Model *loadModel(const char *filePath, struct GraphicsSetup *graphics) {
         result->mesh[i].indicesQuantity = input.mesh[i].indicesQuantity;
         result->mesh[i].vertexBuffer = createVertexBuffer(&result->mesh[i].vertexBufferMemory, graphics->device, graphics->physicalDevice, graphics->surface, graphics->commandPool, graphics->transferQueue, input.mesh[i].verticesQuantity, input.mesh[i].vertices, input.mesh[i].sizeOfVertex);
         result->mesh[i].indexBuffer = createIndexBuffer(&result->mesh[i].indexBufferMemory, graphics->device, graphics->physicalDevice, graphics->surface, graphics->commandPool, graphics->transferQueue, input.mesh[i].verticesQuantity, input.mesh[i].indicesQuantity, input.mesh[i].indices, input.mesh[i].sizeOfVertex);
-        result->qTextures = input.qTextures;
-        result->inputTextures = input.inputTextures;
 
         free(input.mesh[i].vertices);
         free(input.mesh[i].indices);
@@ -51,14 +57,12 @@ void destroyActualModel(void *modelPtr) {
         destroyBuffer(model->device, model->mesh[i].vertexBuffer, model->mesh[i].vertexBufferMemory);
     }
 
-    if (NULL != model->buffers) {
-        destroyBuffer(model->device, model->buffers->buffers, model->buffers->buffersMemory);
-
-        free(model->buffers);
-    }
-    
     for (size_t i = 0; i < model->qTextures; i += 1) {
         free(model->inputTextures[i]);
     }
     free(model->inputTextures);
+
+    model->cleanup(model->info);
+    free(model->mesh);
+    free(model);
 }

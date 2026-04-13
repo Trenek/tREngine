@@ -12,6 +12,7 @@
 #include "actualModel.h"
 
 #include "bufferOperations.h"
+#include "ttf.h"
 
 size_t getGlyphID(char a);
 
@@ -50,6 +51,7 @@ static void cleanupFont(void *toCleanArg) {
 struct Entity *createString(struct StringBuilder builder, struct GraphicsSetup *graphics) {
     uint32_t meshQuantity = count(builder.string);
 
+    struct FontModelInfo *modelInfo = builder.modelData->info;
     struct toCleanup *info = malloc(sizeof(struct toCleanup));
     info->device = graphics->device;
     info->mesh = malloc(sizeof(struct Mesh) * meshQuantity);
@@ -60,7 +62,7 @@ struct Entity *createString(struct StringBuilder builder, struct GraphicsSetup *
     createBuffers(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, meshQuantity * sizeof(mat4), &info->localMesh.buffers, &info->localMesh.buffersMemory, info->localMesh.buffersMapped, graphics->device, graphics->physicalDevice, graphics->surface);
 
     mat4 **thisBuffer = (void *)info->localMesh.buffersMapped;
-    mat4 **transform = (void *)builder.modelData->buffers->buffersMapped;
+    mat4 **transform = (void *)modelInfo->buffers->buffersMapped;
 
     uint32_t i = 0;
     const char *buffer = builder.string;

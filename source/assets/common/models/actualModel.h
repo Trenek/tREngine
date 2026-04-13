@@ -1,6 +1,4 @@
-#include <cglm/cglm.h>
-
-#include "buffer.h"
+#include <vulkan/vulkan_core.h>
 
 struct GraphicsSetup;
 
@@ -15,13 +13,14 @@ struct MeshInput {
 };
 
 struct ModelInput {
-    struct buffer *buffers;
+    uint32_t meshQuantity;
+    struct MeshInput *mesh;
 
     size_t qTextures;
     char **inputTextures;
 
-    uint32_t meshQuantity;
-    struct MeshInput *mesh;
+    void *info;
+    void (*cleanup)(void *);
 };
 
 struct Mesh {
@@ -37,13 +36,14 @@ struct Mesh {
 struct Model {
     VkDevice device;
 
-    struct buffer *buffers;
+    uint32_t meshQuantity;
+    struct Mesh *mesh;
 
     size_t qTextures;
     char **inputTextures;
 
-    uint32_t meshQuantity;
-    struct Mesh *mesh;
+    void *info;
+    void (*cleanup)(void *);
 };
 
 struct Model *loadModel(const char *filePath, struct GraphicsSetup *graphics);

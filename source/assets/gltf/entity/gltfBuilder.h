@@ -7,11 +7,7 @@
 struct Model;
 struct GraphicsSetup;
 
-struct ObjPushConstants {
-    int textureOffset;
-};
-
-struct ObjBuilder {
+struct GltfBuilder {
     uint32_t instanceCount;
 
     size_t instanceSize;
@@ -24,6 +20,6 @@ struct ObjBuilder {
     size_t textureOffset;
 };
 
-struct Entity *createModel(struct ObjBuilder builder, struct GraphicsSetup *graphics);
+struct Entity *createGltf(struct GltfBuilder builder, struct GraphicsSetup *graphics);
 
 #endif

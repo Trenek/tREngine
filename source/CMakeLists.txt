@@ -1,5 +1,8 @@
 set(ENGINE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/gltf"
+            "${CMAKE_CURRENT_SOURCE_DIR}/assets/gltf/entity"
+            "${CMAKE_CURRENT_SOURCE_DIR}/assets/gltf/animate"
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/obj"
             "${CMAKE_CURRENT_SOURCE_DIR}/assets/obj/entity"
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/ttf"

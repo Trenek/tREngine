@@ -1,4 +1,3 @@
-#define TINYOBJ_LOADER_C_IMPLEMENTATION
 #include <freetype/freetype.h>
 #include <stdint.h>
 #include <assert.h>
@@ -8,6 +7,8 @@
 #include "isClockWise.h"
 #include "actualModel.h"
 #include "myMalloc.h"
+
+#include "bufferOperations.h"
 
 #include "ttf.h"
 
@@ -612,9 +613,8 @@ size_t getGlyphID(char a) {
         buffer[i] == 0 ? i - 1 : i;
 }
 
-void LoadCharacter(struct ModelInput *model, FT_Face face) {
+void LoadCharacter(struct ModelInput *model, mat4 **glyphOffset, FT_Face face) {
     float space = 0;
-    mat4 **glyphOffset = (mat4 **)model->buffers->buffersMapped;
 
     for (size_t i = 0; i < model->meshQuantity; i += 1) {
         loadCharacter(face, &model->mesh[i], buffer[i], &space);
@@ -635,20 +635,39 @@ void LoadCharacter(struct ModelInput *model, FT_Face face) {
     }
 }
 
+static void cleanupObjModelInfo(void *objInfoPtr) {
+    struct FontModelInfo *objInfo = objInfoPtr;
+
+    if (NULL != objInfo->buffers) {
+        destroyBuffer(objInfo->device, objInfo->buffers->buffers, objInfo->buffers->buffersMemory);
+    }
+
+    free(objInfo->buffers);
+    free(objInfo->pushConstants);
+
+    free(objInfo);
+} 
+
 void ttfLoadModel(const char *objectPath, struct ModelInput *model, struct GraphicsSetup *graphics) {
     FT_Library library = nullptr;
     FT_Face face = nullptr;
+    struct FontModelInfo *info = model->info = malloc(sizeof(struct FontModelInfo));
 
+    model->cleanup = cleanupObjModelInfo;
     model->meshQuantity = strlen(buffer);
     model->mesh = malloc(sizeof(struct Mesh) * model->meshQuantity);
-    model->buffers = malloc(sizeof(struct buffer));
+    model->qTextures = 1;
+    model->inputTextures = calloc(1, sizeof(char *));
+
+    info->device = graphics->device;
+    info->buffers = malloc(sizeof(struct buffer));
 
     createBuffers(
         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
         model->meshQuantity * sizeof(mat4) + sizeof(mat4),
-        &model->buffers->buffers, 
-        &model->buffers->buffersMemory, 
-        model->buffers->buffersMapped, 
+        &info->buffers->buffers, 
+        &info->buffers->buffersMemory, 
+        info->buffers->buffersMapped, 
         graphics->device, 
         graphics->physicalDevice, 
         graphics->surface
@@ -656,7 +675,7 @@ void ttfLoadModel(const char *objectPath, struct ModelInput *model, struct Graph
 
     IF (0 == FT_Init_FreeType(&library), "No Library")
     IF (0 == FT_New_Face(library, objectPath, 0, &face), "No Face") {
-        LoadCharacter(model, face);
+        LoadCharacter(model, (void *)info->buffers->buffersMapped, face);
     }
 
     FT_Done_Face(face);

@@ -1,6 +1,15 @@
 #include "Vertex.h"
+#include "buffer.h"
 
 #define FNT(x) ((struct FontVertex *)(x))
+
+struct FontModelInfo {
+    VkDevice device;
+
+    struct buffer *buffers;
+
+    void *pushConstants;
+};
 
 struct FontVertex {
     vec2 pos;
