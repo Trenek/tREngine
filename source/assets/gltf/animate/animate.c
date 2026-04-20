@@ -92,28 +92,39 @@ static void interpolateData(struct Frames *frames, float deltaTime, float *data)
     }
 }
 
-static void calculateJointData(struct Frames data[ANIM_PATH_TYPE_MAX_ENUM], mat4 out, float deltaTime) {
-    glm_mat4_identity(out);
+static void calculateJointData(struct Frames data[ANIM_PATH_TYPE_MAX_ENUM], struct AnimationData *out, float deltaTime) {
+    glm_mat4_identity(out->animation);
 
     if (data[cgltf_animation_path_type_translation].qFrames) {
         vec4 interpolatedData; {
             interpolateData(&data[cgltf_animation_path_type_translation], deltaTime, interpolatedData);
         }
-        glm_translate(out, interpolatedData);
+        glm_translate(out->animation, interpolatedData);
     }
 
     if (data[cgltf_animation_path_type_rotation].qFrames) {
         vec4 interpolatedData; {
             interpolateData(&data[cgltf_animation_path_type_rotation], deltaTime, interpolatedData);
         }
-        glm_quat_rotate(out, interpolatedData, out);
+        glm_quat_rotate(out->animation, interpolatedData, out->animation);
     }
 
     if (data[cgltf_animation_path_type_scale].qFrames) {
         vec4 interpolatedData; {
             interpolateData(&data[cgltf_animation_path_type_scale], deltaTime, interpolatedData);
         }
-        glm_scale(out, interpolatedData);
+        glm_scale(out->animation, interpolatedData);
+    }
+
+    if (data[cgltf_animation_path_type_weights].qFrames) {
+        vec4 interpolatedData = { 0, 0, 0, 0 }; {
+            interpolateData(&data[cgltf_animation_path_type_weights], deltaTime, interpolatedData);
+        }
+
+        out->weight1 = interpolatedData[0];
+        out->weight2 = interpolatedData[1];
+        out->weight3 = interpolatedData[2];
+        out->weight4 = interpolatedData[3];
     }
 }
 
@@ -121,12 +132,12 @@ void animate(struct Entity *model, struct Model *actualModel, size_t animID, flo
     struct GltfModelInfo *info = actualModel->info;
 
     struct Frames (*animFrames)[info->qNodes][ANIM_PATH_TYPE_MAX_ENUM] = (void *)info->frames;
-    mat4 *mat = model->buffer[2];
+    struct AnimationData *data = model->buffer[2];
 
     if (animID < info->qAnim) for (size_t i = 0; i < info->qNodes; i += 1) {
-        calculateJointData(animFrames[animID][i], mat[i], deltaTime);
+        calculateJointData(animFrames[animID][i], &data[i], deltaTime);
     }
     else for (size_t i = 0; i < info->qNodes; i += 1) {
-        glm_mat4_identity(mat[i]);
+        glm_mat4_identity(data[i].animation);
     }
 }

@@ -15,6 +15,14 @@ struct Frames {
     float *values;
 };
 
+struct AnimationData {
+    mat4 animation;
+    float weight1;
+    float weight2;
+    float weight3;
+    float weight4;
+};
+
 struct Entity;
 struct Model;
 void animate(struct Entity *, struct Model *, size_t, float);
@@ -41,6 +49,11 @@ struct GltfVertex {
     vec3 norm;
     vec2 tex;
     vec3 color;
+
+    vec3 morphPos1;
+    vec3 morphPos2;
+    vec3 morphPos3;
+    vec3 morphPos4;
 };
 
 [[maybe_unused]]
@@ -68,5 +81,29 @@ static VkVertexInputAttributeDescription GltfVertexAttributeDescriptions[] = {
         .location = 3,
         .format = VK_FORMAT_R32G32B32_SFLOAT,
         .offset = offsetof(struct GltfVertex, color)
+    },
+    [4] = {
+        .binding = 0,
+        .location = 4,
+        .format = VK_FORMAT_R32G32B32_SFLOAT,
+        .offset = offsetof(struct GltfVertex, morphPos1)
+    },
+    [5] = {
+        .binding = 0,
+        .location = 5,
+        .format = VK_FORMAT_R32G32B32_SFLOAT,
+        .offset = offsetof(struct GltfVertex, morphPos2)
+    },
+    [6] = {
+        .binding = 0,
+        .location = 6,
+        .format = VK_FORMAT_R32G32B32_SFLOAT,
+        .offset = offsetof(struct GltfVertex, morphPos3)
+    },
+    [7] = {
+        .binding = 0,
+        .location = 7,
+        .format = VK_FORMAT_R32G32B32_SFLOAT,
+        .offset = offsetof(struct GltfVertex, morphPos4)
     },
 };

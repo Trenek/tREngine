@@ -166,6 +166,10 @@ static void cleanupObjModelInfo(void *objInfoPtr) {
     free(objInfo);
 } 
 
+static size_t max(size_t a, size_t b) {
+    return a > b ? a : b;
+}
+
 void objLoadModel(const char *objectPath, struct ModelInput *model, struct GraphicsSetup *graphics) {
     fastObjMesh *obj = fast_obj_read(objectPath);
 
@@ -177,9 +181,7 @@ void objLoadModel(const char *objectPath, struct ModelInput *model, struct Graph
 
     info->device = graphics->device;
     info->buffers = malloc(sizeof(struct buffer));
-    info->buffers[0].range =
-        sizeof(struct Materials) *
-        (obj->material_count == 0 ? 1 : obj->material_count);
+    info->buffers[0].range = sizeof(struct Materials) * max(1, obj->material_count);
     model->qTextures = obj->texture_count;
     model->inputTextures = malloc(sizeof(const char *) * obj->texture_count);
 

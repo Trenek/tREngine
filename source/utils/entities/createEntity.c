@@ -42,7 +42,16 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
 
     VkBuffer (*buff2[builder.qBuff + 1]);
 
-    createBuffers(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, builder.instanceCount * builder.instanceBufferSize, &result->uniformModel.buffers, &result->uniformModel.buffersMemory, result->uniformModel.buffersMapped, graphics->device, graphics->physicalDevice, graphics->surface);
+    createBuffers(
+        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 
+        builder.instanceCount * builder.instanceBufferSize, 
+        &result->uniformModel.buffers, 
+        &result->uniformModel.buffersMemory, 
+        result->uniformModel.buffersMapped, 
+        graphics->device, 
+        graphics->physicalDevice, 
+        graphics->surface
+    );
 
     result->mapp[0] = &result->uniformModel.buffersMapped;
     buff2[0] = &result->uniformModel.buffers;

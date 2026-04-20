@@ -27,6 +27,28 @@ static void readAccessorOr(cgltf_accessor *accessor, int id, float *vec, size_t 
     }
 }
 
+static void loadMorphTargets(struct GltfVertex *vertex, size_t id, cgltf_primitive *primitive) {
+    assert(primitive->targets_count <= 4);
+    vec3 *morphPos[4] = {
+        &vertex[id].morphPos1,
+        &vertex[id].morphPos2,
+        &vertex[id].morphPos3,
+        &vertex[id].morphPos4,
+    };
+
+    for (cgltf_size i = 0; i < 4; i += 1) {
+        for (size_t j = 0; j < 3; j += 1) {
+            (*morphPos[i])[j] = 0;
+        }
+    }
+    for (cgltf_size i = 0; i < primitive->targets_count; i += 1) {
+        assert(primitive->targets[i].attributes_count == 1);
+        assert(primitive->targets[i].attributes->type == cgltf_attribute_type_position);
+
+        readAccessorOr(primitive->targets[i].attributes->data, id, *morphPos[i], 3, 0);
+    }
+}
+
 static void loadPrimitive(struct MeshInput *mesh, cgltf_primitive *primitive) {
     mesh->sizeOfVertex = sizeof(struct GltfVertex);
 
@@ -42,6 +64,8 @@ static void loadPrimitive(struct MeshInput *mesh, cgltf_primitive *primitive) {
 
     mesh->verticesQuantity = vertexAccessor->count;
     mesh->vertices = malloc(sizeof(struct GltfVertex) * mesh->verticesQuantity);
+    mesh->indicesQuantity = indexAccessor == NULL ? mesh->verticesQuantity : indexAccessor->count;
+    mesh->indices = malloc(sizeof(uint32_t) * mesh->indicesQuantity);
 
     for (cgltf_size i = 0; i < vertexAccessor->count; i += 1) {
         cgltf_accessor_read_float(vertexAccessor, i, GLTF(mesh->vertices)[i].pos, 3);
@@ -49,21 +73,12 @@ static void loadPrimitive(struct MeshInput *mesh, cgltf_primitive *primitive) {
         readAccessorOr(textureAccessor, i, GLTF(mesh->vertices)[i].tex, 2, 0);
         readAccessorOr(colorAccessor, i, GLTF(mesh->vertices)[i].color, 3, 1);
         readAccessorOr(normalAccessor, i, GLTF(mesh->vertices)[i].norm, 3, 1);
+
+        loadMorphTargets(GLTF(mesh->vertices), i, primitive);
     }
 
-    if (indexAccessor) {
-        mesh->indicesQuantity = indexAccessor->count;
-        mesh->indices = malloc(sizeof(uint32_t) * mesh->indicesQuantity);
-        for (cgltf_size i = 0; i < indexAccessor->count; i += 1) {
-            mesh->indices[i] = cgltf_accessor_read_index(indexAccessor, i);
-        }
-    }
-    else {
-        mesh->indicesQuantity = mesh->verticesQuantity;
-        mesh->indices = malloc(sizeof(uint32_t) * mesh->indicesQuantity);
-        for (cgltf_size i = 0; i < mesh->indicesQuantity; i += 1) {
-            mesh->indices[i] = i;
-        }
+    for (cgltf_size i = 0; i < mesh->indicesQuantity; i += 1) {
+        mesh->indices[i] = indexAccessor == NULL ? i : cgltf_accessor_read_index(indexAccessor, i);
     }
 }
 
@@ -105,7 +120,7 @@ static struct Frames loadChannel(cgltf_animation_channel *channel) {
 
     struct Frames result = {
         .qFrames = input->count,
-        .qComponents = cgltf_num_components(output->type),
+        .qComponents = cgltf_num_components(output->type) * (output->count / input->count),
         .interpolationType = (
             channel->target_path == cgltf_animation_path_type_rotation &&
             sampler->interpolation == cgltf_interpolation_type_linear)
@@ -117,10 +132,17 @@ static struct Frames loadChannel(cgltf_animation_channel *channel) {
         result.values = malloc(result.qFrames * (result.qComponents + 1) * sizeof(float))
     );
 
-    assert(input->count == output->count);
-    for (cgltf_size k = 0; k < input->count; k += 1) {
-        cgltf_accessor_read_float(input, k, val[k], 1);
-        cgltf_accessor_read_float(output, k, val[k] + 1, result.qComponents);
+    float times[input->count];
+    float weights[result.qComponents * input->count];
+
+    cgltf_accessor_unpack_floats(input, times, input->count);
+    cgltf_accessor_unpack_floats(output, weights, result.qComponents * input->count);
+
+    for (cgltf_size k = 0; k < result.qFrames; k += 1) {
+        val[k][0] = times[k];
+        for (size_t i = 0; i < result.qComponents; i += 1) {
+            val[k][i + 1] = weights[result.qComponents * k + i];
+        }
     }
 
     return result;
@@ -232,7 +254,7 @@ void gltfLoadModel(const char *modelPath, struct ModelInput *model, struct Graph
         info->qBuffer = 3;
         info->buffers = malloc(info->qBuffer * sizeof(struct buffer));
         info->buffers[0].range = data->nodes_count * sizeof(mat4);
-        info->buffers[1].range = data->nodes_count * sizeof(mat4);
+        info->buffers[1].range = data->nodes_count * sizeof(struct AnimationData);
         info->buffers[2].range = max(data->materials_count, 1) * sizeof(struct Materials);
         model->qTextures = max(data->textures_count, 1);
         model->inputTextures = calloc(model->qTextures, sizeof(char *));
@@ -284,7 +306,7 @@ void gltfLoadModel(const char *modelPath, struct ModelInput *model, struct Graph
 
             for (size_t j = 0; j < MAX_FRAMES_IN_FLIGHT; j += 1) {
                 loadTransformations(((mat4**)info->buffers[0].buffersMapped)[j][i], &data->nodes[i]);
-                glm_mat4_identity(((mat4**)info->buffers[1].buffersMapped)[j][i]);
+                glm_mat4_identity(((struct AnimationData**)info->buffers[1].buffersMapped)[j][i].animation);
             }
         }
 
