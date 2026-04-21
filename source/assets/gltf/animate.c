@@ -179,6 +179,8 @@ void animate(struct Entity *model, struct Model *actualModel, size_t animID, flo
             deltaTime
         );
 
+        data[i].jointToNodeID = 0;
+
         if (info->qSkin) {
             glm_mat4_identity(ancestors);
             loadAccessorsTransformations(skins, deltaTime, animFrames[animID], info->nodes, i, ancestors);
@@ -191,9 +193,11 @@ void animate(struct Entity *model, struct Model *actualModel, size_t animID, flo
                     data[i].animation
                 );
             }
-        }
 
-        data[i].jointToNodeID = info->qSkin == 0 ? 0 : skins->joint[i].nodeID;
+            if (i < skins->qJoint) {
+                data[i].jointToNodeID = skins->joint[i].nodeID;
+            }
+        }
     }
     else for (size_t i = 0; i < info->qNodes; i += 1) {
         glm_mat4_identity(data[i].animation);
