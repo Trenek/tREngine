@@ -3,7 +3,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include "ttf.h"
+#include "font.h"
 
 #include "isClockWise.h"
 

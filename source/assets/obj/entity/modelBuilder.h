@@ -24,6 +24,6 @@ struct ObjBuilder {
     size_t textureOffset;
 };
 
-struct Entity *createModel(struct ObjBuilder builder, struct GraphicsSetup *graphics);
+struct Entity *createObj(struct ObjBuilder builder, struct GraphicsSetup *graphics);
 
 #endif

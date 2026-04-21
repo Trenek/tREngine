@@ -9,7 +9,7 @@ struct FontPushConstants {
     int meshID;
 };
 
-struct StringBuilder {
+struct FontBuilder {
     uint32_t instanceCount;
 
     size_t instanceSize;
@@ -23,6 +23,6 @@ struct StringBuilder {
     int center;
 };
 
-struct Entity *createString(struct StringBuilder builder, struct GraphicsSetup *graphics);
+struct Entity *createFont(struct FontBuilder builder, struct GraphicsSetup *graphics);
 
 #endif

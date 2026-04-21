@@ -1,5 +1,5 @@
-#ifndef GLTF_BUILDER
-#define GLTF_BUILDER
+#ifndef OBJ_BUILDER
+#define OBJ_BUILDER
 #include <vulkan/vulkan.h>
 
 #include "definitions.h"
@@ -7,7 +7,11 @@
 struct Model;
 struct GraphicsSetup;
 
-struct GltfBuilder {
+struct ObjPushConstants {
+    int textureOffset;
+};
+
+struct ObjBuilder {
     uint32_t instanceCount;
 
     size_t instanceSize;
@@ -20,6 +24,6 @@ struct GltfBuilder {
     size_t textureOffset;
 };
 
-struct Entity *createGltf(struct GltfBuilder builder, struct GraphicsSetup *graphics);
+struct Entity *createObj(struct ObjBuilder builder, struct GraphicsSetup *graphics);
 
 #endif

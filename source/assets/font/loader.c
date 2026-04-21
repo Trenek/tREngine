@@ -11,7 +11,7 @@
 
 #include "bufferOperations.h"
 
-#include "ttf.h"
+#include "font.h"
 
 #define IF(x, y) if (!(x)) printf("%s", y); else
 

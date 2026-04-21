@@ -5,14 +5,14 @@
 
 #include "graphicsSetup.h"
 
-#include "stringBuilder.h"
+#include "fontBuilder.h"
 #include "entity.h"
 #include "entityBuilder.h"
 
 #include "actualModel.h"
 
 #include "bufferOperations.h"
-#include "ttf.h"
+#include "font.h"
 
 size_t getGlyphID(char a);
 
@@ -48,7 +48,7 @@ static void cleanupFont(void *toCleanArg) {
     free(toClean);
 }
 
-struct Entity *createString(struct StringBuilder builder, struct GraphicsSetup *graphics) {
+struct Entity *createFont(struct FontBuilder builder, struct GraphicsSetup *graphics) {
     uint32_t meshQuantity = count(builder.string);
 
     struct FontModelInfo *modelInfo = builder.modelData->info;

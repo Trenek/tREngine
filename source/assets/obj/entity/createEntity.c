@@ -18,7 +18,7 @@ static void cleanupPushConstants(void *toCleanArg) {
     free(toClean);
 }
 
-struct Entity *createModel(struct ObjBuilder builder, struct GraphicsSetup *graphics) {
+struct Entity *createObj(struct ObjBuilder builder, struct GraphicsSetup *graphics) {
     struct toCleanup *info = malloc(sizeof(struct toCleanup));
 
     struct ObjPushConstants *pc = info->pushConstants = malloc(sizeof(struct ObjPushConstants) * builder.modelData->meshQuantity);
