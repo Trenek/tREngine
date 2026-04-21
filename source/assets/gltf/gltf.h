@@ -15,12 +15,40 @@ struct Frames {
     float *values;
 };
 
+struct NodeData {
+    mat4 mat;
+
+    vec3 translation;
+    vec3 scale;
+    vec4 rotation;
+};
+
+struct Joint {
+    mat4 inverseMatrix;
+
+    int nodeID;
+    int father;
+};
+
+struct Skin {
+    size_t qNodes;
+    int *jointID;
+
+    size_t qJoint;
+    struct Joint *joint;
+};
+
 struct AnimationData {
     mat4 animation;
     float weight1;
     float weight2;
     float weight3;
     float weight4;
+
+    int jointToNodeID;
+    int pad0;
+    int pad1;
+    int pad2;
 };
 
 struct Entity;
@@ -36,6 +64,10 @@ struct GltfModelInfo {
     size_t qAnim;
     size_t qNodes;
     struct Frames (*frames)[ANIM_PATH_TYPE_MAX_ENUM];
+    struct NodeData *nodes;
+
+    size_t qSkin;
+    struct Skin *skin;
 
     void *pushConstants;
 };
@@ -49,6 +81,8 @@ struct GltfVertex {
     vec3 norm;
     vec2 tex;
     vec3 color;
+    vec4 weight;
+    vec4 joint;
 
     vec3 morphPos1;
     vec3 morphPos2;
@@ -85,24 +119,36 @@ static VkVertexInputAttributeDescription GltfVertexAttributeDescriptions[] = {
     [4] = {
         .binding = 0,
         .location = 4,
-        .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct GltfVertex, morphPos1)
+        .format = VK_FORMAT_R32G32B32A32_SFLOAT,
+        .offset = offsetof(struct GltfVertex, weight)
     },
     [5] = {
         .binding = 0,
         .location = 5,
-        .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct GltfVertex, morphPos2)
+        .format = VK_FORMAT_R32G32B32A32_SFLOAT,
+        .offset = offsetof(struct GltfVertex, joint)
     },
     [6] = {
         .binding = 0,
         .location = 6,
         .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct GltfVertex, morphPos3)
+        .offset = offsetof(struct GltfVertex, morphPos1)
     },
     [7] = {
         .binding = 0,
         .location = 7,
+        .format = VK_FORMAT_R32G32B32_SFLOAT,
+        .offset = offsetof(struct GltfVertex, morphPos2)
+    },
+    [8] = {
+        .binding = 0,
+        .location = 8,
+        .format = VK_FORMAT_R32G32B32_SFLOAT,
+        .offset = offsetof(struct GltfVertex, morphPos3)
+    },
+    [9] = {
+        .binding = 0,
+        .location = 9,
         .format = VK_FORMAT_R32G32B32_SFLOAT,
         .offset = offsetof(struct GltfVertex, morphPos4)
     },

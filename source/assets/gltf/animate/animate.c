@@ -92,7 +92,7 @@ static void interpolateData(struct Frames *frames, float deltaTime, float *data)
     }
 }
 
-static void calculateJointData(struct Frames data[ANIM_PATH_TYPE_MAX_ENUM], struct AnimationData *out, float deltaTime) {
+static void calculateJointData(struct Frames data[ANIM_PATH_TYPE_MAX_ENUM], struct AnimationData *out, vec3 defTra, vec3 defSca, vec4 defRot, float deltaTime) {
     glm_mat4_identity(out->animation);
 
     if (data[cgltf_animation_path_type_translation].qFrames) {
@@ -101,6 +101,9 @@ static void calculateJointData(struct Frames data[ANIM_PATH_TYPE_MAX_ENUM], stru
         }
         glm_translate(out->animation, interpolatedData);
     }
+    else {
+        glm_translate(out->animation, defTra);
+    }
 
     if (data[cgltf_animation_path_type_rotation].qFrames) {
         vec4 interpolatedData; {
@@ -108,12 +111,18 @@ static void calculateJointData(struct Frames data[ANIM_PATH_TYPE_MAX_ENUM], stru
         }
         glm_quat_rotate(out->animation, interpolatedData, out->animation);
     }
+    else {
+        glm_quat_rotate(out->animation, defRot, out->animation);
+    }
 
     if (data[cgltf_animation_path_type_scale].qFrames) {
         vec4 interpolatedData; {
             interpolateData(&data[cgltf_animation_path_type_scale], deltaTime, interpolatedData);
         }
         glm_scale(out->animation, interpolatedData);
+    }
+    else {
+        glm_scale(out->animation, defSca);
     }
 
     if (data[cgltf_animation_path_type_weights].qFrames) {
@@ -128,14 +137,63 @@ static void calculateJointData(struct Frames data[ANIM_PATH_TYPE_MAX_ENUM], stru
     }
 }
 
+void loadAccessorsTransformations(struct Skin *skins, float deltaTime, struct Frames (*frames)[ANIM_PATH_TYPE_MAX_ENUM], struct NodeData *nodes, int nodeID, mat4 out) {
+    struct AnimationData data;
+
+    int jointID = skins->jointID[nodeID];
+    int fatherID = jointID == -1 ? -1 : skins->joint[jointID].father;
+    int fatherNodeID = -1;
+
+    while (fatherID != -1) {
+        fatherNodeID = skins->joint[fatherID].nodeID;
+
+        calculateJointData(frames[fatherNodeID],
+            &data,
+            nodes[fatherNodeID].translation,
+            nodes[fatherNodeID].scale,
+            nodes[fatherNodeID].rotation,
+            deltaTime
+        );
+
+        glm_mat4_mul(data.animation, out, out);
+
+        jointID = skins->jointID[fatherNodeID];
+        fatherID = jointID == -1 ? -1 : skins->joint[jointID].father;
+    }
+}
+
 void animate(struct Entity *model, struct Model *actualModel, size_t animID, float deltaTime) {
     struct GltfModelInfo *info = actualModel->info;
 
     struct Frames (*animFrames)[info->qNodes][ANIM_PATH_TYPE_MAX_ENUM] = (void *)info->frames;
     struct AnimationData *data = model->buffer[2];
+    struct Skin *skins = info->skin;
+
+    mat4 ancestors;
 
     if (animID < info->qAnim) for (size_t i = 0; i < info->qNodes; i += 1) {
-        calculateJointData(animFrames[animID][i], &data[i], deltaTime);
+        calculateJointData(animFrames[animID][i], &data[i],
+            info->nodes[i].translation,
+            info->nodes[i].scale,
+            info->nodes[i].rotation,
+            deltaTime
+        );
+
+        if (info->qSkin) {
+            glm_mat4_identity(ancestors);
+            loadAccessorsTransformations(skins, deltaTime, animFrames[animID], info->nodes, i, ancestors);
+
+            glm_mat4_mul(ancestors, data[i].animation, data[i].animation);
+            if (skins->jointID[i] != -1) {
+                glm_mat4_mul(
+                    data[i].animation, 
+                    skins->joint[skins->jointID[i]].inverseMatrix, 
+                    data[i].animation
+                );
+            }
+        }
+
+        data[i].jointToNodeID = info->qSkin == 0 ? 0 : skins->joint[i].nodeID;
     }
     else for (size_t i = 0; i < info->qNodes; i += 1) {
         glm_mat4_identity(data[i].animation);
