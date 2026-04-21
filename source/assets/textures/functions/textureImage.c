@@ -4,6 +4,7 @@
 #include <stb_image.h>
 #include <vulkan/vulkan.h>
 
+#include "textureFunctions.h"
 #include "MY_ASSERT.h"
 #include "bufferOperations.h"
 #include "imageOperations.h"
@@ -113,17 +114,41 @@ struct textureData {
     int channels;
 };
 
-static struct textureData loadFromFile(const char *texturePath) {
+static struct textureData loadFromFile(struct TextureData texturePath) {
     struct textureData data;
     
-    data.pixels = stbi_load(texturePath, &data.width, &data.height, &data.channels, STBI_rgb_alpha);
+    data.pixels = stbi_load(
+        texturePath.data,
+        &data.width, 
+        &data.height, 
+        &data.channels, 
+        STBI_rgb_alpha
+    );
+
+    assert(data.pixels != NULL);
 
     return data;
 }
 
-static struct textureData loadFromMemory(const char *texturePath) {
+static struct textureData loadFromMemoryVanila(struct TextureData texturePath) {
     struct textureData data;
-    const char *code = strstr(texturePath, ",") + 1;
+
+    data.pixels = stbi_load_from_memory(
+        (unsigned char *)texturePath.data,
+        texturePath.qData,
+        &data.width,
+        &data.height,
+        &data.channels,
+        STBI_rgb_alpha
+    );
+
+    assert(data.pixels != NULL);
+    
+    return data;
+}
+
+static struct textureData loadFromMemoryBase64(struct TextureData texturePath) {
+    const char *code = strstr(texturePath.data, ",") + 1;
     unsigned long codeLen = strlen(code);
 
     int padding = 
@@ -132,22 +157,16 @@ static struct textureData loadFromMemory(const char *texturePath) {
 
     unsigned long decodedLen = (codeLen / 4) * 3 - padding;
 
-    char decoded[(codeLen * 3) / 4 + 4];
+    char decoded[(codeLen * 4) / 4 + 4] = {};
     base64_decode(code, codeLen, decoded);
 
-    data.pixels = stbi_load_from_memory(
-        (unsigned char *)decoded,
-        decodedLen,
-        &data.width,
-        &data.height,
-        &data.channels,
-        STBI_rgb_alpha
-    );
-    
-    return data;
+    return loadFromMemoryVanila((struct TextureData) {
+        .data = (char *)decoded,
+        .qData = decodedLen
+    });
 }
 
-static struct textureData loadDefault(const char *) {
+static struct textureData loadDefault(struct TextureData) {
     struct textureData data = {
         .width = 1,
         .height = 1,
@@ -163,11 +182,12 @@ static struct textureData loadDefault(const char *) {
     return data;
 }
 
-VkImage createTextureBuffer(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, const char *texturePath, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkCommandPool commandPool, VkQueue queue) {
-    struct textureData (*loadTexture)(const char *) =
-        texturePath == NULL ?                   loadDefault :
-        strncmp(texturePath, "data:", 5) == 0 ? loadFromMemory :
-                                                loadFromFile;
+VkImage createTextureBuffer(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, struct TextureData texturePath, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkCommandPool commandPool, VkQueue queue) {
+    struct textureData (*loadTexture)(struct TextureData) =
+        texturePath.data == NULL ?                   loadDefault :
+        strncmp(texturePath.data, "data:", 5) == 0 ? loadFromMemoryBase64 :
+        texturePath.mode == FROM_MEMORY ?            loadFromMemoryVanila :
+                                                     loadFromFile;
 
     struct textureData data = loadTexture(texturePath);
 

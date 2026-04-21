@@ -30,8 +30,8 @@ struct Model *loadModel(const char *filePath, struct GraphicsSetup *graphics) {
     result->device = graphics->device;
     result->cleanup = input.cleanup;
     result->info = input.info;
-    result->qTextures = input.qTextures;
-    result->inputTextures = input.inputTextures;
+    result->qTexture = input.qTexture;
+    result->texture = input.texture;
     result->meshQuantity = input.meshQuantity;
     result->mesh = malloc(sizeof(struct Mesh) * result->meshQuantity);
 
@@ -57,10 +57,10 @@ void destroyActualModel(void *modelPtr) {
         destroyBuffer(model->device, model->mesh[i].vertexBuffer, model->mesh[i].vertexBufferMemory);
     }
 
-    for (size_t i = 0; i < model->qTextures; i += 1) {
-        free(model->inputTextures[i]);
+    for (size_t i = 0; i < model->qTexture; i += 1) {
+        free(model->texture[i].data);
     }
-    free(model->inputTextures);
+    free(model->texture);
 
     model->cleanup(model->info);
     free(model->mesh);

@@ -17,7 +17,7 @@ static struct Data loadCubeMap(const char *texturePath[6], VkDevice device, VkPh
     return result;
 }
 
-static struct Data loadTexture(const char *texturePath, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkCommandPool commandPool, VkQueue queue) {
+static struct Data loadTexture(struct TextureData texturePath, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkCommandPool commandPool, VkQueue queue) {
     struct Data result = { 0 };
 
     result.image = createTextureBuffer(&result.imageMemory, &result.mipLevels, texturePath, device, physicalDevice, surface, commandPool, queue);
@@ -48,7 +48,7 @@ struct Textures *loadCubeMaps(struct GraphicsSetup *graphics, const char *textur
     return texture;
 }
 
-struct Textures *loadTextures(struct GraphicsSetup *graphics, uint32_t texturesQuantity, char *texturePath[static texturesQuantity]) {
+struct Textures *loadTextures(struct GraphicsSetup *graphics, uint32_t texturesQuantity, struct TextureData texturePath[static texturesQuantity]) {
     struct Textures *texture = calloc(1, sizeof(struct Textures));
     *texture = (struct Textures) {
         .device = &graphics->device,

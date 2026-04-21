@@ -16,8 +16,8 @@ struct ModelInput {
     uint32_t meshQuantity;
     struct MeshInput *mesh;
 
-    size_t qTextures;
-    char **inputTextures;
+    size_t qTexture;
+    struct TextureData *texture;
 
     void *info;
     void (*cleanup)(void *);
@@ -39,8 +39,8 @@ struct Model {
     uint32_t meshQuantity;
     struct Mesh *mesh;
 
-    size_t qTextures;
-    char **inputTextures;
+    size_t qTexture;
+    struct TextureData *texture;
 
     void *info;
     void (*cleanup)(void *);

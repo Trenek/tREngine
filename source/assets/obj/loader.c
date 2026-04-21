@@ -3,6 +3,7 @@
 
 #include "actualModel.h"
 #include "graphicsSetup.h"
+#include "texture.h"
 
 #include "bufferOperations.h"
 #include "obj.h"
@@ -73,14 +74,15 @@ static void loadGroup(struct MeshInput *mesh, fastObjMesh *obj, fastObjGroup grp
     }
 }
 
-static void loadTextures(struct ModelInput *model, fastObjMesh *obj) {
+static void loadObjTextures(struct ModelInput *model, fastObjMesh *obj) {
     for (size_t i = 0; i < obj->texture_count; i += 1) {
+        model->texture[i].mode = FROM_OTHER;
+
         if (obj->textures[i].path == NULL) {
-            model->inputTextures[i] = NULL;
+            model->texture[i].data = NULL;
         }
         else {
-            model->inputTextures[i] = calloc(strlen(obj->textures[i].path) + 1, sizeof(char));
-            strcpy(model->inputTextures[i], obj->textures[i].path);
+            model->texture[i].data = strdup(obj->textures[i].path);
         }
     }
 }
@@ -161,8 +163,6 @@ static void cleanupObjModelInfo(void *objInfoPtr) {
     }
 
     free(objInfo->buffers);
-    free(objInfo->pushConstants);
-
     free(objInfo);
 } 
 
@@ -182,13 +182,13 @@ void objLoadModel(const char *objectPath, struct ModelInput *model, struct Graph
     info->device = graphics->device;
     info->buffers = malloc(sizeof(struct buffer));
     info->buffers[0].range = sizeof(struct Materials) * max(1, obj->material_count);
-    model->qTextures = obj->texture_count;
-    model->inputTextures = malloc(sizeof(const char *) * obj->texture_count);
+    model->qTexture = obj->texture_count;
+    model->texture = malloc(sizeof(struct TextureData) * obj->texture_count);
 
     for (size_t i = 0; i < obj->group_count; i += 1) {
         loadGroup(&model->mesh[i], obj, obj->groups[i]);
     }
-    loadTextures(model, obj);
+    loadObjTextures(model, obj);
 
     createBuffers(
         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,

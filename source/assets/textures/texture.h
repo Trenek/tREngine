@@ -1,6 +1,16 @@
 #include "descriptor.h"
 struct GraphicsSetup;
 
+struct TextureData {
+    size_t qData;
+    char *data;
+
+    enum TextureMode {
+        FROM_OTHER,
+        FROM_MEMORY,
+    } mode;
+};
+
 struct Textures {
     VkDevice *device;
     struct descriptor descriptor;
@@ -16,5 +26,5 @@ struct Textures {
 };
 
 struct Textures *loadCubeMaps(struct GraphicsSetup *graphics, const char *texturePath[6]);
-struct Textures *loadTextures(struct GraphicsSetup *graphics, uint32_t texturesQuantity, char *texturePath[static texturesQuantity]);
+struct Textures *loadTextures(struct GraphicsSetup *graphics, uint32_t texturesQuantity, struct TextureData texturePath[static texturesQuantity]);
 void unloadTextures(void *texturePtr);

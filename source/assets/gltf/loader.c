@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "gltf.h"
+#include "texture.h"
 
 #include "graphicsSetup.h"
 #include "modelLoader.h"
@@ -59,6 +60,7 @@ static void loadPrimitive(struct MeshInput *mesh, cgltf_primitive *primitive) {
     cgltf_accessor *weightAccessor = getAccessor(cgltf_attribute_type_weights, primitive);
     cgltf_accessor *jointAccessor = getAccessor(cgltf_attribute_type_joints, primitive);
 
+    assert(vertexAccessor != NULL);
     if (NULL != textureAccessor) assert(vertexAccessor->count == textureAccessor->count);
     if (NULL != colorAccessor)   assert(vertexAccessor->count == colorAccessor->count);
     if (NULL != normalAccessor)  assert(vertexAccessor->count == normalAccessor->count);
@@ -92,7 +94,7 @@ static size_t countMeshContainingNodes(cgltf_data *data) {
     size_t result = 0;
 
     for (cgltf_size i = 0; i < data->nodes_count; i += 1) {
-        result += NULL != data->nodes[i].mesh;
+        result += NULL != data->nodes[i].mesh ? data->nodes[i].mesh->primitives_count : 0;
     }
 
     return result;
@@ -259,14 +261,17 @@ static struct NodeData *loadNodes(cgltf_data *data, struct GltfModelInfo *info, 
         memcpy(nodes[i].rotation, GET_OR_DEF(rotation, 0, 0, 0, 1), sizeof(float[4]));
 
         if (NULL != data->nodes[i].mesh) {
-            assert(data->nodes[i].mesh->primitives_count == 1);
             for (cgltf_size j = 0; j < data->nodes[i].mesh->primitives_count; j += 1) {
                 loadPrimitive(&model->mesh[loadedMesh], &data->nodes[i].mesh->primitives[j]);
+
+                GLTF_PC(info->pushConstants)[loadedMesh].nodeID = i;
+                GLTF_PC(info->pushConstants)[loadedMesh].materialID = data->nodes[i].mesh->primitives[j].material == NULL ? 0 : cgltf_material_index(
+                    data,
+                    data->nodes[i].mesh->primitives[j].material
+                );
+
+                loadedMesh += 1;
             }
-
-            GLTF_PC(info->pushConstants)[loadedMesh].nodeID = i;
-
-            loadedMesh += 1;
         }
 
         for (size_t j = 0; j < MAX_FRAMES_IN_FLIGHT; j += 1) {
@@ -278,11 +283,13 @@ static struct NodeData *loadNodes(cgltf_data *data, struct GltfModelInfo *info, 
     return nodes;
 }
 
+#undef GET_OR_DEF
+
 struct Materials {
 	cgltf_float base_color_factor[4];
 	cgltf_float metallic_factor;
 	cgltf_float roughness_factor;
-    cgltf_float pad0;
+    cgltf_int baseColorID;
     cgltf_float pad1;
 };
 
@@ -301,20 +308,36 @@ static void loadMaterials(cgltf_data *data, struct Materials *materials[MAX_FRAM
         for (uint32_t k = 0; k < MAX_FRAMES_IN_FLIGHT; k += 1) {
             memcpy(materials[k][i].base_color_factor, data->materials[i].pbr_metallic_roughness.base_color_factor, sizeof(float[4]));
             
+            materials[k][i].baseColorID = data->materials[i].pbr_metallic_roughness.base_color_texture.texture == NULL ? 0 : cgltf_texture_index(
+                data, 
+                data->materials[i].pbr_metallic_roughness.base_color_texture.texture
+            );
             materials[k][i].metallic_factor = data->materials[i].pbr_metallic_roughness.metallic_factor;
             materials[k][i].roughness_factor = data->materials[i].pbr_metallic_roughness.roughness_factor;
         }
     }
 }
 
-static void loadTextures(struct ModelInput *model, cgltf_data *obj) {
+static void loadGltfTextures(struct ModelInput *model, cgltf_data *obj) {
     for (size_t i = 0; i < obj->textures_count; i += 1) {
-        if (obj->textures[i].image->uri == NULL) {
-            model->inputTextures[i] = NULL;
+        model->texture[i].mode = FROM_OTHER;
+
+        if (obj->textures[i].image->buffer_view) {
+            model->texture[i].qData = obj->textures[i].image->buffer_view->size;
+            model->texture[i].data = malloc(model->texture[i].qData);
+            memcpy(
+                model->texture[i].data,
+                (char *)obj->textures[i].image->buffer_view->buffer->data +
+                obj->textures[i].image->buffer_view->offset,
+                model->texture[i].qData
+            );
+            model->texture[i].mode = FROM_MEMORY;
+        }
+        else if (obj->textures[i].image->uri == NULL) {
+            model->texture[i].data = NULL;
         }
         else {
-            model->inputTextures[i] = calloc(strlen(obj->textures[i].image->uri) + 1, sizeof(char));
-            strcpy(model->inputTextures[i], obj->textures[i].image->uri);
+            model->texture[i].data = strdup(obj->textures[i].image->uri);
         }
     }
 }
@@ -342,8 +365,8 @@ void gltfLoadModel(const char *modelPath, struct ModelInput *model, struct Graph
         info->buffers[0].range = data->nodes_count * sizeof(mat4);
         info->buffers[1].range = data->nodes_count * sizeof(struct AnimationData);
         info->buffers[2].range = max(data->materials_count, 1) * sizeof(struct Materials);
-        model->qTextures = max(data->textures_count, 1);
-        model->inputTextures = calloc(model->qTextures, sizeof(char *));
+        model->qTexture = max(data->textures_count, 1);
+        model->texture = calloc(model->qTexture, sizeof(struct TextureData));
 
         createBuffers(
             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
@@ -381,7 +404,7 @@ void gltfLoadModel(const char *modelPath, struct ModelInput *model, struct Graph
         info->nodes = loadNodes(data, info, model);
 
         loadMaterials(data, (void *)info->buffers[2].buffersMapped);
-        loadTextures(model, data);
+        loadGltfTextures(model, data);
 
         info->qAnim = data->animations_count;
         info->qNodes = data->nodes_count;

@@ -73,7 +73,8 @@ struct GltfModelInfo {
 };
 
 struct GltfPushConstants {
-    size_t nodeID;
+    uint32_t nodeID;
+    uint32_t materialID;
 };
 
 struct GltfVertex {

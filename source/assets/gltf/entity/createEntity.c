@@ -52,7 +52,7 @@ struct Entity *createGltf(struct GltfBuilder builder, struct GraphicsSetup *grap
         .instanceBufferSize = builder.instanceBufferSize,
         .instanceUpdater = builder.instanceUpdater,
 
-        .destination = VK_SHADER_STAGE_VERTEX_BIT,
+        .destination = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
         .pushConstantsSize = sizeof(struct GltfPushConstants),
         .pushConstants = modelInfo->pushConstants,
     }, graphics);

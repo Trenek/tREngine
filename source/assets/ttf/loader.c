@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <assert.h>
 
+#include "texture.h"
 #include "graphicsSetup.h"
 
 #include "isClockWise.h"
@@ -643,8 +644,6 @@ static void cleanupObjModelInfo(void *objInfoPtr) {
     }
 
     free(objInfo->buffers);
-    free(objInfo->pushConstants);
-
     free(objInfo);
 } 
 
@@ -656,8 +655,8 @@ void ttfLoadModel(const char *objectPath, struct ModelInput *model, struct Graph
     model->cleanup = cleanupObjModelInfo;
     model->meshQuantity = strlen(buffer);
     model->mesh = malloc(sizeof(struct Mesh) * model->meshQuantity);
-    model->qTextures = 1;
-    model->inputTextures = calloc(1, sizeof(char *));
+    model->qTexture = 1;
+    model->texture = calloc(1, sizeof(struct TextureData));
 
     info->device = graphics->device;
     info->buffers = malloc(sizeof(struct buffer));
