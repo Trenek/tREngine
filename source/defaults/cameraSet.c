@@ -3,6 +3,7 @@
 #include "cameraBufferObject.h"
 #include "MY_ASSERT.h"
 #include "definitions.h"
+#include "descriptor.h"
 
 VkDescriptorSetLayout createCameraDescriptorSetLayout(VkDevice device) {
     VkDescriptorSetLayout descriptorSetLayout = NULL;
@@ -29,6 +30,14 @@ VkDescriptorSetLayout createCameraDescriptorSetLayout(VkDevice device) {
 
     return descriptorSetLayout;
 }
+
+struct descriptorSetLayout *defaultCameraDescriptorSetLayout(VkDevice device) {
+    return createDescriptorSetLayoutObj(
+        createCameraDescriptorSetLayout(device),
+        device
+    );
+}
+
 
 VkDescriptorPool createCameraDescriptorPool(VkDevice device) {
     VkDescriptorPool descriptorPool = NULL;

@@ -18,6 +18,8 @@ struct FontVertex {
     uint32_t inOut;
 };
 
+struct descriptorSetLayout *defaultFontDescriptorSetLayout(VkDevice device);
+
 [[maybe_unused]]
 static VkVertexInputAttributeDescription FontVertexAttributeDescriptions[] = {
     [0] = {

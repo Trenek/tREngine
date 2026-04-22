@@ -21,6 +21,7 @@ struct descriptor {
     VkDescriptorSet descriptorSets[MAX_FRAMES_IN_FLIGHT];
 };
 
+struct descriptorSetLayout *defaultCameraDescriptorSetLayout(VkDevice device);
 VkDescriptorSetLayout createCameraDescriptorSetLayout(VkDevice device);
 VkDescriptorPool createCameraDescriptorPool(VkDevice device);
 void bindCameraBuffersToDescriptorSets(VkDescriptorSet descriptorSets[], VkDevice device, VkBuffer uniformBuffers);

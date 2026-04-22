@@ -1,0 +1,25 @@
+#include "obj.h"
+
+#include "descriptor.h"
+
+struct descriptorSetLayout *defaultObjDescriptorSetLayout(VkDevice device) {
+    return createDescriptorSetLayoutObj(
+        createDescriptorSetLayout(device, 2, (VkDescriptorSetLayoutBinding []) {
+            {
+                .binding = 0,
+                .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                .descriptorCount = 1,
+                .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+                .pImmutableSamplers = NULL
+            },
+            {
+                .binding = 1,
+                .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                .descriptorCount = 1,
+                .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                .pImmutableSamplers = NULL
+            },
+        }),
+        device
+    );
+}

@@ -19,6 +19,9 @@ struct ObjVertex {
     unsigned int material;
 };
 
+
+struct descriptorSetLayout *defaultObjDescriptorSetLayout(VkDevice device);
+
 [[maybe_unused]]
 static VkVertexInputAttributeDescription ObjVertexAttributeDescriptions[] = {
     [0] = {
