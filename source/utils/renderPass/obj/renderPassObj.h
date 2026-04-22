@@ -24,8 +24,9 @@ struct renderPassBuilder {
     double color[4];
     struct renderPassCore *renderPass;
 
-    struct ThirdPerson camera;
-    void (*updateCameraBuffer)(void *buffersMapped, VkExtent2D swapChainExtent, struct ThirdPerson);
+    size_t cameraSize;
+    void *camera;
+    void (*updateCameraBuffer)(void *buffersMapped, VkExtent2D swapChainExtent, void *);
 
     struct pipelineConnection *data;
     size_t qData;
@@ -43,8 +44,8 @@ struct renderPassObj {
     struct pipelineConnection *data;
     size_t qData;
 
-    struct ThirdPerson camera;
-    void (*updateCameraBuffer)(void *buffersMapped, VkExtent2D swapChainExtent, struct ThirdPerson camera);
+    void *camera;
+    void (*updateCameraBuffer)(void *buffersMapped, VkExtent2D swapChainExtent, void *);
 
     struct buffer cameraBuffer;
     VkDescriptorPool cameraDescriptorPool;

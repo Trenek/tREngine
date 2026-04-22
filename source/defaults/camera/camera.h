@@ -17,8 +17,9 @@ struct WindowManager;
 typedef struct VkExtent2D VkExtent2D;
 
 void moveThirdPersonCamera(struct WindowManager *windowControl, struct ThirdPerson *camera, float deltaTime);
+void moveFirstPersonCamera(struct WindowManager *windowControl, struct FirstPerson *cameraPtr, float deltaTime);
 
-void updateFirstPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, struct FirstPerson camera);
-void updateThirdPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, struct ThirdPerson camera);
+void updateFirstPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, void *camera);
+void updateThirdPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, void *camera);
 
 #endif

@@ -24,9 +24,10 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
         .qData = builder.qData,
         .cameraDescriptorPool = createCameraDescriptorPool(graphics->device),
         .updateCameraBuffer = builder.updateCameraBuffer,
-        .camera = builder.camera
+        .camera = malloc(builder.cameraSize)
     };
 
+    memcpy(result->camera, builder.camera, builder.cameraSize);
     memcpy(result->data, builder.data, sizeof(struct pipelineConnection) * builder.qData);
     memcpy(result->color, builder.color, sizeof(double) * 4);
     for (size_t i = 0; i < result->qData; i += 1) {
@@ -54,6 +55,7 @@ void destroyRenderPassObj(void *renderPassPtr) {
         free(renderPass->data[i].entity);
     }
     free(renderPass->data);
+    free(renderPass->camera);
     free(renderPass);
 }
 
