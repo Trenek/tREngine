@@ -31,13 +31,16 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
         .mesh = builder.mesh,
         .bufferSize = builder.instanceBufferSize,
 
-        .object.descriptorPool = createObjectDescriptorPool(graphics->device, builder.qBuff + 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER),
+        .object.descriptorPool = createDescriptorPool(graphics->device, builder.qBuff + 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER),
         .qBuff = builder.qBuff + 1
     };
 
     result->buffer[0] = calloc(builder.instanceCount, builder.instanceBufferSize);
     for (size_t i = 0; i < builder.qBuff; i += 1) {
         result->buffer[i + 1] = builder.isChangable[i] ? calloc(1, builder.range[i]) : NULL;
+        if (builder.isChangable[i]) {
+            memcpy(result->buffer[i + 1], (*builder.mapp[i])[0], builder.range[i]);
+        }
     }
 
     VkBuffer (*buff2[builder.qBuff + 1]);
@@ -64,7 +67,7 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
 
     createDescriptorSets(result->object.descriptorSets, graphics->device, result->object.descriptorPool, builder.objectLayout);
 
-    bindObjectBuffersToDescriptorSets(result->object.descriptorSets, graphics->device, builder.qBuff + 1, buff2, result->range, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    bindBuffersToDescriptorSets(result->object.descriptorSets, graphics->device, builder.qBuff + 1, buff2, result->range, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 
     return result;
 }

@@ -1,9 +1,9 @@
 #include <string.h>
 #include <fast_obj.h>
 
-#include "actualModel.h"
 #include "graphicsSetup.h"
 #include "texture.h"
+#include "model.h"
 
 #include "bufferOperations.h"
 #include "obj.h"

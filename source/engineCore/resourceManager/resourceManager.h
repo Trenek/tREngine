@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include <stddef.h>
 
 struct resource {
     void *this;

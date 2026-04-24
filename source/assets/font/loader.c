@@ -2,11 +2,11 @@
 #include <stdint.h>
 #include <assert.h>
 
+#include "model.h"
 #include "texture.h"
 #include "graphicsSetup.h"
 
 #include "isClockWise.h"
-#include "actualModel.h"
 #include "myMalloc.h"
 
 #include "bufferOperations.h"
@@ -14,10 +14,6 @@
 #include "font.h"
 
 #define IF(x, y) if (!(x)) printf("%s", y); else
-
-
-// #define SIZE face->max_advance_width
-#define SIZE 1
 
 static void lerp_l(vec2 out, FT_Vector from, FT_Vector to, float t) {
     out[0] = glm_lerp(from.x, to.x, t);
@@ -334,8 +330,8 @@ static struct contour createContour(FT_Face face, size_t start_point, size_t end
 
         new.vertices[i][0] = (struct FontVertex) {
             .pos = {
-                onLine[i][0] / SIZE,
-                onLine[i][1] / SIZE,
+                onLine[i][0],
+                onLine[i][1],
             },
             .color = { 0.0, 0.0, 0.0 },
             .bezzier = { i & 1, i & 1 },
@@ -343,8 +339,8 @@ static struct contour createContour(FT_Face face, size_t start_point, size_t end
         };
         new.vertices[i][1] = (struct FontVertex) {
             .pos = {
-                offLine[i][0] / SIZE,
-                offLine[i][1] / SIZE,
+                offLine[i][0],
+                offLine[i][1],
             },
             .color = { 0.0, 0.0, 0.0 },
             .bezzier = { 0.5f, 0.0f },
@@ -570,7 +566,7 @@ static void loadCharacter(FT_Face face, struct MeshInput *mesh, char character, 
         FT_GlyphSlot slot = face->glyph;
         FT_Outline *outline = &slot->outline;
 
-        *space = (float)(slot->advance.x) / SIZE;
+        *space = (float)(slot->advance.x);
 
         struct contour contours[outline->n_contours] = {};
         struct contour *tree = loadBezier(face, mesh, contours, &qOnlinePoints);
@@ -591,7 +587,7 @@ static float loadSpaceOffset(FT_Face face) {
     IF (0 == FT_Load_Glyph(face, FT_Get_Char_Index(face, ' '), FT_LOAD_NO_BITMAP), "No Glyph") {
         FT_GlyphSlot slot = face->glyph;
 
-        result = (float)slot->advance.x / SIZE;
+        result = (float)slot->advance.x;
     }
 
     return result;

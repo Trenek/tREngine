@@ -1,4 +1,4 @@
-#include "instanceBuffer.h"
+#include "defaultInstance.h"
 
 #include "entity.h"
 

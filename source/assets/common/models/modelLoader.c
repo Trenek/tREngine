@@ -6,6 +6,7 @@
 #include "entityBuilder.h"
 #include "graphicsSetup.h"
 #include "modelLoader.h"
+#include "model.h"
 
 #include "bufferOperations.h"
 

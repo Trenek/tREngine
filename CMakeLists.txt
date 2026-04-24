@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.0...5.0)
 
 project(tREngine VERSION 1.0 LANGUAGES C)
 

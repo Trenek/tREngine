@@ -2,8 +2,6 @@
 #define OBJ_BUILDER
 #include <vulkan/vulkan.h>
 
-#include "definitions.h"
-
 struct Model;
 struct GraphicsSetup;
 

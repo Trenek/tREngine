@@ -4,7 +4,6 @@
 #include <vulkan/vulkan.h>
 
 #include "definitions.h"
-#include "defaultCamera.h"
 #include "buffer.h"
 
 struct Entity;

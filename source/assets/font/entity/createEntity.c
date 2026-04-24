@@ -5,11 +5,10 @@
 
 #include "graphicsSetup.h"
 
+#include "model.h"
 #include "fontBuilder.h"
 #include "entity.h"
 #include "entityBuilder.h"
-
-#include "actualModel.h"
 
 #include "bufferOperations.h"
 #include "font.h"

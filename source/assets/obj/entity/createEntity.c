@@ -2,9 +2,9 @@
 
 #include "entity.h"
 #include "graphicsSetup.h"
-#include "modelBuilder.h"
-#include "actualModel.h"
+#include "model.h"
 
+#include "objBuilder.h"
 #include "obj.h"
 
 struct toCleanup {

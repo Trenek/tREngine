@@ -1,4 +1,4 @@
-#include "actualModel.h"
+#include "model.h"
 
 #include "rectangle.h"
 

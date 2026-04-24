@@ -1,8 +1,8 @@
 #include <cglm/cglm.h>
 
 #include "entity.h"
+#include "model.h"
 #include "graphicsSetup.h"
-#include "actualModel.h"
 
 #include "gltfBuilder.h"
 #include "gltf.h"

@@ -1,6 +1,7 @@
 #include <vulkan/vulkan.h>
 #include <string.h>
 #include <stddef.h>
+#include <malloc.h>
 
 #include "renderPassObj.h"
 
@@ -20,7 +21,7 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
         .renderPass = builder.renderPass,
         .data = malloc(sizeof(struct pipelineConnection) * builder.qData),
         .qData = builder.qData,
-        .cameraDescriptorPool = createObjectDescriptorPool(graphics->device, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER),
+        .cameraDescriptorPool = createDescriptorPool(graphics->device, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER),
         .updateCameraBuffer = builder.updateCameraBuffer,
         .camera = malloc(builder.cameraSize)
     };
@@ -48,7 +49,7 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
     );
 
     createDescriptorSets(result->cameraDescriptorSet, graphics->device, result->cameraDescriptorPool, builder.cameraDescriptorSetLayout);
-    bindObjectBuffersToDescriptorSets(
+    bindBuffersToDescriptorSets(
         result->cameraDescriptorSet, 
         graphics->device, 
         1, 

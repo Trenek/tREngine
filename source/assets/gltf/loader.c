@@ -3,9 +3,9 @@
 
 #include "gltf.h"
 #include "texture.h"
+#include "model.h"
 
 #include "graphicsSetup.h"
-#include "modelLoader.h"
 
 #include "bufferOperations.h"
 

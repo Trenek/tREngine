@@ -2,8 +2,7 @@
 #include <assert.h>
 #include <cgltf.h>
 
-#include "actualModel.h"
-
+#include "model.h"
 #include "entity.h"
 #include "gltf.h"
 #include "gltfBuilder.h"

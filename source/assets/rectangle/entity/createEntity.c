@@ -1,7 +1,7 @@
 #include <cglm/cglm.h>
 
 #include "entity.h"
-#include "actualModel.h"
+#include "model.h"
 
 #include "rectangleBuilder.h"
 #include "rectangle.h"

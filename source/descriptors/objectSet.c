@@ -17,7 +17,7 @@ VkDescriptorSetLayout createDescriptorSetLayout(VkDevice device, size_t qBinding
     return descriptorSetLayout;
 }
 
-VkDescriptorPool createObjectDescriptorPool(VkDevice device, size_t qBuff, VkDescriptorType descriptorType) {
+VkDescriptorPool createDescriptorPool(VkDevice device, size_t qBuff, VkDescriptorType descriptorType) {
     VkDescriptorPool descriptorPool = NULL;
 
     VkDescriptorPoolSize poolSize[] = {
@@ -40,7 +40,7 @@ VkDescriptorPool createObjectDescriptorPool(VkDevice device, size_t qBuff, VkDes
     return descriptorPool;
 }
 
-void bindObjectBuffersToDescriptorSets(VkDescriptorSet descriptorSets[], VkDevice device, size_t qBuff, VkBuffer (*buff[qBuff]), size_t range[qBuff], VkDescriptorType descriptorType) {
+void bindBuffersToDescriptorSets(VkDescriptorSet descriptorSets[], VkDevice device, size_t qBuff, VkBuffer (*buff[qBuff]), size_t range[qBuff], VkDescriptorType descriptorType) {
     VkWriteDescriptorSet descriptorWrites[qBuff];
     VkDescriptorBufferInfo bufferInfo[qBuff];
 
