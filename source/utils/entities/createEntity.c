@@ -31,7 +31,7 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
         .mesh = builder.mesh,
         .bufferSize = builder.instanceBufferSize,
 
-        .object.descriptorPool = createObjectDescriptorPool(graphics->device, builder.qBuff + 1),
+        .object.descriptorPool = createObjectDescriptorPool(graphics->device, builder.qBuff + 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER),
         .qBuff = builder.qBuff + 1
     };
 
@@ -64,7 +64,7 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
 
     createDescriptorSets(result->object.descriptorSets, graphics->device, result->object.descriptorPool, builder.objectLayout);
 
-    bindObjectBuffersToDescriptorSets(result->object.descriptorSets, graphics->device, builder.qBuff + 1, buff2, result->range);
+    bindObjectBuffersToDescriptorSets(result->object.descriptorSets, graphics->device, builder.qBuff + 1, buff2, result->range, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 
     return result;
 }

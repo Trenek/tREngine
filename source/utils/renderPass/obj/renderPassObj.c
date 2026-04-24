@@ -9,10 +9,8 @@
 
 #include "buffer.h"
 #include "descriptor.h"
-#include "cameraBufferObject.h"
 #include "graphicsPipelineObj.h"
 
-#include "cameraBufferObject.h"
 #include "bufferOperations.h"
 
 struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, struct GraphicsSetup *graphics) {
@@ -22,7 +20,7 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
         .renderPass = builder.renderPass,
         .data = malloc(sizeof(struct pipelineConnection) * builder.qData),
         .qData = builder.qData,
-        .cameraDescriptorPool = createCameraDescriptorPool(graphics->device),
+        .cameraDescriptorPool = createObjectDescriptorPool(graphics->device, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER),
         .updateCameraBuffer = builder.updateCameraBuffer,
         .camera = malloc(builder.cameraSize)
     };
@@ -38,10 +36,26 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
     }
     memcpy(result->coordinates, builder.coordinates, sizeof(double[4]));
 
-    createBuffers(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(struct CameraBuffer), &result->cameraBuffer.buffers, &result->cameraBuffer.buffersMemory, result->cameraBuffer.buffersMapped, graphics->device, graphics->physicalDevice, graphics->surface);
+    createBuffers(
+        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
+        builder.cameraBufferSize,
+        &result->cameraBuffer.buffers, 
+        &result->cameraBuffer.buffersMemory, 
+        result->cameraBuffer.buffersMapped, 
+        graphics->device, 
+        graphics->physicalDevice, 
+        graphics->surface
+    );
 
     createDescriptorSets(result->cameraDescriptorSet, graphics->device, result->cameraDescriptorPool, builder.cameraDescriptorSetLayout);
-    bindCameraBuffersToDescriptorSets(result->cameraDescriptorSet, graphics->device, result->cameraBuffer.buffers);
+    bindObjectBuffersToDescriptorSets(
+        result->cameraDescriptorSet, 
+        graphics->device, 
+        1, 
+        (VkBuffer* []) { &result->cameraBuffer.buffers }, 
+        (size_t []) { builder.cameraBufferSize }, 
+        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+    );
 
     return result;
 }

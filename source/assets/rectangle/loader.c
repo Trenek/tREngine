@@ -4,7 +4,7 @@
 
 void recLoadModel(const char *, struct ModelInput *model, struct GraphicsSetup *) {
     model->meshQuantity = 1;
-    model->mesh = malloc(sizeof(struct Mesh) * model->meshQuantity);
+    model->mesh = calloc(model->meshQuantity, sizeof(struct Mesh));
 
     model->mesh->sizeOfVertex = sizeof(struct RecVertex);
     model->mesh->verticesQuantity = 4;

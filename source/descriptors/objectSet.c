@@ -17,12 +17,12 @@ VkDescriptorSetLayout createDescriptorSetLayout(VkDevice device, size_t qBinding
     return descriptorSetLayout;
 }
 
-VkDescriptorPool createObjectDescriptorPool(VkDevice device, size_t qBuff) {
+VkDescriptorPool createObjectDescriptorPool(VkDevice device, size_t qBuff, VkDescriptorType descriptorType) {
     VkDescriptorPool descriptorPool = NULL;
 
     VkDescriptorPoolSize poolSize[] = {
         [0] = {
-            .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .type = descriptorType,
             .descriptorCount = MAX_FRAMES_IN_FLIGHT * qBuff
         }
     };
@@ -40,7 +40,7 @@ VkDescriptorPool createObjectDescriptorPool(VkDevice device, size_t qBuff) {
     return descriptorPool;
 }
 
-void bindObjectBuffersToDescriptorSets(VkDescriptorSet descriptorSets[], VkDevice device, size_t qBuff, VkBuffer (*buff[qBuff]), size_t range[qBuff]) {
+void bindObjectBuffersToDescriptorSets(VkDescriptorSet descriptorSets[], VkDevice device, size_t qBuff, VkBuffer (*buff[qBuff]), size_t range[qBuff], VkDescriptorType descriptorType) {
     VkWriteDescriptorSet descriptorWrites[qBuff];
     VkDescriptorBufferInfo bufferInfo[qBuff];
 
@@ -56,7 +56,7 @@ void bindObjectBuffersToDescriptorSets(VkDescriptorSet descriptorSets[], VkDevic
                 .dstSet = descriptorSets[i],
                 .dstBinding = j,
                 .dstArrayElement = 0,
-                .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                .descriptorType = descriptorType,
                 .descriptorCount = 1,
                 .pBufferInfo = &bufferInfo[j],
                 .pTexelBufferView = NULL

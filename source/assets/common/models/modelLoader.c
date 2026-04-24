@@ -63,7 +63,10 @@ void destroyActualModel(void *modelPtr) {
     }
     free(model->texture);
 
-    model->cleanup(model->info);
+    if (model->cleanup) {
+        model->cleanup(model->info);
+    }
+
     free(model->mesh);
     free(model);
 }

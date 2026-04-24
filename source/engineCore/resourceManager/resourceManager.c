@@ -6,11 +6,15 @@
 void addResource(struct ResourceManager *this, size_t id, void *mem, void (*cleanup)(void *)) {
     if (NULL == this->resources) {
         this->max = id + 1;
-        this->resources = malloc(sizeof(struct resource) * this->max);
+        this->resources = calloc(this->max, sizeof(struct resource));
     }
     else if (this->max <= id) {
+        this->resources = realloc(this->resources, sizeof(struct resource) * (id + 1));
+        for (size_t i = this->max; i < id + 1; i += 1) {
+            this->resources[i].this = NULL;
+            this->resources[i].cleanup = NULL;
+        }
         this->max = id + 1;
-        this->resources = realloc(this->resources, sizeof(struct resource) * this->max);
     }
 
     this->resources[id].this = mem;
@@ -18,18 +22,21 @@ void addResource(struct ResourceManager *this, size_t id, void *mem, void (*clea
 }
 
 void cleanupResource(struct ResourceManager *this, size_t id) {
-    if (this->resources[id].this)
-    if (this->resources[id].cleanup) {
-        this->resources[id].cleanup(this->resources[id].this);
+    struct resource *res = &this->resources[id];
+        
+    if (NULL != res->this)
+    if (NULL != res->cleanup) {
+        res->cleanup(res->this);
     }
+
+    res->this = NULL;
+    res->cleanup = NULL;
 }
 
 void cleanupResourcesOrg(struct ResourceManager *this) {
+    if (this->resources)
     for (size_t i = 0; i < this->max; i += 1) {
-        if (this->resources)
-        if (this->resources[i].cleanup) {
-            this->resources[i].cleanup(this->resources[i].this);
-        }
+        cleanupResource(this, i);
     }
 
     free(this->resources);

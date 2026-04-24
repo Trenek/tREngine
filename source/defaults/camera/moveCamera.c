@@ -1,6 +1,6 @@
 #include <cglm/cglm.h>
 
-#include "camera.h"
+#include "defaultCamera.h"
 #include "windowManager.h"
 
 void moveFirstPersonCamera(struct WindowManager *windowControl, struct FirstPerson *camera, float deltaTime) {
