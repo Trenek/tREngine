@@ -51,6 +51,13 @@ struct AnimationData {
     int pad2;
 };
 
+struct ColisionBox {
+    char *name;
+
+    size_t qVertex;
+    struct GltfVertex *vertex;
+};
+
 struct Entity;
 struct Model;
 void animate(struct Entity *, struct Model *, size_t, float);
@@ -71,6 +78,12 @@ struct GltfModelInfo {
     struct Skin *skin;
 
     void *pushConstants;
+
+    size_t qHitbox;
+    size_t qHurtBox;
+
+    struct ColisionBox *hitBox;
+    struct ColisionBox *hurtBox;
 };
 
 struct GltfPushConstants {

@@ -236,6 +236,20 @@ static void cleanupGltfModelInfo(void *objInfoPtr) {
         free(objInfo->skin[i].jointID);
         free(objInfo->skin[i].joint);
     }
+    
+    for (size_t i = 0; i < objInfo->qHitbox; i += 1) {
+        free(objInfo->hitBox[i].name);
+        free(objInfo->hitBox[i].vertex);
+    }
+
+    for (size_t i = 0; i < objInfo->qHurtBox; i += 1) {
+        free(objInfo->hurtBox[i].name);
+        free(objInfo->hurtBox[i].vertex);
+    }
+
+    free(objInfo->hitBox);
+    free(objInfo->hurtBox);
+
     free(objInfo->skin);
     free(objInfo->frames);
     free(objInfo->nodes);
@@ -249,6 +263,81 @@ static void cleanupGltfModelInfo(void *objInfoPtr) {
 #define GET_OR_DEF(X, ...) \
     data->nodes[i].has_##X ? \
     data->nodes[i].X : (vec4) { __VA_ARGS__ }
+
+static size_t countNames(cgltf_size qNode, cgltf_node node[qNode], const char *buffer) {
+    size_t result = 0;
+
+    for (cgltf_size i = 0; i < qNode; i += 1) {
+        result += (node[i].name != NULL) && (0 == strncmp(node[i].name, buffer, strlen(buffer)));
+    }
+
+    return result;
+}
+
+static size_t countVertex(size_t qVert, struct GltfVertex vert[qVert]) {
+    size_t i = 0;
+    for (size_t k = 0; k < qVert; k += 1) {
+        i += k == 0 || false == glm_vec3_eqv_eps(vert[k - 1].pos, vert[k].pos);
+    }
+
+    return i;
+}
+
+static void loadPlanes(struct GltfVertex *planes, size_t qVert, struct GltfVertex vert[qVert]) {
+    size_t n = 0;
+
+    for (size_t i = 0; i < qVert; i += 1) {
+        if (i == 0 || false == glm_vec3_eqv_eps(vert[i - 1].pos, vert[i].pos)) {
+            planes[n] = vert[i];
+            for (size_t j = 0; j < n; j += 1) {
+                if (planes[n].pos[1] > planes[j].pos[1]) {
+                    struct GltfVertex temp = planes[n];
+                    planes[n] = planes[j];
+                    planes[j] = temp;
+                }
+            }
+
+            n += 1;
+        }
+    }
+}
+
+static size_t addColisionBox(struct ColisionBox *box, cgltf_node *node, struct MeshInput *mesh, const char *name) {
+    size_t result = 0;
+
+    if (0 == strncmp(node->name, name, strlen(name))) {
+        box->qVertex = countVertex(mesh->verticesQuantity, mesh->vertices);
+        box->vertex = calloc(box->qVertex, sizeof(struct GltfVertex));
+        box->name = strdup(node->name);
+
+        loadPlanes(box->vertex, mesh->verticesQuantity, mesh->vertices);
+
+        result = 1;
+    }
+    
+    return result;
+}
+
+void loadCollisionBoxes(cgltf_data *data, struct GltfModelInfo *info, struct ModelInput *model) {
+    size_t loadedMesh = 0;
+
+    size_t z[2] = {};
+
+    info->qHitbox = countNames(data->nodes_count, data->nodes, "Hit");
+    info->qHurtBox = countNames(data->nodes_count, data->nodes, "Hurt");
+
+    info->hitBox = calloc(info->qHitbox, sizeof(struct ColisionBox));
+    info->hurtBox = calloc(info->qHurtBox, sizeof(struct ColisionBox));
+
+    for (cgltf_size i = 0; i < data->nodes_count; i += 1) if (NULL != data->nodes[i].mesh) {
+        loadedMesh += data->nodes[i].mesh->primitives_count;
+
+        if (data->nodes[i].name) {
+            z[0] += addColisionBox(&info->hitBox[z[0]], &data->nodes[i], &model->mesh[loadedMesh - 1], "Hit");
+            z[1] += addColisionBox(&info->hurtBox[z[1]], &data->nodes[i], &model->mesh[loadedMesh - 1], "Hurt");
+        }
+    }
+}
 
 static struct NodeData *loadNodes(cgltf_data *data, struct GltfModelInfo *info, struct ModelInput *model) {
     struct NodeData *nodes = malloc(data->nodes_count * sizeof(struct NodeData));
@@ -403,6 +492,7 @@ void gltfLoadModel(const char *modelPath, struct ModelInput *model, struct Graph
 
         info->nodes = loadNodes(data, info, model);
 
+        loadCollisionBoxes(data, info, model);
         loadMaterials(data, (void *)info->buffers[2].buffersMapped);
         loadGltfTextures(model, data);
 
