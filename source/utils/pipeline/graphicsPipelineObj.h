@@ -2,6 +2,7 @@
 #define GRAPHICS_PIPELINE_OBJ_H
 
 #include <vulkan/vulkan_core.h>
+#include "Vertex.h"
 
 struct GraphicsSetup;
 
@@ -17,9 +18,7 @@ struct graphicsPipelineBuilder {
 
     VkPrimitiveTopology topology;
 
-    const size_t sizeOfVertex;
-    const size_t numOfAttributes;
-    VkVertexInputAttributeDescription *attributeDescription;
+    struct Vert vert;
 
     VkCullModeFlags cullFlags;
 

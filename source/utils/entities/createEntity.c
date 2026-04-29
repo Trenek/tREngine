@@ -16,8 +16,8 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
         .cleanup = builder.cleanup,
 
         .instanceCount = builder.instanceCount,
-        .instance = malloc(builder.instanceSize * builder.instanceCount),
-        .instanceUpdater = builder.instanceUpdater,
+        .instance = malloc(builder.instance.size * builder.instanceCount),
+        .instanceUpdater = builder.instance.updater,
 
         .pushConstantsSize = builder.pushConstantsSize,
         .pushConstants = builder.pushConstants,
@@ -29,13 +29,13 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
 
         .meshQuantity = builder.meshQuantity,
         .mesh = builder.mesh,
-        .bufferSize = builder.instanceBufferSize,
+        .bufferSize = builder.instance.bufferSize,
 
         .object.descriptorPool = createDescriptorPool(graphics->device, builder.qBuff + 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER),
         .qBuff = builder.qBuff + 1
     };
 
-    result->buffer[0] = calloc(builder.instanceCount, builder.instanceBufferSize);
+    result->buffer[0] = calloc(builder.instanceCount, builder.instance.bufferSize);
     for (size_t i = 0; i < builder.qBuff; i += 1) {
         result->buffer[i + 1] = builder.isChangable[i] ? calloc(1, builder.range[i]) : NULL;
         if (builder.isChangable[i]) {
@@ -47,7 +47,7 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
 
     createBuffers(
         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 
-        builder.instanceCount * builder.instanceBufferSize, 
+        builder.instanceCount * builder.instance.bufferSize, 
         &result->uniformModel.buffers, 
         &result->uniformModel.buffersMemory, 
         result->uniformModel.buffersMapped, 
@@ -58,12 +58,12 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
 
     result->mapp[0] = &result->uniformModel.buffersMapped;
     buff2[0] = &result->uniformModel.buffers;
-    result->range[0] = builder.instanceCount * builder.instanceBufferSize;
+    result->range[0] = builder.instanceCount * builder.instance.bufferSize;
     memcpy(buff2 + 1, builder.buff, sizeof(void *) * builder.qBuff);
     memcpy(result->range + 1, builder.range, sizeof(size_t) * builder.qBuff);
     memcpy(result->mapp + 1, builder.mapp, sizeof(void *) * builder.qBuff);
 
-    memset(result->buffer[0], 0, builder.instanceBufferSize * builder.instanceCount);
+    memset(result->buffer[0], 0, builder.instance.bufferSize * builder.instanceCount);
 
     createDescriptorSets(result->object.descriptorSets, graphics->device, result->object.descriptorPool, builder.objectLayout);
 

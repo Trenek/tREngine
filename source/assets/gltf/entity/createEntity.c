@@ -92,10 +92,7 @@ struct Entity *createGltf(struct GltfBuilder builder, struct GraphicsSetup *grap
         .qBuff = qBuff,
 
         .objectLayout = builder.objectLayout,
-
-        .instanceSize = builder.instanceSize,
-        .instanceBufferSize = builder.instanceBufferSize,
-        .instanceUpdater = builder.instanceUpdater,
+        .instance = builder.instance,
 
         .destination = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
         .pushConstantsSize = sizeof(struct GltfPushConstants),

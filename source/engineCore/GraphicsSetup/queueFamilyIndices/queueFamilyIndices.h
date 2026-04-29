@@ -12,6 +12,7 @@ struct QueueFamilyIndices {
     struct value graphicsFamily;
     struct value presentFamily;
     struct value transferFamily;
+    struct value computeFamily;
 };
 
 bool familyEqual(struct value family1, struct value family2);

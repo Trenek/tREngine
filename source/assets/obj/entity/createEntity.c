@@ -59,10 +59,7 @@ struct Entity *createObj(struct ObjBuilder builder, struct GraphicsSetup *graphi
         .qBuff = qBuff,
 
         .objectLayout = builder.objectLayout,
-
-        .instanceSize = builder.instanceSize,
-        .instanceBufferSize = builder.instanceBufferSize,
-        .instanceUpdater = builder.instanceUpdater,
+        .instance = builder.instance,
 
         .destination = VK_SHADER_STAGE_FRAGMENT_BIT,
         .pushConstantsSize = sizeof(struct ObjPushConstants),

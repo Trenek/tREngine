@@ -51,7 +51,12 @@ struct GraphicsSetup setupGraphics(GLFWwindow *window) {
     graphics.instance = createInstance(&graphics.debugMessenger);
     graphics.surface = createSurface(window, graphics.instance);
     graphics.physicalDevice = pickPhysicalDevice(&graphics.msaaSamples, graphics.instance, graphics.surface);
-    graphics.device = createLogicalDevice(graphics.surface, graphics.physicalDevice, &graphics.graphicsQueue, &graphics.presentQueue, &graphics.transferQueue);
+    graphics.device = createLogicalDevice(graphics.surface, graphics.physicalDevice, (VkQueue *[]) {
+        &graphics.graphicsQueue, 
+        &graphics.presentQueue, 
+        &graphics.transferQueue,
+        &graphics.computeQueue,
+    });
     graphics.swapChain = createSwapChain(window, graphics.surface, graphics.physicalDevice, graphics.device);
     graphics.swapChainImageViews = createImageViews(graphics.device, graphics.swapChain);
 

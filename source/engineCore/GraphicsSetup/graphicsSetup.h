@@ -14,6 +14,7 @@ struct GraphicsSetup {
     VkQueue presentQueue;
     VkQueue graphicsQueue;
     VkQueue transferQueue;
+    VkQueue computeQueue;
     VkDevice device;
 
     struct swapChain swapChain;

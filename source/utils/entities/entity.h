@@ -6,6 +6,7 @@
 #include "descriptor.h"
 #include "buffer.h"
 #include "entityBuilder.h"
+#include "instanceBuilder.h"
 
 struct Entity {
     VkDevice device;

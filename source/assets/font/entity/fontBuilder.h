@@ -2,6 +2,8 @@
 #define STRING_BUILDER
 #include <vulkan/vulkan.h>
 
+#include "instanceBuilder.h"
+
 struct Model;
 struct GraphicsSetup;
 
@@ -12,10 +14,7 @@ struct FontPushConstants {
 struct FontBuilder {
     uint32_t instanceCount;
 
-    size_t instanceSize;
-    size_t instanceBufferSize;
-    void (*instanceUpdater)(void *instancePtr, void *instanceBufferPtr, uint32_t instanceCount, float deltaTime);
-
+    struct instanceBuilder instance;
     const char *string;
     struct Model *modelData;
 

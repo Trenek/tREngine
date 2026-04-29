@@ -3,12 +3,12 @@
 #include <vulkan/vulkan.h>
 
 #include "definitions.h"
+#include "instanceBuilder.h"
 
 struct Model;
 
 struct EntityBuilder {
     uint32_t instanceCount;
-    void (*instanceUpdater)(void *instancePtr, void *instanceBufferPtr, uint32_t instanceCount, float deltaTime);
 
     uint32_t meshQuantity;
     struct Mesh *mesh;
@@ -25,8 +25,7 @@ struct EntityBuilder {
 
     VkDescriptorSetLayout objectLayout;
 
-    size_t instanceSize;
-    size_t instanceBufferSize;
+    struct instanceBuilder instance;
 
     void *additional;
     void (*cleanup)(void *);

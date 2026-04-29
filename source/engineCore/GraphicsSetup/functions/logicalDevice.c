@@ -41,7 +41,7 @@ static int32_t removeDuplications(int32_t queueNumber, VkDeviceQueueCreateInfo a
     return queueNumber;
 }
 
-VkDevice createLogicalDevice(VkSurfaceKHR surface, VkPhysicalDevice physicalDevice, VkQueue *graphicsQueue, VkQueue *presentQueue, VkQueue *transferQueue) {
+VkDevice createLogicalDevice(VkSurfaceKHR surface, VkPhysicalDevice physicalDevice, VkQueue *queues[]) {
     VkDevice device = NULL;
 
     struct QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
@@ -66,6 +66,14 @@ VkDevice createLogicalDevice(VkSurfaceKHR surface, VkPhysicalDevice physicalDevi
         {
             .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
             .queueFamilyIndex = indices.transferFamily.value,
+            .queueCount = 1,
+            .pQueuePriorities = (float[]) { 1.0f },
+            .flags = 0,
+            .pNext = NULL
+        },
+        {
+            .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+            .queueFamilyIndex = indices.computeFamily.value,
             .queueCount = 1,
             .pQueuePriorities = (float[]) { 1.0f },
             .flags = 0,
@@ -109,9 +117,10 @@ VkDevice createLogicalDevice(VkSurfaceKHR surface, VkPhysicalDevice physicalDevi
     MY_ASSERT(indexingFeature.descriptorBindingStorageBufferUpdateAfterBind);
     MY_ASSERT(VK_SUCCESS == vkCreateDevice(physicalDevice, &createInfo, NULL, &device));
 
-    vkGetDeviceQueue(device, indices.graphicsFamily.value, 0, graphicsQueue);
-    vkGetDeviceQueue(device, indices.presentFamily.value, 0, presentQueue);
-    vkGetDeviceQueue(device, indices.transferFamily.value, 0, transferQueue);
+    vkGetDeviceQueue(device, indices.graphicsFamily.value, 0, queues[0]);
+    vkGetDeviceQueue(device, indices.presentFamily.value, 0, queues[1]);
+    vkGetDeviceQueue(device, indices.transferFamily.value, 0, queues[2]);
+    vkGetDeviceQueue(device, indices.computeFamily.value, 0, queues[3]);
 
     return device;
 }

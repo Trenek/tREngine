@@ -103,7 +103,7 @@ VkPipeline createGraphicsPipeline(struct graphicsPipelineBuilder builder, VkDevi
 
     VkVertexInputBindingDescription bindingDescription = {
         .binding = 0,
-        .stride = builder.sizeOfVertex,
+        .stride = builder.vert.sizeOfVertex,
         .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
     };
 
@@ -111,8 +111,8 @@ VkPipeline createGraphicsPipeline(struct graphicsPipelineBuilder builder, VkDevi
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
         .vertexBindingDescriptionCount = 1,
         .pVertexBindingDescriptions = &bindingDescription,
-        .vertexAttributeDescriptionCount = builder.numOfAttributes,
-        .pVertexAttributeDescriptions = builder.attributeDescription
+        .vertexAttributeDescriptionCount = builder.vert.numOfAttributes,
+        .pVertexAttributeDescriptions = builder.vert.attributeDescription
     };
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = {

@@ -134,9 +134,7 @@ struct Entity *createFont(struct FontBuilder builder, struct GraphicsSetup *grap
 
         .instanceCount = builder.instanceCount,
         .objectLayout = builder.objectLayout,
-        .instanceSize = builder.instanceSize,
-        .instanceBufferSize = builder.instanceBufferSize,
-        .instanceUpdater = builder.instanceUpdater,
+        .instance = builder.instance,
 
         .destination = VK_SHADER_STAGE_VERTEX_BIT,
         .pushConstantsSize = sizeof(struct FontPushConstants),

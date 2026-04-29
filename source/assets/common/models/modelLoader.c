@@ -29,13 +29,15 @@ struct Model *loadModel(const char *filePath, struct GraphicsSetup *graphics) {
 
     fun(filePath, &input, graphics);
 
-    result->device = graphics->device;
-    result->cleanup = input.cleanup;
-    result->info = input.info;
-    result->qTexture = input.qTexture;
-    result->texture = input.texture;
-    result->meshQuantity = input.meshQuantity;
-    result->mesh = malloc(sizeof(struct Mesh) * result->meshQuantity);
+    *result = (struct Model) {
+        .device = graphics->device,
+        .cleanup = input.cleanup,
+        .info = input.info,
+        .qTexture = input.qTexture,
+        .texture = input.texture,
+        .meshQuantity = input.meshQuantity,
+        .mesh = malloc(sizeof(struct Mesh) * input.meshQuantity)
+    };
 
     for (uint32_t i = 0; i < result->meshQuantity; i += 1) {
         result->mesh[i].indicesQuantity = input.mesh[i].indicesQuantity;

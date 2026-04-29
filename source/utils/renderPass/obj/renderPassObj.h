@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.h>
 
 #include "definitions.h"
+#include "cameraBuilder.h"
 #include "buffer.h"
 
 struct Entity;
@@ -23,11 +24,7 @@ struct renderPassBuilder {
     double color[4];
     struct renderPassCore *renderPass;
 
-    size_t cameraSize;
-    size_t cameraBufferSize;
-    void *camera;
-    void (*updateCameraBuffer)(void *buffersMapped, VkExtent2D swapChainExtent, void *);
-
+    struct cameraBuilder camera;
     struct pipelineConnection *data;
     size_t qData;
 

@@ -24,6 +24,10 @@ struct QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKH
             indices.graphicsFamily.value = i;
             indices.graphicsFamily.exists = true;
         }
+        if (queueFamilies[i].queueFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)) {
+            indices.computeFamily.value = i;
+            indices.computeFamily.exists = true;
+        }
 
         vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
         if (presentSupport) {
@@ -39,9 +43,11 @@ struct QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKH
         found = indices.graphicsFamily.exists &&
                 indices.presentFamily.exists &&
                 indices.transferFamily.exists &&
+                indices.computeFamily.exists &&
                 indices.graphicsFamily.value == i &&
                 indices.presentFamily.value == i &&
-                indices.transferFamily.value == i;
+                indices.transferFamily.value == i &&
+                indices.computeFamily.value == i;
 
         i += 1;
     }

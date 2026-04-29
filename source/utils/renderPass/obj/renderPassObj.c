@@ -22,11 +22,11 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
         .data = malloc(sizeof(struct pipelineConnection) * builder.qData),
         .qData = builder.qData,
         .cameraDescriptorPool = createDescriptorPool(graphics->device, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER),
-        .updateCameraBuffer = builder.updateCameraBuffer,
-        .camera = malloc(builder.cameraSize)
+        .updateCameraBuffer = builder.camera.updateBuffer,
+        .camera = malloc(builder.camera.size)
     };
 
-    memcpy(result->camera, builder.camera, builder.cameraSize);
+    memcpy(result->camera, builder.camera.mapped, builder.camera.size);
     memcpy(result->data, builder.data, sizeof(struct pipelineConnection) * builder.qData);
     memcpy(result->color, builder.color, sizeof(double) * 4);
     for (size_t i = 0; i < result->qData; i += 1) {
@@ -39,7 +39,7 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
 
     createBuffers(
         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
-        builder.cameraBufferSize,
+        builder.camera.bufferSize,
         &result->cameraBuffer.buffers, 
         &result->cameraBuffer.buffersMemory, 
         result->cameraBuffer.buffersMapped, 
@@ -54,7 +54,7 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
         graphics->device, 
         1, 
         (VkBuffer* []) { &result->cameraBuffer.buffers }, 
-        (size_t []) { builder.cameraBufferSize }, 
+        (size_t []) { builder.camera.bufferSize }, 
         VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
     );
 

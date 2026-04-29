@@ -13,9 +13,6 @@ struct Entity *createRec(struct RecBuilder builder, struct GraphicsSetup *graphi
         .mesh = builder.modelData->mesh,
 
         .objectLayout = builder.objectLayout,
-
-        .instanceSize = builder.instanceSize,
-        .instanceBufferSize = builder.instanceBufferSize,
-        .instanceUpdater = builder.instanceUpdater,
+        .instance = builder.instance,
     }, graphics);
 }

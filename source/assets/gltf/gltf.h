@@ -105,66 +105,73 @@ struct GltfVertex {
     vec3 morphPos4;
 };
 
-[[maybe_unused]]
-static VkVertexInputAttributeDescription GltfVertexAttributeDescriptions[] = {
-    [0] = {
-        .binding = 0,
-        .location = 0,
-        .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct GltfVertex, pos)
-    },
-    [1] = {
-        .binding = 0,
-        .location = 1,
-        .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct GltfVertex, norm)
-    },
-    [2] = {
-        .binding = 0,
-        .location = 2,
-        .format = VK_FORMAT_R32G32_SFLOAT,
-        .offset = offsetof(struct GltfVertex, tex)
-    },
-    [3] = {
-        .binding = 0,
-        .location = 3,
-        .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct GltfVertex, color)
-    },
-    [4] = {
-        .binding = 0,
-        .location = 4,
-        .format = VK_FORMAT_R32G32B32A32_SFLOAT,
-        .offset = offsetof(struct GltfVertex, weight)
-    },
-    [5] = {
-        .binding = 0,
-        .location = 5,
-        .format = VK_FORMAT_R32G32B32A32_SFLOAT,
-        .offset = offsetof(struct GltfVertex, joint)
-    },
-    [6] = {
-        .binding = 0,
-        .location = 6,
-        .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct GltfVertex, morphPos1)
-    },
-    [7] = {
-        .binding = 0,
-        .location = 7,
-        .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct GltfVertex, morphPos2)
-    },
-    [8] = {
-        .binding = 0,
-        .location = 8,
-        .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct GltfVertex, morphPos3)
-    },
-    [9] = {
-        .binding = 0,
-        .location = 9,
-        .format = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset = offsetof(struct GltfVertex, morphPos4)
-    },
-};
+static inline struct Vert defaultGltfVert() {
+    static const VkVertexInputAttributeDescription vertexAttributeDescriptions[] = {
+        [0] = {
+            .binding = 0,
+            .location = 0,
+            .format = VK_FORMAT_R32G32B32_SFLOAT,
+            .offset = offsetof(struct GltfVertex, pos)
+        },
+        [1] = {
+            .binding = 0,
+            .location = 1,
+            .format = VK_FORMAT_R32G32B32_SFLOAT,
+            .offset = offsetof(struct GltfVertex, norm)
+        },
+        [2] = {
+            .binding = 0,
+            .location = 2,
+            .format = VK_FORMAT_R32G32_SFLOAT,
+            .offset = offsetof(struct GltfVertex, tex)
+        },
+        [3] = {
+            .binding = 0,
+            .location = 3,
+            .format = VK_FORMAT_R32G32B32_SFLOAT,
+            .offset = offsetof(struct GltfVertex, color)
+        },
+        [4] = {
+            .binding = 0,
+            .location = 4,
+            .format = VK_FORMAT_R32G32B32A32_SFLOAT,
+            .offset = offsetof(struct GltfVertex, weight)
+        },
+        [5] = {
+            .binding = 0,
+            .location = 5,
+            .format = VK_FORMAT_R32G32B32A32_SFLOAT,
+            .offset = offsetof(struct GltfVertex, joint)
+        },
+        [6] = {
+            .binding = 0,
+            .location = 6,
+            .format = VK_FORMAT_R32G32B32_SFLOAT,
+            .offset = offsetof(struct GltfVertex, morphPos1)
+        },
+        [7] = {
+            .binding = 0,
+            .location = 7,
+            .format = VK_FORMAT_R32G32B32_SFLOAT,
+            .offset = offsetof(struct GltfVertex, morphPos2)
+        },
+        [8] = {
+            .binding = 0,
+            .location = 8,
+            .format = VK_FORMAT_R32G32B32_SFLOAT,
+            .offset = offsetof(struct GltfVertex, morphPos3)
+        },
+        [9] = {
+            .binding = 0,
+            .location = 9,
+            .format = VK_FORMAT_R32G32B32_SFLOAT,
+            .offset = offsetof(struct GltfVertex, morphPos4)
+        },
+    };
+
+    return (struct Vert) {
+        .sizeOfVertex = sizeof(struct GltfVertex),
+        .numOfAttributes = sizeof(vertexAttributeDescriptions) / sizeof(VkVertexInputAttributeDescription),
+        .attributeDescription = vertexAttributeDescriptions
+    };
+}

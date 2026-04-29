@@ -3,6 +3,8 @@
 
 #include <cglm/cglm.h>
 
+#include "cameraBuilder.h"
+
 struct CameraBuffer {
     alignas(16) mat4 view;
     alignas(16) mat4 proj;
@@ -34,5 +36,22 @@ void moveFirstPersonCamera(struct WindowManager *windowControl, struct FirstPers
 
 void updateFirstPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, void *camera);
 void updateThirdPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, void *camera);
+
+static inline struct cameraBuilder defaultFirstPersonCamera(const struct FirstPerson *data) {
+    return (struct cameraBuilder) {
+        .updateBuffer = updateFirstPersonCameraBuffer,
+        .size = sizeof(struct FirstPerson),
+        .bufferSize = sizeof(struct CameraBuffer),
+        .mapped = data
+    };
+}
+static inline struct cameraBuilder defaultThirdPersonCamera(const struct ThirdPerson *data) {
+    return (struct cameraBuilder) {
+        .updateBuffer = updateThirdPersonCameraBuffer,
+        .size = sizeof(struct ThirdPerson),
+        .bufferSize = sizeof(struct CameraBuffer),
+        .mapped = data
+    };
+}
 
 #endif

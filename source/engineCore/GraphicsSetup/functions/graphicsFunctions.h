@@ -6,7 +6,7 @@
 VkInstance createInstance(VkDebugUtilsMessengerEXT *debugMessenger);
 VkSurfaceKHR createSurface(GLFWwindow *window, VkInstance instance);
 VkPhysicalDevice pickPhysicalDevice(VkSampleCountFlagBits *msaaSamples, VkInstance instance, VkSurfaceKHR surface);
-VkDevice createLogicalDevice(VkSurfaceKHR surface, VkPhysicalDevice physicalDevice, VkQueue *graphicsQueue, VkQueue *presentQueue, VkQueue *transferQueue);
+VkDevice createLogicalDevice(VkSurfaceKHR surface, VkPhysicalDevice physicalDevice, VkQueue *queue[]);
 struct swapChain createSwapChain(GLFWwindow *window, VkSurfaceKHR surface, VkPhysicalDevice physicalDevice, VkDevice device);
 VkImageView *createImageViews(VkDevice device, struct swapChain swapChain);
 
