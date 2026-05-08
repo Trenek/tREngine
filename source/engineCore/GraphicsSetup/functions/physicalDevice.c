@@ -84,8 +84,8 @@ static bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
         deviceFeatures.samplerAnisotropy &&
         checkDeviceExtensionSupport(device) &&
         swapChainAdequate &&
-        queueFamilies.graphicsFamily.exists &&
-        queueFamilies.presentFamily.exists;
+        queueFamilies.family[GRAPHICS_FAMILY].exists &&
+        queueFamilies.family[PRESENT_FAMILY].exists;
 }
 
 static VkSampleCountFlagBits getMaxUsableSampleCount(VkPhysicalDevice physicalDevice) {

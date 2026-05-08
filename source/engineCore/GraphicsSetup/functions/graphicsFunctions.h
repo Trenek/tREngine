@@ -1,19 +1,18 @@
 #include "bufferOperations.h"
 
 #include "definitions.h"
+#include "queueFamilyIndices.h"
 
 // setup
 VkInstance createInstance(VkDebugUtilsMessengerEXT *debugMessenger);
 VkSurfaceKHR createSurface(GLFWwindow *window, VkInstance instance);
 VkPhysicalDevice pickPhysicalDevice(VkSampleCountFlagBits *msaaSamples, VkInstance instance, VkSurfaceKHR surface);
-VkDevice createLogicalDevice(VkSurfaceKHR surface, VkPhysicalDevice physicalDevice, VkQueue *queue[]);
+VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice, struct QueueFamilyIndices indices);
 struct swapChain createSwapChain(GLFWwindow *window, VkSurfaceKHR surface, VkPhysicalDevice physicalDevice, VkDevice device);
 VkImageView *createImageViews(VkDevice device, struct swapChain swapChain);
 
-VkCommandPool createCommandPool(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
-void createCommandBuffer(VkCommandBuffer commandBuffer[MAX_FRAMES_IN_FLIGHT], VkDevice device, VkCommandPool commandPool);
-
-VkCommandPool createTransferCommandPool(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
+VkCommandPool createCommandPool(VkDevice device, struct QueueFamilyIndices indices);
+VkCommandPool createTransferCommandPool(VkDevice device, struct QueueFamilyIndices indices);
 
 void createColorResources(VkImage *colorImage, VkDeviceMemory *colorImageMemory, VkImageView *colorImageView, VkDevice device, VkPhysicalDevice physicalDevice, VkExtent2D swapChainExtent, VkFormat swapChainImageFormat, VkSampleCountFlagBits msaaSamples);
 void createDepthResources(VkImage *depthImage, VkDeviceMemory *depthImageMemory, VkImageView *depthImageView, VkDevice device, VkPhysicalDevice physicalDevice, VkExtent2D swapChainExtent, VkSampleCountFlagBits msaaSamples, VkCommandPool commandPool, VkQueue queue);

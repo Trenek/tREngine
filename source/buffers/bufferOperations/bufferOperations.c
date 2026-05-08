@@ -13,9 +13,9 @@ VkBuffer createBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfac
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .size = size,
         .usage = usage,
-        .sharingMode = familyEqual(families.graphicsFamily, families.transferFamily) ? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT,
+        .sharingMode = familyEqual(families.family[GRAPHICS_FAMILY], families.family[TRANSFER_FAMILY]) ? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT,
         .queueFamilyIndexCount = 2,
-        .pQueueFamilyIndices = (uint32_t[]){ families.graphicsFamily.value, families.transferFamily.value },
+        .pQueueFamilyIndices = (uint32_t[]){ families.family[GRAPHICS_FAMILY].value, families.family[TRANSFER_FAMILY].value },
         .flags = 0
     };
 
@@ -47,13 +47,13 @@ VkDeviceMemory createBufferMemory(VkDevice device, VkPhysicalDevice physicalDevi
 void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkDevice device, VkCommandPool commandPool, VkQueue queue) {
     VkCommandBuffer commandBuffer = beginSingleTimeCommands(device, commandPool);
 
-    VkBufferCopy copyRegion = {
-        .srcOffset = 0,
-        .dstOffset = 0,
-        .size = size
-    };
-
-    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, (VkBufferCopy[]) {
+        {
+            .srcOffset = 0,
+            .dstOffset = 0,
+            .size = size
+        }
+    });
 
     endSingleTimeCommands(commandBuffer, device, commandPool, queue);
 }

@@ -1,10 +1,9 @@
 #include "obj.h"
 
-#include "descriptor.h"
+#include "descriptorSetLayoutObj.h"
 
 struct descriptorSetLayout *defaultObjDescriptorSetLayout(VkDevice device) {
-    return createDescriptorSetLayoutObj(
-        createDescriptorSetLayout(device, 2, (VkDescriptorSetLayoutBinding []) {
+    return createDescriptorSetLayoutObj(2, (VkDescriptorSetLayoutBinding []) {
             {
                 .binding = 0,
                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -19,7 +18,7 @@ struct descriptorSetLayout *defaultObjDescriptorSetLayout(VkDevice device) {
                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
                 .pImmutableSamplers = NULL
             },
-        }),
+        },
         device
     );
 }

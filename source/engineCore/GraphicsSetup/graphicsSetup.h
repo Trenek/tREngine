@@ -3,8 +3,8 @@
 
 #include <vulkan/vulkan.h>
 
-#include "definitions.h"
 #include "swapChain.h"
+#include "queueFamilyIndices.h"
 
 struct GraphicsSetup {
     VkInstance instance;
@@ -17,15 +17,13 @@ struct GraphicsSetup {
     VkQueue computeQueue;
     VkDevice device;
 
+    struct QueueFamilyIndices families;
+
     struct swapChain swapChain;
     VkImageView *swapChainImageViews;
 
     VkCommandPool commandPool;
-    VkCommandBuffer commandBuffer[MAX_FRAMES_IN_FLIGHT];
     VkCommandPool transferCommandPool;
-
-    VkSemaphore imageAvailableSemaphore[MAX_FRAMES_IN_FLIGHT];
-    VkFence inFlightFence[MAX_FRAMES_IN_FLIGHT];
 
     VkImage depthImage;
     VkDeviceMemory depthImageMemory;

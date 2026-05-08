@@ -1,14 +1,16 @@
 #include <vulkan/vulkan.h>
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "descriptor.h"
+#include "descriptorSetLayoutObj.h"
 
-struct descriptorSetLayout *createDescriptorSetLayoutObj(VkDescriptorSetLayout layout, VkDevice device) {
+struct descriptorSetLayout *createDescriptorSetLayoutObj(size_t qBinding, VkDescriptorSetLayoutBinding binding[qBinding], VkDevice device) {
     struct descriptorSetLayout *result = calloc(1, sizeof(struct descriptorSetLayout));
 
     *result = (struct descriptorSetLayout) {
-        .descriptorSetLayout = layout,
+        .descriptorSetLayout = createDescriptorSetLayout(device, qBinding, binding),
         .device = device
     };
 
@@ -20,4 +22,4 @@ void destroyDescriptorSetLayout(void *layoutPtr) {
 
     vkDestroyDescriptorSetLayout(layout->device, layout->descriptorSetLayout, NULL);
     free(layout);
-} 
+}

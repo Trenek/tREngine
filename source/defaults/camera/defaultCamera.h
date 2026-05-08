@@ -37,7 +37,7 @@ void moveFirstPersonCamera(struct WindowManager *windowControl, struct FirstPers
 void updateFirstPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, void *camera);
 void updateThirdPersonCameraBuffer(void *uniformBuffersMapped, VkExtent2D swapChainExtent, void *camera);
 
-static inline struct cameraBuilder defaultFirstPersonCamera(const struct FirstPerson *data) {
+static inline struct cameraBuilder defaultFirstPersonCamera(const struct FirstPerson * const restrict data) {
     return (struct cameraBuilder) {
         .updateBuffer = updateFirstPersonCameraBuffer,
         .size = sizeof(struct FirstPerson),
@@ -45,7 +45,7 @@ static inline struct cameraBuilder defaultFirstPersonCamera(const struct FirstPe
         .mapped = data
     };
 }
-static inline struct cameraBuilder defaultThirdPersonCamera(const struct ThirdPerson *data) {
+static inline struct cameraBuilder defaultThirdPersonCamera(const struct ThirdPerson * const restrict data) {
     return (struct cameraBuilder) {
         .updateBuffer = updateThirdPersonCameraBuffer,
         .size = sizeof(struct ThirdPerson),

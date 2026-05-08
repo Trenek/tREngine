@@ -14,6 +14,8 @@ struct EngineCore {
     struct ResourceManager resource;
 
     struct GraphicsSetup graphics;
+    size_t currentFrame;
+    uint32_t imageIndex;
 };
 
 struct EngineCore setup(const char *name, const char *icon);
@@ -21,6 +23,14 @@ void recreateSwapChain(struct EngineCore *engine, size_t qRenderPassCore, struct
 void cleanup(struct EngineCore engine);
 
 struct renderPassObj;
-void drawFrame(struct EngineCore *engine, size_t qRenderPass, struct renderPassObj **renderPass, size_t qRenderPassCore, struct renderPassCore **renderPassCore);
+struct ComputePass;
+struct CommandQueue;
+
+void engineUpdate(struct EngineCore *vulkan, size_t qRenderPass, struct renderPassObj **renderPass);
+void aquireNextImage(struct EngineCore *vulkan, VkFence *inFlightFence, VkSemaphore *semaphore);
+VkResult queueCompute(struct CommandQueue *commandQueue, struct EngineCore *vulkan, size_t qComputePass, struct ComputePass *computePass);
+void queueDraw(struct CommandQueue *commandQueue, struct EngineCore *vulkan, size_t qRenderPass, struct renderPassObj **renderPass, size_t qWait, VkSemaphore waitSem[qWait], VkPipelineStageFlags waitStage[qWait]);
+
+void presentFrame(struct EngineCore *vulkan, size_t qRenderPassCore, struct renderPassCore **renderPassCore, size_t qQueue, struct CommandQueue **queue);
 
 #endif

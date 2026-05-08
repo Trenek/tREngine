@@ -1,10 +1,9 @@
 #include "gltf.h"
 
-#include "descriptor.h"
+#include "descriptorSetLayoutObj.h"
 
 struct descriptorSetLayout *defaultGltfDescriptorSetLayout(VkDevice device) {
-    return createDescriptorSetLayoutObj(
-        createDescriptorSetLayout(device, 4, (VkDescriptorSetLayoutBinding []) {
+    return createDescriptorSetLayoutObj(4, (VkDescriptorSetLayoutBinding []) {
             {
                 .binding = 0,
                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -33,7 +32,7 @@ struct descriptorSetLayout *defaultGltfDescriptorSetLayout(VkDevice device) {
                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
                 .pImmutableSamplers = NULL
             },
-        }), 
+        }, 
         device
     );
 }

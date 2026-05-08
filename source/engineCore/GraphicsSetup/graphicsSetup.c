@@ -3,14 +3,7 @@
 #include "graphicsFunctions.h"
 #include "graphicsSetup.h"
 
-#include "definitions.h"
-
 static void cleanupSwapChain(struct GraphicsSetup *graphics) {
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
-        vkDestroySemaphore(graphics->device, graphics->imageAvailableSemaphore[i], NULL);
-        vkDestroyFence(graphics->device, graphics->inFlightFence[i], NULL);
-    }
-
     for (size_t i = 0; i < graphics->swapChain.imagesCount; i += 1) {
         vkDestroySemaphore(graphics->device, graphics->swapChain.renderFinishedSemaphore[i], NULL);
     }
@@ -38,11 +31,6 @@ void recreateSwapChainGraphics(GLFWwindow *window, struct GraphicsSetup *graphic
 
     createColorResources(&graphics->colorImage, &graphics->colorImageMemory, &graphics->colorImageView, graphics->device, graphics->physicalDevice, graphics->swapChain.extent, graphics->swapChain.imageFormat, graphics->msaaSamples);
     createDepthResources(&graphics->depthImage, &graphics->depthImageMemory, &graphics->depthImageView, graphics->device, graphics->physicalDevice, graphics->swapChain.extent, graphics->msaaSamples, graphics->transferCommandPool, graphics->transferQueue);
-
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
-        graphics->imageAvailableSemaphore[i] = createSemaphore(graphics->device);
-        graphics->inFlightFence[i] = createFence(graphics->device);
-    }
 }
 
 struct GraphicsSetup setupGraphics(GLFWwindow *window) {
@@ -51,38 +39,28 @@ struct GraphicsSetup setupGraphics(GLFWwindow *window) {
     graphics.instance = createInstance(&graphics.debugMessenger);
     graphics.surface = createSurface(window, graphics.instance);
     graphics.physicalDevice = pickPhysicalDevice(&graphics.msaaSamples, graphics.instance, graphics.surface);
-    graphics.device = createLogicalDevice(graphics.surface, graphics.physicalDevice, (VkQueue *[]) {
-        &graphics.graphicsQueue, 
-        &graphics.presentQueue, 
-        &graphics.transferQueue,
-        &graphics.computeQueue,
-    });
+    graphics.families = findQueueFamilies(graphics.physicalDevice, graphics.surface);
+    graphics.device = createLogicalDevice(graphics.physicalDevice, graphics.families);
+
+    vkGetDeviceQueue(graphics.device, graphics.families.family[GRAPHICS_FAMILY].value, 0, &graphics.graphicsQueue);
+    vkGetDeviceQueue(graphics.device, graphics.families.family[PRESENT_FAMILY].value, 0, &graphics.presentQueue);
+    vkGetDeviceQueue(graphics.device, graphics.families.family[TRANSFER_FAMILY].value, 0, &graphics.transferQueue);
+    vkGetDeviceQueue(graphics.device, graphics.families.family[COMPUTE_FAMILY].value, 0, &graphics.computeQueue);
+
     graphics.swapChain = createSwapChain(window, graphics.surface, graphics.physicalDevice, graphics.device);
     graphics.swapChainImageViews = createImageViews(graphics.device, graphics.swapChain);
 
-    graphics.commandPool = createCommandPool(graphics.device, graphics.physicalDevice, graphics.surface);
-    createCommandBuffer(graphics.commandBuffer, graphics.device, graphics.commandPool);
-
-    graphics.transferCommandPool = createTransferCommandPool(graphics.device, graphics.physicalDevice, graphics.surface);
+    graphics.commandPool = createCommandPool(graphics.device, graphics.families);
+    graphics.transferCommandPool = createTransferCommandPool(graphics.device, graphics.families);
 
     createColorResources(&graphics.colorImage, &graphics.colorImageMemory, &graphics.colorImageView, graphics.device, graphics.physicalDevice, graphics.swapChain.extent, graphics.swapChain.imageFormat, graphics.msaaSamples);
     createDepthResources(&graphics.depthImage, &graphics.depthImageMemory, &graphics.depthImageView, graphics.device, graphics.physicalDevice, graphics.swapChain.extent, graphics.msaaSamples, graphics.transferCommandPool, graphics.transferQueue);
-
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
-        graphics.imageAvailableSemaphore[i] = createSemaphore(graphics.device);
-        graphics.inFlightFence[i] = createFence(graphics.device);
-    }
 
     return graphics;
 }
 
 void cleanupGraphics(struct GraphicsSetup graphics) {
     vkDeviceWaitIdle(graphics.device);
-
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
-        vkDestroySemaphore(graphics.device, graphics.imageAvailableSemaphore[i], NULL);
-        vkDestroyFence(graphics.device, graphics.inFlightFence[i], NULL);
-    }
 
     vkDestroyImageView(graphics.device, graphics.colorImageView, NULL);
     vkDestroyImage(graphics.device, graphics.colorImage, NULL);

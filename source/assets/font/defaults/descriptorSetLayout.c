@@ -1,10 +1,9 @@
 #include "font.h"
 
-#include "descriptor.h"
+#include "descriptorSetLayoutObj.h"
 
 struct descriptorSetLayout *defaultFontDescriptorSetLayout(VkDevice device) {
-    return createDescriptorSetLayoutObj(
-        createDescriptorSetLayout(device, 2, (VkDescriptorSetLayoutBinding []) {
+    return createDescriptorSetLayoutObj(2, (VkDescriptorSetLayoutBinding []) {
             {
                 .binding = 0,
                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -19,7 +18,7 @@ struct descriptorSetLayout *defaultFontDescriptorSetLayout(VkDevice device) {
                 .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
                 .pImmutableSamplers = NULL
             }
-        }),
+        },
         device
     );
 }

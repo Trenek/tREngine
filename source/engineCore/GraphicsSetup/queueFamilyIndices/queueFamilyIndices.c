@@ -1,6 +1,6 @@
 #include "queueFamilyIndices.h"
 
-bool familyEqual(struct value family1, struct value family2) {
+bool familyEqual(struct Family family1, struct Family family2) {
     return family1.exists == family2.exists && family1.value == family2.value;
 }
 
@@ -21,33 +21,33 @@ struct QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKH
 
     while (i < queueFamilyCount && found == false) {
         if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-            indices.graphicsFamily.value = i;
-            indices.graphicsFamily.exists = true;
+            indices.family[GRAPHICS_FAMILY].value = i;
+            indices.family[GRAPHICS_FAMILY].exists = true;
         }
         if (queueFamilies[i].queueFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)) {
-            indices.computeFamily.value = i;
-            indices.computeFamily.exists = true;
+            indices.family[COMPUTE_FAMILY].value = i;
+            indices.family[COMPUTE_FAMILY].exists = true;
         }
 
         vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
         if (presentSupport) {
-            indices.presentFamily.value = i;
-            indices.presentFamily.exists = true;
+            indices.family[PRESENT_FAMILY].value = i;
+            indices.family[PRESENT_FAMILY].exists = true;
         }
 
         if (queueFamilies[i].queueFlags & VK_QUEUE_TRANSFER_BIT) {
-            indices.transferFamily.value = i;
-            indices.transferFamily.exists = true;
+            indices.family[TRANSFER_FAMILY].value = i;
+            indices.family[TRANSFER_FAMILY].exists = true;
         }
 
-        found = indices.graphicsFamily.exists &&
-                indices.presentFamily.exists &&
-                indices.transferFamily.exists &&
-                indices.computeFamily.exists &&
-                indices.graphicsFamily.value == i &&
-                indices.presentFamily.value == i &&
-                indices.transferFamily.value == i &&
-                indices.computeFamily.value == i;
+        found = indices.family[GRAPHICS_FAMILY].exists &&
+                indices.family[PRESENT_FAMILY].exists &&
+                indices.family[TRANSFER_FAMILY].exists &&
+                indices.family[COMPUTE_FAMILY].exists &&
+                indices.family[GRAPHICS_FAMILY].value == i &&
+                indices.family[PRESENT_FAMILY].value == i &&
+                indices.family[TRANSFER_FAMILY].value == i &&
+                indices.family[COMPUTE_FAMILY].value == i;
 
         i += 1;
     }

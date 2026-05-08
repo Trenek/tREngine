@@ -13,7 +13,7 @@ struct graphicsPipelineLayout *createGraphicPipelineLayout(struct graphicsPipeli
         .setLayoutCount = builder.qDescriptorSetLayout,
         .pSetLayouts = builder.descriptorSetLayout,
         .pushConstantRangeCount = builder.pushConstantRangeCount,
-        .pPushConstantRanges = builder.pPushConstantRanges
+        .pPushConstantRanges = builder.pPushConstantRanges,
     };
 
     *graphicsPipeLayout = (struct graphicsPipelineLayout) {
@@ -25,7 +25,7 @@ struct graphicsPipelineLayout *createGraphicPipelineLayout(struct graphicsPipeli
     return graphicsPipeLayout;
 }
 
-void destroyObjGraphicsPipelineLayout(void *pipePtr) {
+void destroyPipelineLayoutObj(void *pipePtr) {
     struct graphicsPipelineLayout *pipeLayout = pipePtr;
     vkDeviceWaitIdle(pipeLayout->device);
 

@@ -7,6 +7,29 @@
 #include "buffer.h"
 #include "entityBuilder.h"
 #include "instanceBuilder.h"
+#include "definitions.h"
+
+struct DrawCall2 {
+    VkBuffer *vertexBuffer;
+
+    size_t verticesQuantity;
+};
+
+struct DrawCall {
+    VkBuffer vertexBuffer;
+    VkBuffer indexBuffer;
+
+    union {
+        size_t indicesQuantity;
+        size_t verticesQuantity;
+    };
+
+    size_t pushConstantsSize;
+    VkShaderStageFlags pushConstantsStage;
+    void *pushConstans;
+
+    size_t instanceCount;
+};
 
 struct Entity {
     VkDevice device;
@@ -14,20 +37,13 @@ struct Entity {
     void *instance;
     void (*instanceUpdater)(void *instancePtr, void *instanceBufferPtr, uint32_t instanceCount, float deltaTime);
 
+    size_t qBuff;
     void **buffer;
-
-    size_t bufferSize;
     void *(**mapp)[MAX_FRAMES_IN_FLIGHT];
     size_t *range;
 
-    uint32_t meshQuantity;
-    struct Mesh *mesh;
-
-    int destination;
-    size_t pushConstantsSize;
-    void *pushConstants;
-
-    size_t qBuff;
+    uint32_t drawCallQuantity;
+    void *drawCall;
 
     struct buffer uniformModel;
     struct descriptor object;

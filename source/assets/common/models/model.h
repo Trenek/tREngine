@@ -24,13 +24,12 @@ struct ModelInput {
 };
 
 struct Mesh {
-    size_t indicesQuantity;
-
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
 
     VkBuffer indexBuffer;
     VkDeviceMemory indexBufferMemory;
+    size_t indicesQuantity;
 };
 
 struct Model {

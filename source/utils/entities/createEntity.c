@@ -1,8 +1,10 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "graphicsSetup.h"
 
+#include "model.h"
 #include "entity.h"
 #include "entityBuilder.h"
 #include "bufferOperations.h"
@@ -19,17 +21,12 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
         .instance = malloc(builder.instance.size * builder.instanceCount),
         .instanceUpdater = builder.instance.updater,
 
-        .pushConstantsSize = builder.pushConstantsSize,
-        .pushConstants = builder.pushConstants,
-        .destination = builder.destination,
-
         .buffer = calloc(builder.qBuff + 1, sizeof(void *)),
         .range = calloc(builder.qBuff + 1, sizeof(size_t)),
         .mapp = calloc(builder.qBuff + 1, sizeof(void *)),
 
-        .meshQuantity = builder.meshQuantity,
-        .mesh = builder.mesh,
-        .bufferSize = builder.instance.bufferSize,
+        .drawCallQuantity = builder.meshQuantity,
+        .drawCall = calloc(builder.meshQuantity, sizeof(struct DrawCall)),
 
         .object.descriptorPool = createDescriptorPool(graphics->device, builder.qBuff + 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER),
         .qBuff = builder.qBuff + 1
@@ -69,6 +66,21 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
 
     bindBuffersToDescriptorSets(result->object.descriptorSets, graphics->device, builder.qBuff + 1, buff2, result->range, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 
+    for (size_t i = 0; i < builder.meshQuantity; i += 1) {
+        ((struct DrawCall *)result->drawCall)[i] = (struct DrawCall) {
+            .vertexBuffer = builder.mesh[i].vertexBuffer,
+
+            .indicesQuantity = builder.mesh[i].indicesQuantity,
+            .indexBuffer = builder.mesh[i].indexBuffer,
+
+            .pushConstantsStage = builder.destination,
+            .pushConstantsSize = builder.pushConstantsSize,
+            .pushConstans = (char *)builder.pushConstants + i * builder.pushConstantsSize,
+
+            .instanceCount = builder.instanceCount,
+        };
+    }
+
     return result;
 }
 
@@ -87,6 +99,7 @@ void destroyEntity(void *modelPtr) {
     free(model->buffer);
     free(model->range);
     free(model->mapp);
+    free(model->drawCall);
 
     destroyBuffer(model->device, model->uniformModel.buffers, model->uniformModel.buffersMemory);
 

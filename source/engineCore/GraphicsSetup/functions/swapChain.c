@@ -70,7 +70,7 @@ struct swapChain createSwapChain(GLFWwindow *window, VkSurfaceKHR surface, VkPhy
         swapChainSupport.capabilities.minImageCount + 1;
 
     struct QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
-    uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value, indices.presentFamily.value };
+    uint32_t queueFamilyIndices[] = { indices.family[GRAPHICS_FAMILY].value, indices.family[PRESENT_FAMILY].value };
 
     VkSwapchainCreateInfoKHR createInfo = {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -81,9 +81,9 @@ struct swapChain createSwapChain(GLFWwindow *window, VkSurfaceKHR surface, VkPhy
         .imageExtent = extent,
         .imageArrayLayers = 1, // 1 unless stereoscopic 3D application
         .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, // VK_IMAGE_USAGE_TRANSFER_DST_BIT for postprocessing
-        .imageSharingMode = familyEqual(indices.graphicsFamily, indices.presentFamily) ? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT,
-        .queueFamilyIndexCount = familyEqual(indices.graphicsFamily, indices.presentFamily) ? 0 : 2, // 0 optional
-        .pQueueFamilyIndices = familyEqual(indices.graphicsFamily, indices.presentFamily) ? NULL : queueFamilyIndices, // NULL optional
+        .imageSharingMode = familyEqual(indices.family[GRAPHICS_FAMILY], indices.family[PRESENT_FAMILY]) ? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT,
+        .queueFamilyIndexCount = familyEqual(indices.family[GRAPHICS_FAMILY], indices.family[PRESENT_FAMILY]) ? 0 : 2, // 0 optional
+        .pQueueFamilyIndices = familyEqual(indices.family[GRAPHICS_FAMILY], indices.family[PRESENT_FAMILY]) ? NULL : queueFamilyIndices, // NULL optional
         .preTransform = swapChainSupport.capabilities.currentTransform,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
         .presentMode = presentMode,

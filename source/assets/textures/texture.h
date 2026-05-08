@@ -12,7 +12,7 @@ struct TextureData {
 };
 
 struct Textures {
-    VkDevice *device;
+    VkDevice device;
     struct descriptor descriptor;
 
     size_t quantity;

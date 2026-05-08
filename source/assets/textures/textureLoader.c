@@ -30,7 +30,7 @@ static struct Data loadTexture(struct TextureData texturePath, VkDevice device, 
 struct Textures *loadCubeMaps(struct GraphicsSetup *graphics, const char *texturePath[6]) {
     struct Textures *texture = calloc(1, sizeof(struct Textures));
     *texture = (struct Textures){
-        .device = &graphics->device,
+        .device = graphics->device,
         .data = calloc(1, sizeof(struct Data)),
         .quantity = 1,
         .descriptor = {
@@ -51,7 +51,7 @@ struct Textures *loadCubeMaps(struct GraphicsSetup *graphics, const char *textur
 struct Textures *loadTextures(struct GraphicsSetup *graphics, uint32_t texturesQuantity, struct TextureData texturePath[static texturesQuantity]) {
     struct Textures *texture = calloc(1, sizeof(struct Textures));
     *texture = (struct Textures) {
-        .device = &graphics->device,
+        .device = graphics->device,
         .data = calloc(texturesQuantity, sizeof(struct Data)),
         .quantity = texturesQuantity,
         .descriptor = {
@@ -74,17 +74,17 @@ struct Textures *loadTextures(struct GraphicsSetup *graphics, uint32_t texturesQ
 void unloadTextures(void *texturePtr) {
     struct Textures *texture = texturePtr;
     for (uint32_t i = 0; i < texture->quantity; i += 1) {
-        vkDestroySampler(*texture->device, texture->data[i].sampler, NULL);
-        vkDestroyImageView(*texture->device, texture->data[i].imageView, NULL);
+        vkDestroySampler(texture->device, texture->data[i].sampler, NULL);
+        vkDestroyImageView(texture->device, texture->data[i].imageView, NULL);
 
-        vkDestroyImage(*texture->device, texture->data[i].image, NULL);
-        vkFreeMemory(*texture->device, texture->data[i].imageMemory, NULL);
+        vkDestroyImage(texture->device, texture->data[i].image, NULL);
+        vkFreeMemory(texture->device, texture->data[i].imageMemory, NULL);
     }
 
     free(texture->data);
 
-    vkDestroyDescriptorPool(*texture->device, texture->descriptor.descriptorPool, NULL);
-    vkDestroyDescriptorSetLayout(*texture->device, texture->descriptor.descriptorSetLayout, NULL);
+    vkDestroyDescriptorSetLayout(texture->device, texture->descriptor.descriptorSetLayout, NULL);
+    vkDestroyDescriptorPool(texture->device, texture->descriptor.descriptorPool, NULL);
 
     free(texture);
 }

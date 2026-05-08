@@ -18,6 +18,6 @@ struct graphicsPipelineLayout {
     VkPipelineLayout pipelineLayout;
 };
 struct graphicsPipelineLayout *createGraphicPipelineLayout(struct graphicsPipelineLayoutBuilder builder, struct GraphicsSetup *graphics);
-void destroyObjGraphicsPipelineLayout(void *pipePtr);
+void destroyPipelineLayoutObj(void *pipePtr);
 
 #endif

@@ -3,19 +3,25 @@
 
 #include <vulkan/vulkan.h>
 
-struct value {
+struct Family {
     bool exists;
     uint32_t value;
 };
 
-struct QueueFamilyIndices {
-    struct value graphicsFamily;
-    struct value presentFamily;
-    struct value transferFamily;
-    struct value computeFamily;
+enum {
+    GRAPHICS_FAMILY,
+    PRESENT_FAMILY,
+    TRANSFER_FAMILY,
+    COMPUTE_FAMILY,
+
+    Q_QUEUE,
 };
 
-bool familyEqual(struct value family1, struct value family2);
+struct QueueFamilyIndices {
+    struct Family family[Q_QUEUE];
+};
+
+bool familyEqual(struct Family family1, struct Family family2);
 struct QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
 
 #endif

@@ -41,15 +41,13 @@ static int32_t removeDuplications(int32_t queueNumber, VkDeviceQueueCreateInfo a
     return queueNumber;
 }
 
-VkDevice createLogicalDevice(VkSurfaceKHR surface, VkPhysicalDevice physicalDevice, VkQueue *queues[]) {
+VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice, struct QueueFamilyIndices indices) {
     VkDevice device = NULL;
-
-    struct QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
 
     VkDeviceQueueCreateInfo queueCreateInfo[] = {
         {
             .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-            .queueFamilyIndex = indices.graphicsFamily.value,
+            .queueFamilyIndex = indices.family[GRAPHICS_FAMILY].value,
             .queueCount = 1,
             .pQueuePriorities = (float[]) { 1.0f },
             .flags = 0,
@@ -57,7 +55,7 @@ VkDevice createLogicalDevice(VkSurfaceKHR surface, VkPhysicalDevice physicalDevi
         },
         {
             .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-            .queueFamilyIndex = indices.presentFamily.value,
+            .queueFamilyIndex = indices.family[PRESENT_FAMILY].value,
             .queueCount = 1,
             .pQueuePriorities = (float[]) { 1.0f },
             .flags = 0,
@@ -65,7 +63,7 @@ VkDevice createLogicalDevice(VkSurfaceKHR surface, VkPhysicalDevice physicalDevi
         },
         {
             .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-            .queueFamilyIndex = indices.transferFamily.value,
+            .queueFamilyIndex = indices.family[TRANSFER_FAMILY].value,
             .queueCount = 1,
             .pQueuePriorities = (float[]) { 1.0f },
             .flags = 0,
@@ -73,7 +71,7 @@ VkDevice createLogicalDevice(VkSurfaceKHR surface, VkPhysicalDevice physicalDevi
         },
         {
             .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-            .queueFamilyIndex = indices.computeFamily.value,
+            .queueFamilyIndex = indices.family[COMPUTE_FAMILY].value,
             .queueCount = 1,
             .pQueuePriorities = (float[]) { 1.0f },
             .flags = 0,
@@ -116,11 +114,6 @@ VkDevice createLogicalDevice(VkSurfaceKHR surface, VkPhysicalDevice physicalDevi
     MY_ASSERT(indexingFeature.shaderStorageBufferArrayNonUniformIndexing);
     MY_ASSERT(indexingFeature.descriptorBindingStorageBufferUpdateAfterBind);
     MY_ASSERT(VK_SUCCESS == vkCreateDevice(physicalDevice, &createInfo, NULL, &device));
-
-    vkGetDeviceQueue(device, indices.graphicsFamily.value, 0, queues[0]);
-    vkGetDeviceQueue(device, indices.presentFamily.value, 0, queues[1]);
-    vkGetDeviceQueue(device, indices.transferFamily.value, 0, queues[2]);
-    vkGetDeviceQueue(device, indices.computeFamily.value, 0, queues[3]);
 
     return device;
 }

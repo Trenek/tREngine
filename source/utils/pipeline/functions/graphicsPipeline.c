@@ -51,7 +51,7 @@ static VkShaderModule createShaderModule(VkDevice device, const char *filename) 
     return shaderModule;
 }
 
-VkPipeline createGraphicsPipeline(struct graphicsPipelineBuilder builder, VkDevice device, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkSampleCountFlagBits msaaSamples) {
+VkPipeline createGraphicsPipeline(struct GraphicsPipelineBuilder builder, VkDevice device, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkSampleCountFlagBits msaaSamples) {
     VkPipeline graphicsPipeline = NULL;
 
     VkShaderModule vertShaderModule = createShaderModule(device, builder.vertexShader);

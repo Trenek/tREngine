@@ -6,7 +6,7 @@
 
 struct GraphicsSetup;
 
-struct graphicsPipelineBuilder {
+struct GraphicsPipelineBuilder {
     size_t qRenderPassCore;
     struct renderPassCore **renderPassCore;
 
@@ -27,12 +27,17 @@ struct graphicsPipelineBuilder {
     VkPipelineLayout pipelineLayout;
 };
 
+struct ComputePipelineBuilder {
+    const char *computeShader;
+    VkPipelineLayout pipelineLayout;
+};
+
 struct renderPipeline {
     VkPipeline pipeline;
     struct renderPassCore *core;
 };
 
-struct graphicsPipeline {
+struct Pipeline {
     VkDevice device;
 
     VkPipelineLayout pipelineLayout;
@@ -40,7 +45,8 @@ struct graphicsPipeline {
     struct renderPipeline *pipeline;
 };
 
-struct graphicsPipeline *createObjGraphicsPipeline(struct graphicsPipelineBuilder builder, struct GraphicsSetup *graphics);
-void destroyObjGraphicsPipeline(void *pipePtr);
+struct Pipeline *createGraphicsPipelineObj(struct GraphicsPipelineBuilder builder, struct GraphicsSetup *graphics);
+struct Pipeline *createComputePipelineObj(struct ComputePipelineBuilder builder, struct GraphicsSetup *graphics);
+void destroyPipelineObj(void *pipePtr);
 
 #endif

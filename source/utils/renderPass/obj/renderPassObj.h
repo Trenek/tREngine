@@ -8,27 +8,48 @@
 #include "buffer.h"
 
 struct Entity;
-struct graphicsPipeline;
+struct Pipeline;
 struct GraphicsSetup;
 
+struct BuffersToUpdate {
+    void *buffer;
+    void **mapp;
+    size_t range;
+};
+
 struct pipelineConnection {
+    VkPipeline pipeline;
+    VkPipelineLayout pipelineLayout;
+
+    struct descriptor *texture;
+
+    VkDescriptorSet **entitySet;
+    size_t qEntity;
+
+    void **drawData;
+    size_t *qDrawData;
+};
+
+struct pipelineConnectionBuilder {
     size_t pipeNum;
-    struct graphicsPipeline *pipe;
+    struct Pipeline *pipe;
     struct descriptor *texture;
     struct Entity **entity;
     size_t qEntity;
 };
 
+struct renderPassObj;
 struct renderPassBuilder {
     double coordinates[4];
     double color[4];
     struct renderPassCore *renderPass;
 
     struct cameraBuilder camera;
-    struct pipelineConnection *data;
+    struct pipelineConnectionBuilder *data;
     size_t qData;
 
     VkDescriptorSetLayout cameraDescriptorSetLayout;
+    void (*drawRenderPass)(VkCommandBuffer, uint32_t, struct renderPassObj *);
 };
 
 struct renderPassObj {
@@ -41,16 +62,24 @@ struct renderPassObj {
     struct pipelineConnection *data;
     size_t qData;
 
+    size_t qBuffersToUpdate;
+    struct BuffersToUpdate *buffersToUpdate;
+
     void *camera;
     void (*updateCameraBuffer)(void *buffersMapped, VkExtent2D swapChainExtent, void *);
 
     struct buffer cameraBuffer;
     VkDescriptorPool cameraDescriptorPool;
     VkDescriptorSet cameraDescriptorSet[MAX_FRAMES_IN_FLIGHT];
+
+    void (*drawRenderPass)(VkCommandBuffer, uint32_t, struct renderPassObj *);
 };
 
 struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, struct GraphicsSetup *graphics);
 void destroyRenderPassObj(void *renderPassPtr);
 void destroyRenderPassObjArr(size_t qRenderPass, struct renderPassObj **renderPass);
+
+void drawRenderPass(VkCommandBuffer commandBuffer, uint32_t currentFrame, struct renderPassObj *renderPass);
+void drawRenderPassComp(VkCommandBuffer commandBuffer, uint32_t currentFrame, struct renderPassObj *renderPass);
 
 #endif
