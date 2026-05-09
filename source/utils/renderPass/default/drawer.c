@@ -1,32 +1,7 @@
-#include <stdio.h>
-#include <string.h>
-
-#include "engineCore.h"
+#include <vulkan/vulkan.h>
 
 #include "renderPassObj.h"
 #include "entity.h"
-#include "model.h"
-
-#include "descriptorObj.h"
-
-#include "MY_ASSERT.h"
-
-static void bindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t currentFrame, struct renderPassObj *renderPass, size_t j, size_t k) {
-    size_t qSet = renderPass->data[j].texture == NULL ? 2 : 3;
-    VkDescriptorSet set[qSet];
-
-    if (renderPass->data[j].texture) {
-        set[0] = renderPass->data[j].entitySet[k][currentFrame];
-        set[1] = renderPass->data[j].texture->descriptorSets[currentFrame];
-        set[2] = renderPass->cameraDescriptorSet[currentFrame];
-    }
-    else {
-        set[0] = renderPass->data[j].entitySet[k][currentFrame];
-        set[1] = renderPass->cameraDescriptorSet[currentFrame];
-    }
-
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[j].pipelineLayout, 0, qSet, set, 0, NULL);
-}
 
 static void drawEntity(VkCommandBuffer commandBuffer, size_t qDraw, struct DrawCall *draw, VkPipelineLayout pipelineLayout) {
     for (uint32_t i = 0; i < qDraw; i += 1) {
@@ -47,11 +22,18 @@ static void drawEntity(VkCommandBuffer commandBuffer, size_t qDraw, struct DrawC
 }
 
 void drawRenderPass(VkCommandBuffer commandBuffer, uint32_t currentFrame, struct renderPassObj *renderPass) {
+    int one = renderPass->cameraBuffer.range == 0;
+
     for (uint32_t i = 0; i < renderPass->qData; i += 1) {
+        int two = one + (renderPass->data[i].texture == 0);
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipeline);
 
+        if (renderPass->data[i].texture) {
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipelineLayout, 1 - one, 1, &renderPass->data[i].texture->descriptorSets[currentFrame], 0, NULL);
+        }
+
         for (uint32_t j = 0; j < renderPass->data[i].qEntity; j += 1) {
-            bindDescriptorSets(commandBuffer, currentFrame, renderPass, i, j);
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipelineLayout, 2 - two, 1, &renderPass->data[i].entitySet[j][currentFrame], 0, NULL);
             drawEntity(commandBuffer, renderPass->data[i].qDrawData[j], renderPass->data[i].drawData[j], renderPass->data[i].pipelineLayout);
         }
     }

@@ -63,6 +63,11 @@ static void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageInd
             vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
             vkCmdSetScissor(commandBuffer, 0, 1, &renderArena);
 
+            // TODO: use vkCmdBindDescriptorSets2 in the future as it's nicer
+            if (renderPass[i]->cameraBuffer.range) {
+                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass[i]->data[i].pipelineLayout, 0, 1, &renderPass[i]->cameraDescriptorSet[currentFrame], 0, NULL);
+            }
+
             renderPass[i]->drawRenderPass(commandBuffer, currentFrame, renderPass[i]);
 
             vkCmdEndRenderPass(commandBuffer);
@@ -186,10 +191,11 @@ void aquireNextImage(struct EngineCore *vulkan, VkFence *inFlightFence, VkSemaph
 
 static void updateBuffers(size_t currentFrame, size_t qRenderPass, struct renderPassObj *renderPass[qRenderPass], VkExtent2D swapChainExtent) {
     for (uint32_t i = 0; i < qRenderPass; i += 1) {
-        renderPass[i]->updateCameraBuffer(renderPass[i]->cameraBuffer.buffersMapped[currentFrame], (VkExtent2D) { 
-            .width = renderPass[i]->coordinates[2] * swapChainExtent.width,
-            .height = renderPass[i]->coordinates[3] * swapChainExtent.height,
-        }, renderPass[i]->camera);
+        if (renderPass[i]->updateCameraBuffer)
+            renderPass[i]->updateCameraBuffer(renderPass[i]->cameraBuffer.buffersMapped[currentFrame], (VkExtent2D) { 
+                .width = renderPass[i]->coordinates[2] * swapChainExtent.width,
+                .height = renderPass[i]->coordinates[3] * swapChainExtent.height,
+            }, renderPass[i]->camera);
         for (uint32_t j = 0; j < renderPass[i]->qBuffersToUpdate; j += 1) {
             memcpy(
                 renderPass[i]->buffersToUpdate[j].mapp[currentFrame],

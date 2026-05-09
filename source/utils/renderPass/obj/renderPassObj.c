@@ -82,26 +82,28 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
     result->buffersToUpdate = consolidateBuffers(builder, result->qBuffersToUpdate);
     memcpy(result->coordinates, builder.coordinates, sizeof(double[4]));
 
-    createBuffers(
-        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
-        builder.camera.bufferSize,
-        &result->cameraBuffer.buffers, 
-        &result->cameraBuffer.buffersMemory, 
-        result->cameraBuffer.buffersMapped, 
-        graphics->device, 
-        graphics->physicalDevice, 
-        graphics->surface
-    );
+    if (builder.camera.bufferSize) {
+        createBuffers(
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
+            result->cameraBuffer.range = builder.camera.bufferSize,
+            &result->cameraBuffer.buffers, 
+            &result->cameraBuffer.buffersMemory, 
+            result->cameraBuffer.buffersMapped, 
+            graphics->device, 
+            graphics->physicalDevice, 
+            graphics->surface
+        );
 
-    createDescriptorSets(result->cameraDescriptorSet, graphics->device, result->cameraDescriptorPool, builder.cameraDescriptorSetLayout);
-    bindBuffersToDescriptorSets(
-        result->cameraDescriptorSet, 
-        graphics->device, 
-        1, 
-        (VkBuffer* []) { &result->cameraBuffer.buffers }, 
-        (size_t []) { builder.camera.bufferSize }, 
-        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-    );
+        createDescriptorSets(result->cameraDescriptorSet, graphics->device, result->cameraDescriptorPool, builder.cameraDescriptorSetLayout);
+        bindBuffersToDescriptorSets(
+            result->cameraDescriptorSet, 
+            graphics->device, 
+            1, 
+            (VkBuffer* []) { &result->cameraBuffer.buffers }, 
+            (size_t []) { builder.camera.bufferSize }, 
+            VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+        );
+    }
 
     return result;
 }
