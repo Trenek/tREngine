@@ -9,6 +9,70 @@
 #include "entityBuilder.h"
 #include "bufferOperations.h"
 
+struct InstanceInfo {
+    VkDevice device;
+    struct buffer uniformModel;
+
+    void *prevInfo;
+    void (*prevCleanup)(void *);
+};
+
+static void cleanupInstance(void *infoPtr) {
+    struct InstanceInfo *info = infoPtr;
+    destroyBuffer(info->device, info->uniformModel.buffers, info->uniformModel.buffersMemory);
+
+    if (info->prevCleanup) {
+        info->prevCleanup(info->prevInfo);
+    }
+
+    free(info);
+}
+
+struct Entity *createInstancedEntity(struct EntityBuilder builder, struct GraphicsSetup *graphics) {
+    struct InstanceInfo *info = calloc(1, sizeof(struct InstanceInfo));
+    *info = (struct InstanceInfo) {
+        .device = graphics->device,
+        .prevCleanup = builder.cleanup,
+        .prevInfo = builder.additional
+    };
+
+    size_t qBuff = builder.qBuff + 1;
+    VkBuffer (*buff[qBuff]);
+    void *(*mapp[qBuff])[MAX_FRAMES_IN_FLIGHT];
+    bool isChangable[qBuff];
+    size_t range[qBuff];
+
+    createBuffers(
+        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 
+        builder.instanceCount * builder.instance.bufferSize, 
+        &info->uniformModel.buffers, 
+        &info->uniformModel.buffersMemory, 
+        info->uniformModel.buffersMapped, 
+        graphics->device, 
+        graphics->physicalDevice, 
+        graphics->surface
+    );
+
+    mapp[0] = &info->uniformModel.buffersMapped;
+    buff[0] = &info->uniformModel.buffers;
+    range[0] = builder.instanceCount * builder.instance.bufferSize;
+    isChangable[0] = true;
+    memcpy(buff + 1, builder.buff, sizeof(void *) * builder.qBuff);
+    memcpy(range + 1, builder.range, sizeof(size_t) * builder.qBuff);
+    memcpy(mapp + 1, builder.mapp, sizeof(void *) * builder.qBuff);
+    memcpy(isChangable + 1, builder.isChangable, sizeof(bool) * builder.qBuff);
+
+    builder.qBuff = qBuff;
+    builder.buff = buff;
+    builder.mapp = mapp;
+    builder.isChangable = isChangable;
+    builder.range = range;
+    builder.additional = info;
+    builder.cleanup = cleanupInstance;
+
+    return createEntity(builder, graphics);
+}
+
 struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *graphics) {
     struct Entity *result = calloc(1, sizeof(struct Entity));
 
@@ -21,50 +85,35 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
         .instance = malloc(builder.instance.size * builder.instanceCount),
         .instanceUpdater = builder.instance.updater,
 
-        .buffer = calloc(builder.qBuff + 1, sizeof(void *)),
-        .range = calloc(builder.qBuff + 1, sizeof(size_t)),
-        .mapp = calloc(builder.qBuff + 1, sizeof(void *)),
+        .buffer = calloc(builder.qBuff, sizeof(void *)),
+        .range = calloc(builder.qBuff, sizeof(size_t)),
+        .mapp = calloc(builder.qBuff, sizeof(void *)),
 
         .drawCallQuantity = builder.meshQuantity,
         .drawCall = calloc(builder.meshQuantity, sizeof(struct DrawCall)),
 
-        .object.descriptorPool = createDescriptorPool(graphics->device, builder.qBuff + 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER),
-        .qBuff = builder.qBuff + 1
+        .object.descriptorPool = builder.qBuff > 0 ? createDescriptorPool(graphics->device, builder.qBuff, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER) : NULL,
+        .qBuff = builder.qBuff,
     };
 
-    result->buffer[0] = calloc(builder.instanceCount, builder.instance.bufferSize);
-    for (size_t i = 0; i < builder.qBuff; i += 1) {
-        result->buffer[i + 1] = builder.isChangable[i] ? calloc(1, builder.range[i]) : NULL;
-        if (builder.isChangable[i]) {
-            memcpy(result->buffer[i + 1], (*builder.mapp[i])[0], builder.range[i]);
+    if (builder.qBuff > 0) {
+        for (size_t i = 0; i < builder.qBuff; i += 1) {
+            result->buffer[i] = builder.isChangable[i] ? calloc(1, builder.range[i]) : NULL;
+            if (builder.isChangable[i]) {
+                memcpy(result->buffer[i], (*builder.mapp[i])[0], builder.range[i]);
+            }
         }
+
+        VkBuffer (*buff2[builder.qBuff]);
+
+        memcpy(buff2, builder.buff, sizeof(void *) * builder.qBuff);
+        memcpy(result->range, builder.range, sizeof(size_t) * builder.qBuff);
+        memcpy(result->mapp, builder.mapp, sizeof(void *) * builder.qBuff);
+
+        createDescriptorSets(result->object.descriptorSets, graphics->device, result->object.descriptorPool, builder.objectLayout);
+
+        bindBuffersToDescriptorSets(result->object.descriptorSets, graphics->device, builder.qBuff, buff2, result->range, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     }
-
-    VkBuffer (*buff2[builder.qBuff + 1]);
-
-    createBuffers(
-        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 
-        builder.instanceCount * builder.instance.bufferSize, 
-        &result->uniformModel.buffers, 
-        &result->uniformModel.buffersMemory, 
-        result->uniformModel.buffersMapped, 
-        graphics->device, 
-        graphics->physicalDevice, 
-        graphics->surface
-    );
-
-    result->mapp[0] = &result->uniformModel.buffersMapped;
-    buff2[0] = &result->uniformModel.buffers;
-    result->range[0] = builder.instanceCount * builder.instance.bufferSize;
-    memcpy(buff2 + 1, builder.buff, sizeof(void *) * builder.qBuff);
-    memcpy(result->range + 1, builder.range, sizeof(size_t) * builder.qBuff);
-    memcpy(result->mapp + 1, builder.mapp, sizeof(void *) * builder.qBuff);
-
-    memset(result->buffer[0], 0, builder.instance.bufferSize * builder.instanceCount);
-
-    createDescriptorSets(result->object.descriptorSets, graphics->device, result->object.descriptorPool, builder.objectLayout);
-
-    bindBuffersToDescriptorSets(result->object.descriptorSets, graphics->device, builder.qBuff + 1, buff2, result->range, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 
     for (size_t i = 0; i < builder.meshQuantity; i += 1) {
         ((struct DrawCall *)result->drawCall)[i] = (struct DrawCall) {
@@ -100,8 +149,6 @@ void destroyEntity(void *modelPtr) {
     free(model->range);
     free(model->mapp);
     free(model->drawCall);
-
-    destroyBuffer(model->device, model->uniformModel.buffers, model->uniformModel.buffersMemory);
 
     vkDestroyDescriptorPool(model->device, model->object.descriptorPool, NULL);
 

@@ -45,7 +45,6 @@ struct Entity {
     uint32_t drawCallQuantity;
     void *drawCall;
 
-    struct buffer uniformModel;
     struct descriptor object;
 
     void *additional;
@@ -56,6 +55,7 @@ struct GraphicsSetup;
 struct EntityBuilder;
 
 struct Entity *createEntity(struct EntityBuilder modelBuilder, struct GraphicsSetup *graphics);
+struct Entity *createInstancedEntity(struct EntityBuilder builder, struct GraphicsSetup *graphics);
 void destroyEntity(void *modelPtr);
 void destroyEntityArray(size_t num, struct Entity *modelArray[num], struct GraphicsSetup *graphics);
 

@@ -80,7 +80,7 @@ struct Entity *createGltf(struct GltfBuilder builder, struct GraphicsSetup *grap
     mapp[1] = &anim->anim.buffersMapped;
 
     size_t qBuff = sizeof(buff) / sizeof(buff[0]);
-    return createEntity((struct EntityBuilder) {
+    return createInstancedEntity((struct EntityBuilder) {
         .instanceCount = builder.instanceCount,
         .meshQuantity = builder.modelData->meshQuantity,
         .mesh = builder.modelData->mesh,

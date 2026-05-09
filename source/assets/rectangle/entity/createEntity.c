@@ -16,3 +16,14 @@ struct Entity *createRec(struct RecBuilder builder, struct GraphicsSetup *graphi
         .instance = builder.instance,
     }, graphics);
 }
+
+struct Entity *createInstancedRec(struct RecBuilder builder, struct GraphicsSetup *graphics) {
+    return createInstancedEntity((struct EntityBuilder) {
+        .instanceCount = builder.instanceCount,
+        .meshQuantity = builder.modelData->meshQuantity,
+        .mesh = builder.modelData->mesh,
+
+        .objectLayout = builder.objectLayout,
+        .instance = builder.instance,
+    }, graphics);
+}

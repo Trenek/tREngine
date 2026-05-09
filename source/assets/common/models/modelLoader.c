@@ -24,6 +24,7 @@ struct Model *loadModel(const char *filePath, struct GraphicsSetup *graphics) {
         NULL != strstr(filePath, ".glb") ? gltfLoadModel :
         NULL != strstr(filePath, ".gltf") ? gltfLoadModel :
         NULL != strstr(filePath, ".rec") ? recLoadModel :
+        NULL != strstr(filePath, ".scr") ? screenLoadModel :
         NULL;
     assert(NULL != fun);
 

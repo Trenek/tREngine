@@ -18,5 +18,6 @@ struct RecBuilder {
 };
 
 struct Entity *createRec(struct RecBuilder builder, struct GraphicsSetup *graphics);
+struct Entity *createInstancedRec(struct RecBuilder builder, struct GraphicsSetup *graphics);
 
 #endif

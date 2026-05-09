@@ -47,7 +47,7 @@ struct Entity *createObj(struct ObjBuilder builder, struct GraphicsSetup *graphi
         pc[i].textureOffset = builder.textureOffset;
     }
 
-    return createEntity((struct EntityBuilder) {
+    return createInstancedEntity((struct EntityBuilder) {
         .instanceCount = builder.instanceCount,
         .meshQuantity = builder.modelData->meshQuantity,
         .mesh = builder.modelData->mesh,

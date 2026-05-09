@@ -122,7 +122,7 @@ struct Entity *createFont(struct FontBuilder builder, struct GraphicsSetup *grap
         meshQuantity * sizeof(mat4),
     };
 
-    return createEntity((struct EntityBuilder) {
+    return createInstancedEntity((struct EntityBuilder) {
         .meshQuantity = meshQuantity,
         .mesh = info->mesh,
 

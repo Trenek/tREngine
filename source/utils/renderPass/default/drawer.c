@@ -33,7 +33,9 @@ void drawRenderPass(VkCommandBuffer commandBuffer, uint32_t currentFrame, struct
         }
 
         for (uint32_t j = 0; j < renderPass->data[i].qEntity; j += 1) {
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipelineLayout, 2 - two, 1, &renderPass->data[i].entitySet[j][currentFrame], 0, NULL);
+            if (renderPass->data[i].entitySet[j][currentFrame]) {
+                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipelineLayout, 2 - two, 1, &renderPass->data[i].entitySet[j][currentFrame], 0, NULL);
+            }
             drawEntity(commandBuffer, renderPass->data[i].qDrawData[j], renderPass->data[i].drawData[j], renderPass->data[i].pipelineLayout);
         }
     }
