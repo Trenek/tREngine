@@ -1,4 +1,5 @@
 #include <cgltf.h>
+#include <assert.h>
 #include <string.h>
 
 #include "gltf.h"

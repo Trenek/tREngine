@@ -97,7 +97,7 @@ static size_t getLeft(size_t qT, struct Point **T, struct Point *this) {
     return max;
 }
 
-static void getProper(struct Point **lesser, struct Point **bigger, int N, struct Point *polygon) {
+static void getProper(struct Point **lesser, struct Point **bigger, [[maybe_unused]] int N, struct Point *polygon) {
     struct Point **temp = lesser;
 
     if (more(*lesser, *bigger)) {
