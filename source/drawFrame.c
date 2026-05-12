@@ -179,7 +179,7 @@ void presentFrame(struct EngineCore *vulkan, size_t qRenderPassCore, struct rend
         recreateSwapChain(vulkan, qRenderPassCore, renderPassCore);
 
         for (size_t i = 0; false; i += 1) {
-            recreateCommandQueue(queue[i], &vulkan->graphics);
+            recreateCommandQueue(queue[i]);
         }
     }
 }
