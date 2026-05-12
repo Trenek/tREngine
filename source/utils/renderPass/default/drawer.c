@@ -28,6 +28,10 @@ void drawRenderPass(VkCommandBuffer commandBuffer, uint32_t currentFrame, struct
         int two = one + (renderPass->data[i].texture == 0);
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipeline);
 
+        // TODO: use vkCmdBindDescriptorSets2 in the future as it's nicer
+        if (renderPass->cameraBuffer.range) {
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipelineLayout, 0, 1, &renderPass->cameraDescriptorSet[currentFrame], 0, NULL);
+        }
         if (renderPass->data[i].texture) {
             vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipelineLayout, 1 - one, 1, &renderPass->data[i].texture->descriptorSets[currentFrame], 0, NULL);
         }

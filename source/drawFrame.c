@@ -63,11 +63,6 @@ static void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageInd
             vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
             vkCmdSetScissor(commandBuffer, 0, 1, &renderArena);
 
-            // TODO: use vkCmdBindDescriptorSets2 in the future as it's nicer
-            if (renderPass[i]->cameraBuffer.range) {
-                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass[i]->data[i].pipelineLayout, 0, 1, &renderPass[i]->cameraDescriptorSet[currentFrame], 0, NULL);
-            }
-
             renderPass[i]->drawRenderPass(commandBuffer, currentFrame, renderPass[i]);
 
             vkCmdEndRenderPass(commandBuffer);
