@@ -41,6 +41,9 @@ struct GraphicsSetup setupGraphics(GLFWwindow *window) {
     graphics.physicalDevice = pickPhysicalDevice(&graphics.msaaSamples, graphics.instance, graphics.surface);
     graphics.families = findQueueFamilies(graphics.physicalDevice, graphics.surface);
     graphics.device = createLogicalDevice(graphics.physicalDevice, graphics.families);
+#ifndef NDEBUG
+    graphics.debugNamer = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetDeviceProcAddr(graphics.device, "vkSetDebugUtilsObjectNameEXT");
+#endif
 
     vkGetDeviceQueue(graphics.device, graphics.families.family[GRAPHICS_FAMILY].value, 0, &graphics.graphicsQueue);
     vkGetDeviceQueue(graphics.device, graphics.families.family[PRESENT_FAMILY].value, 0, &graphics.presentQueue);

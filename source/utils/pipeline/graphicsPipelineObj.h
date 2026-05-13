@@ -25,6 +25,8 @@ struct GraphicsPipelineBuilder {
     VkCompareOp operation;
 
     VkPipelineLayout pipelineLayout;
+
+    const char *debugName;
 };
 
 struct ComputePipelineBuilder {

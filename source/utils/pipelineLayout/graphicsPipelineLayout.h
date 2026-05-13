@@ -10,6 +10,8 @@ struct graphicsPipelineLayoutBuilder {
     VkDescriptorSetLayout *descriptorSetLayout;
     uint32_t pushConstantRangeCount;
     const VkPushConstantRange* pPushConstantRanges;
+
+    const char * const debugName;
 };
 
 struct graphicsPipelineLayout {

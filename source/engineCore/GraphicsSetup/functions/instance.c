@@ -14,7 +14,7 @@ static const bool enableValidationLayers = true;
 #endif
 
 static const char *const validationLayers[] = {
-    "VK_LAYER_KHRONOS_validation"
+    "VK_LAYER_KHRONOS_validation",
 };
 static const uint32_t validationLayersCount = sizeof(validationLayers) / sizeof(const char *);
 
@@ -99,7 +99,7 @@ static const char **getRequiredExtensions(uint32_t *extensionCount) {
     memcpy(extensions, glfwExtensions, sizeof(const char *) * *extensionCount);
     
     if (enableValidationLayers) {
-        extensions[*extensionCount] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME; // not sure how it works
+        extensions[*extensionCount] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
     }
     
     *extensionCount = newSize;

@@ -22,6 +22,15 @@ struct graphicsPipelineLayout *createGraphicPipelineLayout(struct graphicsPipeli
 
     MY_ASSERT(VK_SUCCESS == vkCreatePipelineLayout(graphics->device, &pipelineLayoutInfo, NULL, &graphicsPipeLayout->pipelineLayout));
 
+#ifndef NDEBUG
+    graphics->debugNamer(graphics->device, &(VkDebugUtilsObjectNameInfoEXT) {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+        .objectType = VK_OBJECT_TYPE_PIPELINE_LAYOUT,
+        .objectHandle = (uint64_t)graphicsPipeLayout->pipelineLayout,
+        .pObjectName = builder.debugName,
+    });
+#endif
+
     return graphicsPipeLayout;
 }
 

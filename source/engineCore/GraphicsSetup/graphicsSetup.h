@@ -17,6 +17,8 @@ struct GraphicsSetup {
     VkQueue computeQueue;
     VkDevice device;
 
+    PFN_vkSetDebugUtilsObjectNameEXT debugNamer;
+
     struct QueueFamilyIndices families;
 
     struct swapChain swapChain;

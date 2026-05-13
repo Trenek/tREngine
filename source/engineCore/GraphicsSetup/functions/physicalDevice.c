@@ -13,9 +13,6 @@
 const char *const deviceExtensions[] = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
-#ifdef __APPLE__
-    VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
-#endif
 };
 const uint32_t deviceExtensionsCount = sizeof(deviceExtensions) / sizeof(const char *const);
 
