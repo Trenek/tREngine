@@ -4,9 +4,10 @@
 #include <stb_image.h>
 #include <vulkan/vulkan.h>
 
+#include "graphicsSetup.h"
 #include "textureFunctions.h"
 #include "MY_ASSERT.h"
-#include "bufferOperations.h"
+#include "bufferObj.h"
 #include "imageOperations.h"
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
@@ -64,8 +65,7 @@ static void base64_decode(const char *in, const unsigned long in_len, char *out)
 }
 
 // transfer command and queue
-// transfer command and queue
-static VkImage createTextureBufferPixels(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, stbi_uc *pixels, int width, int height, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkCommandPool commandPool, VkQueue queue) {
+static VkImage createTextureBufferPixels(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, stbi_uc *pixels, int width, int height, struct GraphicsSetup *graphics) {
     VkImage textureImage = NULL;
 
     *mipLevels = floor(log2(MAX(width, height))) + 1;
@@ -73,18 +73,23 @@ static VkImage createTextureBufferPixels(VkDeviceMemory *textureImageMemory, uin
 
     MY_ASSERT(NULL != pixels);
 
-    VkBuffer stagingBuffer = createBuffer(device, physicalDevice, surface, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-    VkDeviceMemory stagingBufferMemory = createBufferMemory(device, physicalDevice, stagingBuffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    struct BufferObj *staging = createBufferObj((struct BufferBuilder) {
+        .bufferUsage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        .memoryProperty = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        .size = imageSize,
+        .repetitions = 1
+    }, graphics);
 
     void *data;
-    vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+    vkMapMemory(graphics->device, staging->memory, 0, imageSize, 0, &data);
     memcpy(data, pixels, imageSize);
-    vkUnmapMemory(device, stagingBufferMemory);
+    vkUnmapMemory(graphics->device, staging->memory);
 
     stbi_image_free(pixels);
 
+    // TODO - i guess cleanup and better abstractions simular to BufferObj?
     textureImage = createImage(
-        device,
+        graphics->device,
         width, height, *mipLevels, VK_SAMPLE_COUNT_1_BIT,
         VK_FORMAT_R8G8B8A8_SRGB,
         VK_IMAGE_TILING_OPTIMAL,
@@ -92,16 +97,14 @@ static VkImage createTextureBufferPixels(VkDeviceMemory *textureImageMemory, uin
         1,
         0
     );
-    *textureImageMemory = createImageMemory(device, physicalDevice, textureImage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    *textureImageMemory = createImageMemory(graphics->device, graphics->physicalDevice, textureImage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, *mipLevels, device, commandPool, queue, 1);
-    copyBufferToImage(stagingBuffer, textureImage, width, height, device, commandPool, queue, 1);
+    transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, *mipLevels, graphics->device, graphics->transferCommandPool, graphics->transferQueue, 1);
+    copyBufferToImage(staging->buffer, textureImage, width, height, graphics->device, graphics->transferCommandPool, graphics->transferQueue, 1);
     //transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, *mipLevels, device, commandPool, queue);
-    generateMipmaps(textureImage, VK_FORMAT_R8G8B8A8_SRGB, width, height, *mipLevels, device, physicalDevice, commandPool, queue);
+    generateMipmaps(textureImage, VK_FORMAT_R8G8B8A8_SRGB, width, height, *mipLevels, graphics->device, graphics->physicalDevice, graphics->transferCommandPool, graphics->transferQueue);
 
-
-    vkDestroyBuffer(device, stagingBuffer, NULL);
-    vkFreeMemory(device, stagingBufferMemory, NULL);
+    destroyBufferObj(staging);
 
     return textureImage;
 }
@@ -182,7 +185,7 @@ static struct textureData loadDefault(struct TextureData) {
     return data;
 }
 
-VkImage createTextureBuffer(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, struct TextureData texturePath, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkCommandPool commandPool, VkQueue queue) {
+VkImage createTextureBuffer(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, struct TextureData texturePath, struct GraphicsSetup *graphics) {
     struct textureData (*loadTexture)(struct TextureData) =
         texturePath.data == NULL ?                   loadDefault :
         strncmp(texturePath.data, "data:", 5) == 0 ? loadFromMemoryBase64 :
@@ -191,11 +194,11 @@ VkImage createTextureBuffer(VkDeviceMemory *textureImageMemory, uint32_t *mipLev
 
     struct textureData data = loadTexture(texturePath);
 
-    return createTextureBufferPixels(textureImageMemory, mipLevels, data.pixels, data.width, data.height, device, physicalDevice, surface, commandPool, queue);
+    return createTextureBufferPixels(textureImageMemory, mipLevels, data.pixels, data.width, data.height, graphics);
 }
 
 
-VkImage createCubeMapTexture(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, const char *texturePath[6], VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkCommandPool commandPool, VkQueue queue) {
+VkImage createCubeMapTexture(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, const char *texturePath[6], struct GraphicsSetup *graphics) {
     VkImage textureImage = NULL;
 
     int width = 0;
@@ -216,22 +219,27 @@ VkImage createCubeMapTexture(VkDeviceMemory *textureImageMemory, uint32_t *mipLe
         MY_ASSERT(NULL != pixels[i]);
     }
 
-    VkBuffer stagingBuffer = createBuffer(device, physicalDevice, surface, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-    VkDeviceMemory stagingBufferMemory = createBufferMemory(device, physicalDevice, stagingBuffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    struct BufferObj *staging = createBufferObj((struct BufferBuilder) {
+        .bufferUsage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        .memoryProperty = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
+                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        .size = imageSize,
+        .repetitions = 1,
+    }, graphics);
 
     void *data;
-    vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+    vkMapMemory(graphics->device, staging->memory, 0, imageSize, 0, &data);
     for (int i = 0; i < 6; i += 1) {
         memcpy((char *)data + i * layerSize, pixels[i], layerSize);
     }
-    vkUnmapMemory(device, stagingBufferMemory);
+    vkUnmapMemory(graphics->device, staging->memory);
 
     for (int i = 0; i < 6; i += 1) {
         stbi_image_free(pixels[i]);
     }
 
     textureImage = createImage(
-        device,
+        graphics->device,
         width, height, *mipLevels, VK_SAMPLE_COUNT_1_BIT,
         VK_FORMAT_R8G8B8A8_SRGB,
         VK_IMAGE_TILING_OPTIMAL,
@@ -239,14 +247,13 @@ VkImage createCubeMapTexture(VkDeviceMemory *textureImageMemory, uint32_t *mipLe
         6,
         VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT
     );
-    *textureImageMemory = createImageMemory(device, physicalDevice, textureImage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    *textureImageMemory = createImageMemory(graphics->device, graphics->physicalDevice, textureImage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, *mipLevels, device, commandPool, queue, 6);
-    copyBufferToImage(stagingBuffer, textureImage, width, height, device, commandPool, queue, 6);
-    transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, *mipLevels, device, commandPool, queue, 6);
+    transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, *mipLevels, graphics->device, graphics->transferCommandPool, graphics->transferQueue, 6);
+    copyBufferToImage(staging->buffer, textureImage, width, height, graphics->device, graphics->transferCommandPool, graphics->transferQueue, 6);
+    transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, *mipLevels, graphics->device, graphics->transferCommandPool, graphics->transferQueue, 6);
 
-    vkDestroyBuffer(device, stagingBuffer, NULL);
-    vkFreeMemory(device, stagingBufferMemory, NULL);
+    destroyBufferObj(staging);
 
     return textureImage;
 }

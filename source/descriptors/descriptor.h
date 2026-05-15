@@ -13,7 +13,7 @@ struct descriptor {
 
 VkDescriptorSetLayout createDescriptorSetLayout(VkDevice device, size_t qBindings, VkDescriptorSetLayoutBinding bindings[qBindings]);
 VkDescriptorPool createDescriptorPool(VkDevice device, size_t qBuff, VkDescriptorType descriptorType);
-void bindBuffersToDescriptorSets(VkDescriptorSet descriptorSets[], VkDevice device, size_t qBuff, VkBuffer (*buff[qBuff]), size_t range[qBuff], VkDescriptorType descriptorType);
+void bindBuffersToDescriptorSets(VkDescriptorSet descriptorSets[], VkDevice device, size_t qBuff, VkBuffer buff[qBuff], size_t range[qBuff], bool isSingle[qBuff], VkDescriptorType descriptorType);
 
 void createDescriptorSets(VkDescriptorSet descriptorSets[], VkDevice device, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout);
 

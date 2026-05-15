@@ -9,8 +9,6 @@
 #include "isClockWise.h"
 #include "myMalloc.h"
 
-#include "bufferOperations.h"
-
 #include "font.h"
 
 #define IF(x, y) if (!(x)) printf("%s", y); else
@@ -605,72 +603,48 @@ size_t getGlyphID(char a) {
 
     while (buffer[i] != 0 && buffer[i] != a) i += 1;
 
-    return 
-        a == ' ' ? i :
-        buffer[i] == 0 ? i - 1 : i;
+    return buffer[i] == 0 ? i - 1 : i;
 }
 
-void LoadCharacter(struct ModelInput *model, mat4 **glyphOffset, FT_Face face) {
+void LoadCharacter(struct ModelInput *model, float *glyphOffset, FT_Face face) {
     float space = 0;
 
     for (size_t i = 0; i < model->meshQuantity; i += 1) {
         loadCharacter(face, &model->mesh[i], buffer[i], &space);
 
+        glyphOffset[i] = space;
         for (uint32_t k = 0; k < MAX_FRAMES_IN_FLIGHT; k += 1) {
             model->mesh[i].sizeOfVertex = sizeof(struct FontVertex);
-            glm_mat4_identity(glyphOffset[k][i]);
-            glm_translate(glyphOffset[k][i], (vec3) {
-                space, 0, 0
-            });
         }
     }
     for (uint32_t k = 0; k < MAX_FRAMES_IN_FLIGHT; k += 1) {
-        glm_mat4_identity(glyphOffset[k][model->meshQuantity]);
-        glm_translate(glyphOffset[k][model->meshQuantity], (vec3) {
-            loadSpaceOffset(face), 0, 0
-        });
+        glyphOffset[model->meshQuantity] = loadSpaceOffset(face);
     }
 }
 
 static void cleanupObjModelInfo(void *objInfoPtr) {
     struct FontModelInfo *objInfo = objInfoPtr;
 
-    if (NULL != objInfo->buffers) {
-        destroyBuffer(objInfo->device, objInfo->buffers->buffers, objInfo->buffers->buffersMemory);
-    }
-
-    free(objInfo->buffers);
+    free(objInfo->offset);
     free(objInfo);
 } 
 
-void ttfLoadModel(const char *objectPath, struct ModelInput *model, struct GraphicsSetup *graphics) {
+void ttfLoadModel(const char *objectPath, struct ModelInput *model, struct GraphicsSetup *) {
     FT_Library library = nullptr;
     FT_Face face = nullptr;
     struct FontModelInfo *info = model->info = malloc(sizeof(struct FontModelInfo));
 
     model->cleanup = cleanupObjModelInfo;
     model->meshQuantity = strlen(buffer);
-    model->mesh = malloc(sizeof(struct Mesh) * model->meshQuantity);
+    model->mesh = malloc(sizeof(struct MeshInput) * model->meshQuantity);
     model->qTexture = 1;
     model->texture = calloc(1, sizeof(struct TextureData));
 
-    info->device = graphics->device;
-    info->buffers = malloc(sizeof(struct buffer));
-
-    createBuffers(
-        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-        model->meshQuantity * sizeof(mat4) + sizeof(mat4),
-        &info->buffers->buffers, 
-        &info->buffers->buffersMemory, 
-        info->buffers->buffersMapped, 
-        graphics->device, 
-        graphics->physicalDevice, 
-        graphics->surface
-    );
+    info->offset = malloc(sizeof(float) * (model->meshQuantity + 1));
 
     IF (0 == FT_Init_FreeType(&library), "No Library")
     IF (0 == FT_New_Face(library, objectPath, 0, &face), "No Face") {
-        LoadCharacter(model, (void *)info->buffers->buffersMapped, face);
+        LoadCharacter(model, (void *)info->offset, face);
     }
 
     FT_Done_Face(face);

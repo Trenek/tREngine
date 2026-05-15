@@ -5,31 +5,29 @@
 
 #include "renderPassObj.h"
 
+#include "bufferObj.h"
 #include "graphicsSetup.h"
 #include "definitions.h"
 
-#include "buffer.h"
 #include "descriptor.h"
 #include "graphicsPipelineObj.h"
 
-#include "bufferOperations.h"
 #include "entity.h"
 
 static struct BuffersToUpdate *consolidateBuffers(struct renderPassBuilder builder, size_t qBuffersToUpdate) {
     struct BuffersToUpdate *result = malloc(sizeof(struct BuffersToUpdate) * qBuffersToUpdate);
+    size_t k0 = 0;
     
-    for (size_t i = 0, k0 = 0; i < builder.qData; i += 1) {
+    for (size_t i = 0; i < builder.qData; i += 1) {
         for (size_t j = 0; j < builder.data[i].qEntity; j += 1) {
             for (size_t k = 0; k < builder.data[i].entity[j]->qBuff; k += 1) {
-                if (builder.data[i].entity[j]->buffer[k]) {
-                    result[k0] = (struct BuffersToUpdate) {
-                        .buffer = builder.data[i].entity[j]->buffer[k],
-                        .range = builder.data[i].entity[j]->range[k],
-                        .mapp = *builder.data[i].entity[j]->mapp[k],
-                    };
-                    
-                    k0 += 1;
-                }
+                result[k0] = (struct BuffersToUpdate) {
+                    .buffer = builder.data[i].entity[j]->buffer[k],
+                    .range = builder.data[i].entity[j]->range[k],
+                    .mapp = *builder.data[i].entity[j]->mapp[k],
+                };
+                
+                k0 += 1;
             }
         } 
     }
@@ -71,11 +69,8 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
             result->data[i].qDrawData[j] = builder.data[i].entity[j]->drawCallQuantity;
             result->data[i].drawData[j] = builder.data[i].entity[j]->drawCall;
             result->data[i].entitySet[j] = builder.data[i].entity[j]->object.descriptorSets;
-            for (size_t k = 0; k < builder.data[i].entity[j]->qBuff; k += 1) {
-                if (builder.data[i].entity[j]->buffer[k]) {
-                    result->qBuffersToUpdate += 1;
-                }
-            }
+
+            result->qBuffersToUpdate += builder.data[i].entity[j]->qBuff;
         } 
     }
 
@@ -83,24 +78,28 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
     memcpy(result->coordinates, builder.coordinates, sizeof(double[4]));
 
     if (builder.camera.bufferSize) {
-        createBuffers(
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
-            result->cameraBuffer.range = builder.camera.bufferSize,
-            &result->cameraBuffer.buffers, 
-            &result->cameraBuffer.buffersMemory, 
-            result->cameraBuffer.buffersMapped, 
-            graphics->device, 
-            graphics->physicalDevice, 
-            graphics->surface
-        );
+        result->cameraBuffer = createBufferObj((struct BufferBuilder) {
+            .bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            .memoryProperty = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            .size = builder.camera.bufferSize,
+            .repetitions = MAX_FRAMES_IN_FLIGHT
+        }, graphics);
+
+        vkMapMemory(graphics->device, result->cameraBuffer->memory, 0, result->cameraBuffer->range, 0, result->cameraMapped);
+
+        for (size_t i = 1; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
+            result->cameraMapped[i] = (char *)result->cameraMapped[i - 1] + result->cameraBuffer->range;
+        }
 
         createDescriptorSets(result->cameraDescriptorSet, graphics->device, result->cameraDescriptorPool, builder.cameraDescriptorSetLayout);
         bindBuffersToDescriptorSets(
             result->cameraDescriptorSet, 
             graphics->device, 
             1, 
-            (VkBuffer* []) { &result->cameraBuffer.buffers }, 
-            (size_t []) { builder.camera.bufferSize }, 
+            (VkBuffer []) { result->cameraBuffer->buffer }, 
+            (size_t []) { result->cameraBuffer->range }, 
+            (bool []) { false },
             VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
         );
     }
@@ -111,7 +110,10 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
 void destroyRenderPassObj(void *renderPassPtr) {
     struct renderPassObj *renderPass = renderPassPtr;
     vkDestroyDescriptorPool(renderPass->device, renderPass->cameraDescriptorPool, NULL);
-    destroyBuffer(renderPass->device, renderPass->cameraBuffer.buffers, renderPass->cameraBuffer.buffersMemory);
+
+    if (renderPass->cameraBuffer) {
+        destroyBufferObj(renderPass->cameraBuffer);
+    }
 
     for (size_t i = 0; i < renderPass->qData; i += 1) {
         free(renderPass->data[i].drawData);

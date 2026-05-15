@@ -40,15 +40,15 @@ VkDescriptorPool createDescriptorPool(VkDevice device, size_t qBuff, VkDescripto
     return descriptorPool;
 }
 
-void bindBuffersToDescriptorSets(VkDescriptorSet descriptorSets[], VkDevice device, size_t qBuff, VkBuffer (*buff[qBuff]), size_t range[qBuff], VkDescriptorType descriptorType) {
+void bindBuffersToDescriptorSets(VkDescriptorSet descriptorSets[], VkDevice device, size_t qBuff, VkBuffer buff[qBuff], size_t range[qBuff], bool isSingle[qBuff], VkDescriptorType descriptorType) {
     VkWriteDescriptorSet descriptorWrites[qBuff];
     VkDescriptorBufferInfo bufferInfo[qBuff];
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
         for (size_t j = 0; j < qBuff; j += 1) {
             bufferInfo[j] = (VkDescriptorBufferInfo) {
-                .buffer = *buff[j],
-                .offset = i * range[j],
+                .buffer = buff[j],
+                .offset = !isSingle[j] * i * range[j],
                 .range = range[j]
             };
             descriptorWrites[j] = (VkWriteDescriptorSet){

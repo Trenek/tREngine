@@ -4,7 +4,7 @@
 
 void recLoadModel(const char *, struct ModelInput *model, struct GraphicsSetup *) {
     model->meshQuantity = 1;
-    model->mesh = calloc(model->meshQuantity, sizeof(struct Mesh));
+    model->mesh = calloc(model->meshQuantity, sizeof(struct MeshInput));
 
     model->mesh->sizeOfVertex = sizeof(struct RecVertex);
     model->mesh->verticesQuantity = 4;
@@ -41,7 +41,7 @@ void recLoadModel(const char *, struct ModelInput *model, struct GraphicsSetup *
 
 void screenLoadModel(const char *, struct ModelInput *model, struct GraphicsSetup *) {
     model->meshQuantity = 1;
-    model->mesh = calloc(model->meshQuantity, sizeof(struct Mesh));
+    model->mesh = calloc(model->meshQuantity, sizeof(struct MeshInput));
 
     model->mesh->sizeOfVertex = sizeof(struct RecVertex);
     model->mesh->verticesQuantity = 4;

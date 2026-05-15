@@ -5,7 +5,7 @@
 #include "texture.h"
 #include "model.h"
 
-#include "bufferOperations.h"
+#include "bufferObj.h"
 #include "obj.h"
 
 static size_t countV(fastObjMesh *obj, fastObjGroup grp) {
@@ -116,53 +116,49 @@ struct Materials {
     int pad1;
 };
 
-static void loadMaterials(fastObjMesh *obj, struct Materials *materials[MAX_FRAMES_IN_FLIGHT]) {
+static struct Materials *loadMaterials(fastObjMesh *obj, size_t materialCount) {
+    struct Materials *materials = malloc(sizeof(struct Materials) * materialCount);
     vec3 one = { 1.0f, 1.0f, 1.0f };
 
     if (0 == obj->material_count) {
-        for (uint32_t k = 0; k < MAX_FRAMES_IN_FLIGHT; k += 1) {
-            memset(materials[k], 0, sizeof(struct Materials));
+        memset(materials, 0, sizeof(struct Materials));
 
-            glm_vec3_dup(one, materials[k]->Ka);
-            glm_vec3_dup(one, materials[k]->Kd);
-        }
+        glm_vec3_dup(one, materials->Ka);
+        glm_vec3_dup(one, materials->Kd);
     }
     else for (size_t i = 0; i < obj->material_count; i += 1) {
-        for (uint32_t k = 0; k < MAX_FRAMES_IN_FLIGHT; k += 1) {
-            memcpy(materials[k][i].Ka, obj->materials[i].Ka, sizeof(float[3]));
-            memcpy(materials[k][i].Kd, obj->materials[i].Kd, sizeof(float[3]));
-            memcpy(materials[k][i].Ks, obj->materials[i].Ks, sizeof(float[3]));
-            memcpy(materials[k][i].Ke, obj->materials[i].Ke, sizeof(float[3]));
-            memcpy(materials[k][i].Kt, obj->materials[i].Kt, sizeof(float[3]));
-            memcpy(materials[k][i].Tf, obj->materials[i].Tf, sizeof(float[3]));
+        memcpy(materials[i].Ka, obj->materials[i].Ka, sizeof(float[3]));
+        memcpy(materials[i].Kd, obj->materials[i].Kd, sizeof(float[3]));
+        memcpy(materials[i].Ks, obj->materials[i].Ks, sizeof(float[3]));
+        memcpy(materials[i].Ke, obj->materials[i].Ke, sizeof(float[3]));
+        memcpy(materials[i].Kt, obj->materials[i].Kt, sizeof(float[3]));
+        memcpy(materials[i].Tf, obj->materials[i].Tf, sizeof(float[3]));
 
-            materials[k][i].Ns = obj->materials[i].Ns;
-            materials[k][i].Ni = obj->materials[i].Ni;
-            materials[k][i].d = obj->materials[i].d;
-            materials[k][i].illum = obj->materials[i].illum;
-            materials[k][i].fallback = obj->materials[i].fallback;
+        materials[i].Ns = obj->materials[i].Ns;
+        materials[i].Ni = obj->materials[i].Ni;
+        materials[i].d = obj->materials[i].d;
+        materials[i].illum = obj->materials[i].illum;
+        materials[i].fallback = obj->materials[i].fallback;
 
-            materials[k][i].map_ka = obj->materials[i].map_Ka;
-            materials[k][i].map_kd = obj->materials[i].map_Kd;
-            materials[k][i].map_ks = obj->materials[i].map_Ks;
-            materials[k][i].map_ke = obj->materials[i].map_Ke;
-            materials[k][i].map_kt = obj->materials[i].map_Kt;
-            materials[k][i].map_ns = obj->materials[i].map_Ns;
-            materials[k][i].map_ni = obj->materials[i].map_Ni;
-            materials[k][i].map_d = obj->materials[i].map_d;
-            materials[k][i].map_bump = obj->materials[i].map_bump;
-        }
+        materials[i].map_ka = obj->materials[i].map_Ka;
+        materials[i].map_kd = obj->materials[i].map_Kd;
+        materials[i].map_ks = obj->materials[i].map_Ks;
+        materials[i].map_ke = obj->materials[i].map_Ke;
+        materials[i].map_kt = obj->materials[i].map_Kt;
+        materials[i].map_ns = obj->materials[i].map_Ns;
+        materials[i].map_ni = obj->materials[i].map_Ni;
+        materials[i].map_d = obj->materials[i].map_d;
+        materials[i].map_bump = obj->materials[i].map_bump;
     }
+
+    return materials;
 }
 
 static void cleanupObjModelInfo(void *objInfoPtr) {
     struct ObjModelInfo *objInfo = objInfoPtr;
 
-    if (NULL != objInfo->buffers) {
-        destroyBuffer(objInfo->device, objInfo->buffers->buffers, objInfo->buffers->buffersMemory);
-    }
+    destroyBufferObj(objInfo->buffer);
 
-    free(objInfo->buffers);
     free(objInfo);
 } 
 
@@ -177,11 +173,9 @@ void objLoadModel(const char *objectPath, struct ModelInput *model, struct Graph
 
     model->cleanup = cleanupObjModelInfo;
     model->meshQuantity = obj->group_count;
-    model->mesh = malloc(sizeof(struct Mesh) * model->meshQuantity);
+    model->mesh = malloc(sizeof(struct MeshInput) * model->meshQuantity);
 
     info->device = graphics->device;
-    info->buffers = malloc(sizeof(struct buffer));
-    info->buffers[0].range = sizeof(struct Materials) * max(1, obj->material_count);
     model->qTexture = obj->texture_count;
     model->texture = malloc(sizeof(struct TextureData) * obj->texture_count);
 
@@ -190,18 +184,40 @@ void objLoadModel(const char *objectPath, struct ModelInput *model, struct Graph
     }
     loadObjTextures(model, obj);
 
-    createBuffers(
-        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-        info->buffers[0].range,
-        &info->buffers[0].buffers, 
-        &info->buffers[0].buffersMemory, 
-        info->buffers[0].buffersMapped, 
-        graphics->device, 
-        graphics->physicalDevice, 
-        graphics->surface
-    );
+    const size_t materialCount = max(1, obj->material_count);
+    void * const materials = loadMaterials(obj, materialCount);
 
-    loadMaterials(obj, (void *)info->buffers[0].buffersMapped);
+    // materials
+    struct BufferObj *srcBuffer = createBufferObj((struct BufferBuilder) {
+        .bufferUsage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        .memoryProperty = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        .size = sizeof(struct Materials) * max(1, obj->material_count),
+        .repetitions = 1,
+    }, graphics);
+
+    void *map = NULL;
+    vkMapMemory(graphics->device, srcBuffer->memory, 0, srcBuffer->range, 0, &map);
+    memcpy(map, materials, srcBuffer->range);
+    vkUnmapMemory(graphics->device, srcBuffer->memory);
+
+    info->buffer = createBufferObj((struct BufferBuilder) {
+        .bufferUsage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+                       VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        .memoryProperty = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        .size = sizeof(struct Materials) * max(1, obj->material_count),
+        .repetitions = 1,
+    }, graphics);
+
+    copyBufferObj(info->buffer, srcBuffer, 1, (VkBufferCopy[]) {
+        {
+            .size = srcBuffer->range,
+            .srcOffset = 0,
+            .dstOffset = 0,
+        }
+    }, graphics);
     
+    destroyBufferObj(srcBuffer);
+    free(materials);
     fast_obj_destroy(obj);
 }

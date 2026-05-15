@@ -1,14 +1,12 @@
+#include <vulkan/vulkan.h>
 #include "Vertex.h"
-#include "buffer.h"
 
 #define OBJ(X) ((struct ObjVertex *)X)
 
 struct ObjModelInfo {
     VkDevice device;
 
-    struct buffer *buffers;
-
-    void *pushConstants;
+    struct BufferObj *buffer;
 };
 
 struct ObjVertex {

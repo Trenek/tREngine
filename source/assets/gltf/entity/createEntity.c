@@ -8,76 +8,74 @@
 #include "gltfBuilder.h"
 #include "gltf.h"
 
-#include "buffer.h"
-#include "bufferOperations.h"
+#include "bufferObj.h"
 
 struct toCleanup {
     VkDevice device;
 
-    struct buffer anim;
+    struct BufferObj *anim;
+    void *animMapped[MAX_FRAMES_IN_FLIGHT];
 };
 
 void cleanupAnim(void *toCleanArg) {
     struct toCleanup *toClean = toCleanArg;
 
-    if (toClean) {
-        destroyBuffer(toClean->device, toClean->anim.buffers, toClean->anim.buffersMemory);
+    destroyBufferObj(toClean->anim);
 
-        free(toClean);
-    }
+    free(toClean);
 }
 
 struct Entity *createGltf(struct GltfBuilder builder, struct GraphicsSetup *graphics) {
     struct GltfModelInfo *modelInfo = builder.modelData->info;
 
-    VkBuffer (*buff[]) = {
-        &modelInfo->buffers[0].buffers,
+    VkBuffer buff[] = {
+        modelInfo->buffers[0]->buffer,
+        modelInfo->buffers[1]->buffer,
         NULL,
-        &modelInfo->buffers[2].buffers,
     };
 
     void *(*mapp[])[MAX_FRAMES_IN_FLIGHT] = {
-        &modelInfo->buffers[0].buffersMapped,
         NULL,
-        &modelInfo->buffers[2].buffersMapped,
+        NULL,
+        NULL,
     };
 
     bool isChangable[] = {
         false,
-        true,
         false,
+        true,
+    };
+
+    bool isSingle[] = {
+        true,
+        true,
+        false
     };
 
     size_t range[] = {
-        modelInfo->buffers[0].range,
-        modelInfo->buffers[1].range,
-        modelInfo->buffers[2].range,
+        modelInfo->buffers[0]->range,
+        modelInfo->buffers[1]->range,
+        modelInfo->qNodes * sizeof(struct AnimationData),
     };
 
     struct toCleanup *anim = malloc(sizeof(struct toCleanup));
 
     anim->device = graphics->device;
-    createBuffers(
-        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 
-        range[1], 
-        &anim->anim.buffers, 
-        &anim->anim.buffersMemory, 
-        anim->anim.buffersMapped, 
-        graphics->device, 
-        graphics->physicalDevice, 
-        graphics->surface
-    );
+    anim->anim = createBufferObj((struct BufferBuilder) {
+        .bufferUsage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+        .memoryProperty = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        .size = modelInfo->qNodes * sizeof(struct AnimationData),
+        .repetitions = MAX_FRAMES_IN_FLIGHT
+    }, graphics);
 
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
-        memcpy(
-            anim->anim.buffersMapped[i],
-            modelInfo->buffers[1].buffersMapped[i],
-            modelInfo->buffers[1].range
-        );
+    vkMapMemory(graphics->device, anim->anim->memory, 0, anim->anim->range, 0, anim->animMapped);
+    for (size_t i = 1; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
+        anim->animMapped[i] = (char *)anim->animMapped[i - 1] + anim->anim->range;
     }
 
-    buff[1] = &anim->anim.buffers;
-    mapp[1] = &anim->anim.buffersMapped;
+    buff[2] = anim->anim->buffer;
+    mapp[2] = &anim->animMapped;
 
     size_t qBuff = sizeof(buff) / sizeof(buff[0]);
     return createInstancedEntity((struct EntityBuilder) {
@@ -88,6 +86,7 @@ struct Entity *createGltf(struct GltfBuilder builder, struct GraphicsSetup *grap
         .buff = buff,
         .mapp = mapp,
         .isChangable = isChangable,
+        .isSingle = isSingle,
         .range = range,
         .qBuff = qBuff,
 

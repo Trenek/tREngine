@@ -5,7 +5,6 @@
 
 #include "definitions.h"
 #include "cameraBuilder.h"
-#include "buffer.h"
 
 struct Entity;
 struct Pipeline;
@@ -68,7 +67,8 @@ struct renderPassObj {
     void *camera;
     void (*updateCameraBuffer)(void *buffersMapped, VkExtent2D swapChainExtent, void *);
 
-    struct buffer cameraBuffer;
+    void *cameraMapped[MAX_FRAMES_IN_FLIGHT];
+    struct BufferObj *cameraBuffer;
     VkDescriptorPool cameraDescriptorPool;
     VkDescriptorSet cameraDescriptorSet[MAX_FRAMES_IN_FLIGHT];
 

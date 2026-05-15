@@ -4,7 +4,6 @@
 #include <vulkan/vulkan.h>
 
 #include "descriptor.h"
-#include "buffer.h"
 #include "entityBuilder.h"
 #include "instanceBuilder.h"
 #include "definitions.h"
@@ -33,6 +32,7 @@ struct DrawCall {
 
 struct Entity {
     VkDevice device;
+
     uint32_t instanceCount;
     void *instance;
     void (*instanceUpdater)(void *instancePtr, void *instanceBufferPtr, uint32_t instanceCount, float deltaTime);

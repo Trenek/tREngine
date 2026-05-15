@@ -5,6 +5,7 @@
 #include "model.h"
 
 #include "objBuilder.h"
+#include "bufferObj.h"
 #include "obj.h"
 
 struct toCleanup {
@@ -25,20 +26,24 @@ struct Entity *createObj(struct ObjBuilder builder, struct GraphicsSetup *graphi
 
     struct ObjModelInfo *modelInfo = builder.modelData->info;
 
-    VkBuffer (*buff[]) = {
-        &modelInfo->buffers->buffers
+    VkBuffer buff[] = {
+        modelInfo->buffer->buffer
     };
 
     void *(*mapp[])[MAX_FRAMES_IN_FLIGHT] = {
-        &modelInfo->buffers->buffersMapped
+        NULL
     };
 
     bool isChangable[] = {
         false
     };
 
+    bool isSingle[] = {
+        true
+    };
+
     size_t range[] = {
-        modelInfo->buffers->range
+        modelInfo->buffer->range
     };
 
     size_t qBuff = 1;
@@ -55,6 +60,7 @@ struct Entity *createObj(struct ObjBuilder builder, struct GraphicsSetup *graphi
         .buff = buff,
         .mapp = mapp,
         .isChangable = isChangable,
+        .isSingle = isSingle,
         .range = range,
         .qBuff = qBuff,
 

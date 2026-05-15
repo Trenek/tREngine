@@ -1,14 +1,11 @@
+#include <vulkan/vulkan_core.h>
+
 #include "Vertex.h"
-#include "buffer.h"
 
 #define FNT(x) ((struct FontVertex *)(x))
 
 struct FontModelInfo {
-    VkDevice device;
-
-    struct buffer *buffers;
-
-    void *pushConstants;
+    float *offset;
 };
 
 struct FontVertex {

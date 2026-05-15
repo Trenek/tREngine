@@ -8,7 +8,7 @@
 
 #include "graphicsSetup.h"
 
-#include "bufferOperations.h"
+#include "bufferObj.h"
 
 static cgltf_accessor *getAccessor(cgltf_attribute_type type, cgltf_primitive* primitive) {
     cgltf_accessor *result = NULL;
@@ -223,7 +223,7 @@ static void cleanupGltfModelInfo(void *objInfoPtr) {
 
     if (NULL != objInfo->buffers) {
         for (size_t i = 0; i < objInfo->qBuffer; i += 1) {
-            destroyBuffer(objInfo->device, objInfo->buffers[i].buffers, objInfo->buffers[i].buffersMemory);
+            destroyBufferObj(objInfo->buffers[i]);
         }
     }
 
@@ -340,7 +340,7 @@ void loadCollisionBoxes(cgltf_data *data, struct GltfModelInfo *info, struct Mod
     }
 }
 
-static struct NodeData *loadNodes(cgltf_data *data, struct GltfModelInfo *info, struct ModelInput *model) {
+static struct NodeData *loadNodes(cgltf_data *data, struct GltfModelInfo *info, struct ModelInput *model, mat4 *transformations) {
     struct NodeData *nodes = malloc(data->nodes_count * sizeof(struct NodeData));
 
     size_t loadedMesh = 0;
@@ -364,10 +364,7 @@ static struct NodeData *loadNodes(cgltf_data *data, struct GltfModelInfo *info, 
             }
         }
 
-        for (size_t j = 0; j < MAX_FRAMES_IN_FLIGHT; j += 1) {
-            loadTransformations(((mat4**)info->buffers[0].buffersMapped)[j][i], &data->nodes[i]);
-            glm_mat4_identity(((struct AnimationData**)info->buffers[1].buffersMapped)[j][i].animation);
-        }
+        loadTransformations(transformations[i], &data->nodes[i]);
     }
 
     return nodes;
@@ -383,28 +380,24 @@ struct Materials {
     cgltf_float pad1;
 };
 
-static void loadMaterials(cgltf_data *data, struct Materials *materials[MAX_FRAMES_IN_FLIGHT]) {
+static void loadMaterials(cgltf_data *data, struct Materials *materials) {
     vec4 id = { 1.0f, 1.0f, 1.0f, 1.0f };
 
     if (0 == data->materials_count) {
-        for (uint32_t k = 0; k < MAX_FRAMES_IN_FLIGHT; k += 1) {
-            memcpy(materials[k]->base_color_factor, id, sizeof(float[4]));
-            
-            materials[k]->metallic_factor = 0;
-            materials[k]->roughness_factor = 0;
-        }
+        memcpy(materials->base_color_factor, id, sizeof(float[4]));
+        
+        materials->metallic_factor = 0;
+        materials->roughness_factor = 0;
     }
     else for (size_t i = 0; i < data->materials_count; i += 1) {
-        for (uint32_t k = 0; k < MAX_FRAMES_IN_FLIGHT; k += 1) {
-            memcpy(materials[k][i].base_color_factor, data->materials[i].pbr_metallic_roughness.base_color_factor, sizeof(float[4]));
-            
-            materials[k][i].baseColorID = data->materials[i].pbr_metallic_roughness.base_color_texture.texture == NULL ? 0 : cgltf_texture_index(
-                data, 
-                data->materials[i].pbr_metallic_roughness.base_color_texture.texture
-            );
-            materials[k][i].metallic_factor = data->materials[i].pbr_metallic_roughness.metallic_factor;
-            materials[k][i].roughness_factor = data->materials[i].pbr_metallic_roughness.roughness_factor;
-        }
+        memcpy(materials[i].base_color_factor, data->materials[i].pbr_metallic_roughness.base_color_factor, sizeof(float[4]));
+        
+        materials[i].baseColorID = data->materials[i].pbr_metallic_roughness.base_color_texture.texture == NULL ? 0 : cgltf_texture_index(
+            data, 
+            data->materials[i].pbr_metallic_roughness.base_color_texture.texture
+        );
+        materials[i].metallic_factor = data->materials[i].pbr_metallic_roughness.metallic_factor;
+        materials[i].roughness_factor = data->materials[i].pbr_metallic_roughness.roughness_factor;
     }
 }
 
@@ -440,61 +433,52 @@ void gltfLoadModel(const char *modelPath, struct ModelInput *model, struct Graph
     cgltf_options options = {};
     cgltf_data *data = NULL;
 
+    void *map1 = NULL;
+    void *map2 = NULL;
+
     if (cgltf_result_success == cgltf_parse_file(&options, modelPath, &data))
     if (cgltf_result_success == cgltf_load_buffers(&options, data, modelPath)) {
         struct GltfModelInfo *info = model->info = malloc(sizeof(struct GltfModelInfo));
 
         model->cleanup = cleanupGltfModelInfo,
         model->meshQuantity = countMeshContainingNodes(data);
-        model->mesh = malloc(sizeof(struct Mesh) * model->meshQuantity);
+        model->mesh = malloc(sizeof(struct MeshInput) * model->meshQuantity);
 
         info->device = graphics->device;
         info->pushConstants = malloc(sizeof(struct GltfPushConstants) * data->nodes_count);
-        info->qBuffer = 3;
-        info->buffers = malloc(info->qBuffer * sizeof(struct buffer));
-        info->buffers[0].range = data->nodes_count * sizeof(mat4);
-        info->buffers[1].range = data->nodes_count * sizeof(struct AnimationData);
-        info->buffers[2].range = max(data->materials_count, 1) * sizeof(struct Materials);
         model->qTexture = max(data->textures_count, 1);
         model->texture = calloc(model->qTexture, sizeof(struct TextureData));
 
-        createBuffers(
-            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-            info->buffers[0].range,
-            &info->buffers[0].buffers, 
-            &info->buffers[0].buffersMemory, 
-            info->buffers[0].buffersMapped, 
-            graphics->device, 
-            graphics->physicalDevice, 
-            graphics->surface
-        );
+        info->qBuffer = 2;
+        info->buffers = malloc(info->qBuffer * sizeof(struct BufferObj *));
 
-        createBuffers(
-            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-            info->buffers[1].range,
-            &info->buffers[1].buffers, 
-            &info->buffers[1].buffersMemory, 
-            info->buffers[1].buffersMapped, 
-            graphics->device, 
-            graphics->physicalDevice, 
-            graphics->surface
-        );
+        // transformations
+        info->buffers[0] = createBufferObj((struct BufferBuilder) {
+            .bufferUsage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+            .memoryProperty = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
+                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            .size = data->nodes_count * sizeof(mat4),
+            .repetitions = 1,
+        }, graphics);
 
-        createBuffers(
-            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-            info->buffers[2].range,
-            &info->buffers[2].buffers, 
-            &info->buffers[2].buffersMemory, 
-            info->buffers[2].buffersMapped, 
-            graphics->device, 
-            graphics->physicalDevice, 
-            graphics->surface
-        );
 
-        info->nodes = loadNodes(data, info, model);
+        vkMapMemory(graphics->device, info->buffers[0]->memory, 0, info->buffers[0]->range, 0, &map1);
+
+        // materials
+        info->buffers[1] = createBufferObj((struct BufferBuilder) {
+            .bufferUsage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+            .memoryProperty = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
+                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            .size = max(data->materials_count, 1) * sizeof(struct Materials),
+            .repetitions = 1,
+        }, graphics);
+
+        vkMapMemory(graphics->device, info->buffers[1]->memory, 0, info->buffers[1]->range, 0, &map2);
+
+        info->nodes = loadNodes(data, info, model, map1);
 
         loadCollisionBoxes(data, info, model);
-        loadMaterials(data, (void *)info->buffers[2].buffersMapped);
+        loadMaterials(data, map2);
         loadGltfTextures(model, data);
 
         info->qAnim = data->animations_count;
@@ -503,6 +487,9 @@ void gltfLoadModel(const char *modelPath, struct ModelInput *model, struct Graph
 
         info->qSkin = data->skins_count;
         info->skin = loadSkins(data);
+
+        vkUnmapMemory(graphics->device, info->buffers[0]->memory);
+        vkUnmapMemory(graphics->device, info->buffers[1]->memory);
     }
 
     cgltf_free(data);

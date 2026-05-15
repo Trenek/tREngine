@@ -1,5 +1,5 @@
+#include <vulkan/vulkan.h>
 #include "Vertex.h"
-#include "buffer.h"
 
 #define GLTF(X) ((struct GltfVertex *)X)
 #define GLTF_PC(X) ((struct GltfPushConstants *)X)
@@ -67,7 +67,7 @@ struct GltfModelInfo {
     VkDevice device;
 
     size_t qBuffer;
-    struct buffer *buffers;
+    struct BufferObj **buffers;
 
     size_t qAnim;
     size_t qNodes;

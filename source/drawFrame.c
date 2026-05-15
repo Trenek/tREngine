@@ -11,6 +11,8 @@
 #include "MY_ASSERT.h"
 
 static void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, VkExtent2D swapChainExtent, uint32_t currentFrame, size_t qRenderPass, struct renderPassObj *renderPass[qRenderPass]) {
+    vkResetCommandBuffer(commandBuffer, 0);
+
     MY_ASSERT(VK_SUCCESS == vkBeginCommandBuffer(commandBuffer, &(VkCommandBufferBeginInfo) {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .flags = 0,
@@ -137,7 +139,6 @@ void queueDraw(struct CommandQueue *commandQueue, struct EngineCore *vulkan, siz
 
     vkResetFences(vulkan->graphics.device, 1, &commandQueue->inFlightFence[currentFrame]);
 
-    vkResetCommandBuffer(commandQueue->commandBuffer[currentFrame], 0);
     recordCommandBuffer(commandQueue->commandBuffer[currentFrame], imageIndex, vulkan->graphics.swapChain.extent, currentFrame, qRenderPass, renderPass);
 
     MY_ASSERT(VK_SUCCESS == vkQueueSubmit(vulkan->graphics.graphicsQueue, 1, &submitInfo, commandQueue->inFlightFence[currentFrame]));
@@ -187,7 +188,7 @@ void aquireNextImage(struct EngineCore *vulkan, VkFence *inFlightFence, VkSemaph
 static void updateBuffers(size_t currentFrame, size_t qRenderPass, struct renderPassObj *renderPass[qRenderPass], VkExtent2D swapChainExtent) {
     for (uint32_t i = 0; i < qRenderPass; i += 1) {
         if (renderPass[i]->updateCameraBuffer)
-            renderPass[i]->updateCameraBuffer(renderPass[i]->cameraBuffer.buffersMapped[currentFrame], (VkExtent2D) { 
+            renderPass[i]->updateCameraBuffer(renderPass[i]->cameraMapped[currentFrame], (VkExtent2D) { 
                 .width = renderPass[i]->coordinates[2] * swapChainExtent.width,
                 .height = renderPass[i]->coordinates[3] * swapChainExtent.height,
             }, renderPass[i]->camera);

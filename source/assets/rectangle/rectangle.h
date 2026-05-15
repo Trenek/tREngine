@@ -1,5 +1,5 @@
+#include <vulkan/vulkan.h>
 #include "Vertex.h"
-#include "buffer.h"
 
 #define REC(X) ((struct RecVertex *)X)
 

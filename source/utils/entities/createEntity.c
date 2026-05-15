@@ -7,11 +7,12 @@
 #include "model.h"
 #include "entity.h"
 #include "entityBuilder.h"
-#include "bufferOperations.h"
+#include "bufferObj.h"
 
 struct InstanceInfo {
     VkDevice device;
-    struct buffer uniformModel;
+    struct BufferObj *instanceBuffer;
+    void *instanceMapped[MAX_FRAMES_IN_FLIGHT];
 
     void *prevInfo;
     void (*prevCleanup)(void *);
@@ -19,7 +20,8 @@ struct InstanceInfo {
 
 static void cleanupInstance(void *infoPtr) {
     struct InstanceInfo *info = infoPtr;
-    destroyBuffer(info->device, info->uniformModel.buffers, info->uniformModel.buffersMemory);
+
+    destroyBufferObj(info->instanceBuffer);
 
     if (info->prevCleanup) {
         info->prevCleanup(info->prevInfo);
@@ -37,35 +39,44 @@ struct Entity *createInstancedEntity(struct EntityBuilder builder, struct Graphi
     };
 
     size_t qBuff = builder.qBuff + 1;
-    VkBuffer (*buff[qBuff]);
+    VkBuffer buff[qBuff];
     void *(*mapp[qBuff])[MAX_FRAMES_IN_FLIGHT];
     bool isChangable[qBuff];
+    bool isSingle[qBuff];
     size_t range[qBuff];
 
-    createBuffers(
-        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 
-        builder.instanceCount * builder.instance.bufferSize, 
-        &info->uniformModel.buffers, 
-        &info->uniformModel.buffersMemory, 
-        info->uniformModel.buffersMapped, 
-        graphics->device, 
-        graphics->physicalDevice, 
-        graphics->surface
-    );
+    info->instanceBuffer = createBufferObj((struct BufferBuilder) {
+        .bufferUsage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+        .memoryProperty = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
+                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        .size = builder.instanceCount * builder.instance.bufferSize,
+        .repetitions = MAX_FRAMES_IN_FLIGHT
+    }, graphics);
 
-    mapp[0] = &info->uniformModel.buffersMapped;
-    buff[0] = &info->uniformModel.buffers;
-    range[0] = builder.instanceCount * builder.instance.bufferSize;
+    vkMapMemory(graphics->device, info->instanceBuffer->memory, 0, info->instanceBuffer->range, 0, &info->instanceMapped[0]);
+    for (size_t i = 1; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
+        info->instanceMapped[i] = (char *)info->instanceMapped[i - 1] + info->instanceBuffer->range;
+    }
+
+    mapp[0] = &info->instanceMapped;
+    buff[0] = info->instanceBuffer->buffer;
+    range[0] = info->instanceBuffer->range;
     isChangable[0] = true;
-    memcpy(buff + 1, builder.buff, sizeof(void *) * builder.qBuff);
-    memcpy(range + 1, builder.range, sizeof(size_t) * builder.qBuff);
-    memcpy(mapp + 1, builder.mapp, sizeof(void *) * builder.qBuff);
-    memcpy(isChangable + 1, builder.isChangable, sizeof(bool) * builder.qBuff);
+    isSingle[0] = false;
+
+    if (builder.qBuff > 0) {
+        memcpy(buff + 1, builder.buff, sizeof(void *) * builder.qBuff);
+        memcpy(range + 1, builder.range, sizeof(size_t) * builder.qBuff);
+        memcpy(mapp + 1, builder.mapp, sizeof(void *) * builder.qBuff);
+        memcpy(isChangable + 1, builder.isChangable, sizeof(bool) * builder.qBuff);
+        memcpy(isSingle + 1, builder.isSingle, sizeof(bool) * builder.qBuff);
+    }
 
     builder.qBuff = qBuff;
     builder.buff = buff;
     builder.mapp = mapp;
     builder.isChangable = isChangable;
+    builder.isSingle = isSingle;
     builder.range = range;
     builder.additional = info;
     builder.cleanup = cleanupInstance;
@@ -73,8 +84,19 @@ struct Entity *createInstancedEntity(struct EntityBuilder builder, struct Graphi
     return createEntity(builder, graphics);
 }
 
+size_t countChangeableBuffers(size_t qBuff, bool buff[qBuff]) {
+    size_t result = 0;
+
+    for (size_t i = 0; i < qBuff; i += 1) {
+        result += buff[i];
+    }
+
+    return result;
+}
+
 struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *graphics) {
     struct Entity *result = calloc(1, sizeof(struct Entity));
+    size_t qBuff = countChangeableBuffers(builder.qBuff, builder.isChangable);
 
     *result = (struct Entity){
         .device = graphics->device,
@@ -85,42 +107,40 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
         .instance = malloc(builder.instance.size * builder.instanceCount),
         .instanceUpdater = builder.instance.updater,
 
-        .buffer = calloc(builder.qBuff, sizeof(void *)),
-        .range = calloc(builder.qBuff, sizeof(size_t)),
-        .mapp = calloc(builder.qBuff, sizeof(void *)),
+        .qBuff = qBuff,
+        .buffer = calloc(qBuff, sizeof(void *)),
+        .range = calloc(qBuff, sizeof(size_t)),
+        .mapp = calloc(qBuff, sizeof(void *)),
 
         .drawCallQuantity = builder.meshQuantity,
         .drawCall = calloc(builder.meshQuantity, sizeof(struct DrawCall)),
 
         .object.descriptorPool = builder.qBuff > 0 ? createDescriptorPool(graphics->device, builder.qBuff, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER) : NULL,
-        .qBuff = builder.qBuff,
     };
 
     if (builder.qBuff > 0) {
-        for (size_t i = 0; i < builder.qBuff; i += 1) {
-            result->buffer[i] = builder.isChangable[i] ? calloc(1, builder.range[i]) : NULL;
+        for (size_t i = 0, j = 0; i < builder.qBuff; i += 1) {
             if (builder.isChangable[i]) {
-                memcpy(result->buffer[i], (*builder.mapp[i])[0], builder.range[i]);
+                result->buffer[j] = calloc(1, builder.range[i]);
+                memcpy(result->buffer[j], (*builder.mapp[i])[0], builder.range[i]);
+                result->range[j] = builder.range[i];
+                result->mapp[j] = builder.mapp[i];
+
+                j += 1;
             }
         }
 
-        VkBuffer (*buff2[builder.qBuff]);
-
-        memcpy(buff2, builder.buff, sizeof(void *) * builder.qBuff);
-        memcpy(result->range, builder.range, sizeof(size_t) * builder.qBuff);
-        memcpy(result->mapp, builder.mapp, sizeof(void *) * builder.qBuff);
-
         createDescriptorSets(result->object.descriptorSets, graphics->device, result->object.descriptorPool, builder.objectLayout);
 
-        bindBuffersToDescriptorSets(result->object.descriptorSets, graphics->device, builder.qBuff, buff2, result->range, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+        bindBuffersToDescriptorSets(result->object.descriptorSets, graphics->device, builder.qBuff, builder.buff, builder.range, builder.isSingle, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     }
 
     for (size_t i = 0; i < builder.meshQuantity; i += 1) {
         ((struct DrawCall *)result->drawCall)[i] = (struct DrawCall) {
-            .vertexBuffer = builder.mesh[i].vertexBuffer,
+            .vertexBuffer = builder.mesh[i].vertex->buffer,
 
             .indicesQuantity = builder.mesh[i].indicesQuantity,
-            .indexBuffer = builder.mesh[i].indexBuffer,
+            .indexBuffer = builder.mesh[i].index->buffer,
 
             .pushConstantsStage = builder.destination,
             .pushConstantsSize = builder.pushConstantsSize,

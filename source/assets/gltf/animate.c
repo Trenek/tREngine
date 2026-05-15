@@ -165,7 +165,7 @@ void animate(struct Entity *entity, struct Model *model, size_t animID, float de
     struct GltfModelInfo *info = model->info;
 
     struct Frames (*animFrames)[info->qNodes][ANIM_PATH_TYPE_MAX_ENUM] = (void *)info->frames;
-    struct AnimationData *data = entity->buffer[2];
+    struct AnimationData *data = entity->buffer[1];
     struct Skin *skins = info->skin;
 
     mat4 ancestors;

@@ -10,12 +10,12 @@
 #include "entity.h"
 #include "entityBuilder.h"
 
-#include "bufferOperations.h"
+#include "bufferObj.h"
 #include "font.h"
 
 size_t getGlyphID(char a);
 
-size_t count(const char *buffer) {
+static size_t count(const char *buffer) {
     size_t i = 0;
 
     while (*buffer != 0) {
@@ -27,19 +27,31 @@ size_t count(const char *buffer) {
     return i;
 }
 
+static float getStringLength(const char *string, float *offset) {
+    float length = 0;
+
+    while (*string != 0) {
+        length += offset[getGlyphID(*string)];
+
+        string += 1;
+    }
+
+    return length;
+}
+
 struct toCleanup {
     VkDevice device;
 
     struct Mesh *mesh;
     void *pushConstants;
 
-    struct buffer localMesh;
+    struct BufferObj *localMesh;
 };
 
 static void cleanupFont(void *toCleanArg) {
     struct toCleanup *toClean = toCleanArg;
 
-    destroyBuffer(toClean->device, toClean->localMesh.buffers, toClean->localMesh.buffersMemory);
+    destroyBufferObj(toClean->localMesh);
 
     free(toClean->mesh);
     free(toClean->pushConstants);
@@ -52,74 +64,93 @@ struct Entity *createFont(struct FontBuilder builder, struct GraphicsSetup *grap
 
     struct FontModelInfo *modelInfo = builder.modelData->info;
     struct toCleanup *info = malloc(sizeof(struct toCleanup));
-    info->device = graphics->device;
-    info->mesh = malloc(sizeof(struct Mesh) * meshQuantity);
-    info->pushConstants = malloc(sizeof(struct FontPushConstants) * meshQuantity);
+    *info = (struct toCleanup) {
+        .device = graphics->device,
+        .mesh = malloc(sizeof(struct Mesh) * meshQuantity),
+        .pushConstants = malloc(sizeof(struct FontPushConstants) * meshQuantity),
+    };
 
     struct FontPushConstants *pc = info->pushConstants;
 
-    createBuffers(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, meshQuantity * sizeof(mat4), &info->localMesh.buffers, &info->localMesh.buffersMemory, info->localMesh.buffersMapped, graphics->device, graphics->physicalDevice, graphics->surface);
+    struct BufferObj *staging = createBufferObj((struct BufferBuilder) {
+        .bufferUsage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        .memoryProperty = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        .size = meshQuantity * sizeof(mat4),
+        .repetitions = MAX_FRAMES_IN_FLIGHT
+    }, graphics);
+    void *mapped[MAX_FRAMES_IN_FLIGHT];
 
-    mat4 **thisBuffer = (void *)info->localMesh.buffersMapped;
-    mat4 **transform = (void *)modelInfo->buffers->buffersMapped;
+    vkMapMemory(graphics->device, staging->memory, 0, staging->range, 0, mapped);
 
-    uint32_t i = 0;
-    const char *buffer = builder.string;
-    char prev = 0;
-    mat4 space; {
-        glm_mat4_identity(space);
-    }
-    for (uint32_t j = 0; j < meshQuantity; j += 1) pc[j].meshID = j;
-    while (i < meshQuantity) {
-        if (*buffer == ' ') {
-            glm_mat4_mul(space, transform[0][getGlyphID(' ')], space);
-        }
-        else {
-            info->mesh[i] = builder.modelData->mesh[getGlyphID(*buffer)];
-
-            for (uint32_t k = 0; k < MAX_FRAMES_IN_FLIGHT; k += 1) {
-                if (i == 0) {
-                    glm_mat4_identity(thisBuffer[k][i]);
-                }
-                else { 
-                    glm_mat4_mul(thisBuffer[k][i - 1], transform[k][getGlyphID(prev)], thisBuffer[k][i]);
-                    glm_mat4_mul(space, thisBuffer[k][i], thisBuffer[k][i]);
-                }
-            }
-
-            glm_mat4_identity(space);
-            prev = *buffer;
-
-            i += 1;
-        }
-
-        buffer += 1;
-    }
-    for (uint32_t k = 0; k < MAX_FRAMES_IN_FLIGHT; k += 1) {
-        mat4 length;
-        glm_mat4_mul(thisBuffer[k][meshQuantity - 1], transform[k][getGlyphID(prev)], length);
-        for (uint32_t j = 0; j < meshQuantity; j += 1) {
-            mat4 temp;
-            glm_mat4_identity(temp);
-            glm_translate(temp, (vec4) { -length[3][0] * 0.5 * (builder.center + 1), 0, 0, 1 });
-            glm_mat4_mul(thisBuffer[k][j], temp, thisBuffer[k][j]);
-        }
+    for (size_t i = 1; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
+        mapped[i] = (char *)mapped[i - 1] + staging->range;
     }
 
-    VkBuffer (*buff[]) = {
-        &info->localMesh.buffers
+    mat4 **transformation = (void *)mapped;
+
+    const char *string = builder.string;
+    float offset = -getStringLength(string, modelInfo->offset) * (builder.center + 1) / 2;
+
+    for (size_t i = 0; i < meshQuantity; i += 1) {
+        pc[i].meshID = i;
+
+        while (*string == ' ') {
+            offset += modelInfo->offset[getGlyphID(' ')];
+
+            string += 1;
+        }
+
+        info->mesh[i] = builder.modelData->mesh[getGlyphID(*string)];
+
+        for (uint32_t j = 0; j < MAX_FRAMES_IN_FLIGHT; j += 1) {
+            glm_mat4_identity(transformation[j][i]);
+            glm_translate_x(transformation[j][i], offset);
+        }
+
+        offset += modelInfo->offset[getGlyphID(*string)];
+        string += 1;
+    }
+
+    vkUnmapMemory(graphics->device, staging->memory);
+
+    info->localMesh = createBufferObj((struct BufferBuilder) {
+        .bufferUsage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+                       VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        .memoryProperty = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        .size = meshQuantity * sizeof(mat4),
+        .repetitions = MAX_FRAMES_IN_FLIGHT
+    }, graphics);
+
+    VkBufferCopy copies[MAX_FRAMES_IN_FLIGHT]; for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
+        copies[i] = (VkBufferCopy) {
+            .size = staging->range,
+            .dstOffset = i * info->localMesh->range,
+            .srcOffset = i * staging->range
+        };
+    }
+
+    copyBufferObj(info->localMesh, staging, MAX_FRAMES_IN_FLIGHT, copies, graphics);
+    destroyBufferObj(staging);
+
+    VkBuffer buff[] = {
+        info->localMesh->buffer
     };
 
     bool isChangable[] = {
         false,
     };
 
+    bool isSingle[] = {
+        false,
+    };
+
     void *(*mapp[])[MAX_FRAMES_IN_FLIGHT] = {
-        &info->localMesh.buffersMapped,
+        NULL
     };
 
     size_t range[] = {
-        meshQuantity * sizeof(mat4),
+        info->localMesh->range
     };
 
     return createInstancedEntity((struct EntityBuilder) {
@@ -129,6 +160,7 @@ struct Entity *createFont(struct FontBuilder builder, struct GraphicsSetup *grap
         .buff = buff,
         .mapp = mapp,
         .isChangable = isChangable,
+        .isSingle = isSingle,
         .range = range,
         .qBuff = 1,
 

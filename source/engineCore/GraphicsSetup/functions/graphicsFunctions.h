@@ -1,6 +1,3 @@
-#include "bufferOperations.h"
-
-#include "definitions.h"
 #include "queueFamilyIndices.h"
 
 // setup

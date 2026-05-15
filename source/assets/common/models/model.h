@@ -24,11 +24,8 @@ struct ModelInput {
 };
 
 struct Mesh {
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
-
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexBufferMemory;
+    struct BufferObj *vertex;
+    struct BufferObj *index;
     size_t indicesQuantity;
 };
 
