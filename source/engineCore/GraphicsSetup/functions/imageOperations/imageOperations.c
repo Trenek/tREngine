@@ -158,7 +158,7 @@ void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t 
     endSingleTimeCommands(commandBuffer, device, commandPool, queue);
 }
 
-void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t width, int32_t height, uint32_t mipLevels, VkDevice device, VkPhysicalDevice physicalDevice, VkCommandPool commandPool, VkQueue queue) {
+void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t width, int32_t height, uint32_t mipLevels, VkFilter imageFilter, VkDevice device, VkPhysicalDevice physicalDevice, VkCommandPool commandPool, VkQueue queue) {
     VkCommandBuffer commandBuffer = beginSingleTimeCommands(device, commandPool);
 
     VkImageMemoryBarrier barrier = {
@@ -226,7 +226,7 @@ void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t width, int32_t
             image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
             image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             1, &blit,
-            VK_FILTER_LINEAR
+            imageFilter
         );
 
         barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;

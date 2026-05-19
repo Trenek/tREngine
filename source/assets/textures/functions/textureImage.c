@@ -65,7 +65,7 @@ static void base64_decode(const char *in, const unsigned long in_len, char *out)
 }
 
 // transfer command and queue
-static VkImage createTextureBufferPixels(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, stbi_uc *pixels, int width, int height, struct GraphicsSetup *graphics) {
+static VkImage createTextureBufferPixels(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, stbi_uc *pixels, int width, int height, VkFormat textureFormat, VkFilter textureFilter, struct GraphicsSetup *graphics) {
     VkImage textureImage = NULL;
 
     *mipLevels = floor(log2(MAX(width, height))) + 1;
@@ -91,7 +91,7 @@ static VkImage createTextureBufferPixels(VkDeviceMemory *textureImageMemory, uin
     textureImage = createImage(
         graphics->device,
         width, height, *mipLevels, VK_SAMPLE_COUNT_1_BIT,
-        VK_FORMAT_R8G8B8A8_SRGB,
+        textureFormat,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         1,
@@ -102,7 +102,7 @@ static VkImage createTextureBufferPixels(VkDeviceMemory *textureImageMemory, uin
     transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, *mipLevels, graphics->device, graphics->transferCommandPool, graphics->transferQueue, 1);
     copyBufferToImage(staging->buffer, textureImage, width, height, graphics->device, graphics->transferCommandPool, graphics->transferQueue, 1);
     //transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, *mipLevels, device, commandPool, queue);
-    generateMipmaps(textureImage, VK_FORMAT_R8G8B8A8_SRGB, width, height, *mipLevels, graphics->device, graphics->physicalDevice, graphics->transferCommandPool, graphics->transferQueue);
+    generateMipmaps(textureImage, VK_FORMAT_R8G8B8A8_SRGB, width, height, *mipLevels, textureFilter, graphics->device, graphics->physicalDevice, graphics->transferCommandPool, graphics->transferQueue);
 
     destroyBufferObj(staging);
 
@@ -185,7 +185,7 @@ static struct textureData loadDefault(struct TextureData) {
     return data;
 }
 
-VkImage createTextureBuffer(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, struct TextureData texturePath, struct GraphicsSetup *graphics) {
+VkImage createTextureBuffer(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, struct TextureData texturePath, VkFormat textureFormat, VkFilter textureFilter, struct GraphicsSetup *graphics) {
     struct textureData (*loadTexture)(struct TextureData) =
         texturePath.data == NULL ?                   loadDefault :
         strncmp(texturePath.data, "data:", 5) == 0 ? loadFromMemoryBase64 :
@@ -194,9 +194,8 @@ VkImage createTextureBuffer(VkDeviceMemory *textureImageMemory, uint32_t *mipLev
 
     struct textureData data = loadTexture(texturePath);
 
-    return createTextureBufferPixels(textureImageMemory, mipLevels, data.pixels, data.width, data.height, graphics);
+    return createTextureBufferPixels(textureImageMemory, mipLevels, data.pixels, data.width, data.height, textureFormat, textureFilter, graphics);
 }
-
 
 VkImage createCubeMapTexture(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, const char *texturePath[6], struct GraphicsSetup *graphics) {
     VkImage textureImage = NULL;

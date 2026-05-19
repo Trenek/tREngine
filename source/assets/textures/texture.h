@@ -27,4 +27,5 @@ struct Textures {
 
 struct Textures *loadCubeMaps(struct GraphicsSetup *graphics, const char *texturePath[6]);
 struct Textures *loadTextures(struct GraphicsSetup *graphics, uint32_t texturesQuantity, struct TextureData texturePath[static texturesQuantity]);
+struct Textures *loadUintTextures(struct GraphicsSetup *graphics, uint32_t texturesQuantity, struct TextureData texturePath[static texturesQuantity]);
 void unloadTextures(void *texturePtr);
