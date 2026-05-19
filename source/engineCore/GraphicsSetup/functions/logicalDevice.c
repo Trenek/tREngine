@@ -96,6 +96,12 @@ VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice, struct QueueFamily
 
     vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures);
 
+    VkPhysicalDeviceVulkan13Features features13 = {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+        .synchronization2 = VK_TRUE,
+        .pNext = &deviceFeatures
+    };
+
     VkDeviceCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pQueueCreateInfos = queueCreateInfo,
@@ -103,8 +109,8 @@ VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice, struct QueueFamily
         .pEnabledFeatures = NULL,
         .enabledExtensionCount = deviceExtensionsCount,
         .ppEnabledExtensionNames = deviceExtensions,
-        .pNext = &deviceFeatures,
-        .flags = 0
+        .pNext = &features13,
+        .flags = 0,
     };
 
     MY_ASSERT(indexingFeature.shaderSampledImageArrayNonUniformIndexing);

@@ -88,15 +88,26 @@ static VkImage createTextureBufferPixels(VkDeviceMemory *textureImageMemory, uin
     stbi_image_free(pixels);
 
     // TODO - i guess cleanup and better abstractions simular to BufferObj?
-    textureImage = createImage(
-        graphics->device,
-        width, height, *mipLevels, VK_SAMPLE_COUNT_1_BIT,
-        textureFormat,
-        VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-        1,
-        0
-    );
+    MY_ASSERT(VK_SUCCESS == vkCreateImage(graphics->device, &(VkImageCreateInfo) {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+        .imageType = VK_IMAGE_TYPE_2D,
+        .extent = {
+            .width = width,
+            .height = height,
+            .depth = 1
+        },
+        .mipLevels = *mipLevels,
+        .arrayLayers = 1,
+        .format = textureFormat,
+        .tiling = VK_IMAGE_TILING_OPTIMAL,
+        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | 
+                 VK_IMAGE_USAGE_TRANSFER_SRC_BIT | 
+                 VK_IMAGE_USAGE_SAMPLED_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .flags = 0
+    }, NULL, &textureImage));
     *textureImageMemory = createImageMemory(graphics->device, graphics->physicalDevice, textureImage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, *mipLevels, graphics->device, graphics->transferCommandPool, graphics->transferQueue, 1);
@@ -237,15 +248,26 @@ VkImage createCubeMapTexture(VkDeviceMemory *textureImageMemory, uint32_t *mipLe
         stbi_image_free(pixels[i]);
     }
 
-    textureImage = createImage(
-        graphics->device,
-        width, height, *mipLevels, VK_SAMPLE_COUNT_1_BIT,
-        VK_FORMAT_R8G8B8A8_SRGB,
-        VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-        6,
-        VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT
-    );
+    MY_ASSERT(VK_SUCCESS == vkCreateImage(graphics->device, &(VkImageCreateInfo) {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+        .imageType = VK_IMAGE_TYPE_2D,
+        .extent = {
+            .width = width,
+            .height = height,
+            .depth = 1
+        },
+        .mipLevels = *mipLevels,
+        .arrayLayers = 6,
+        .format = VK_FORMAT_R8G8B8A8_SRGB,
+        .tiling = VK_IMAGE_TILING_OPTIMAL,
+        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | 
+                 VK_IMAGE_USAGE_TRANSFER_SRC_BIT | 
+                 VK_IMAGE_USAGE_SAMPLED_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT
+    }, NULL, &textureImage));
     *textureImageMemory = createImageMemory(graphics->device, graphics->physicalDevice, textureImage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, *mipLevels, graphics->device, graphics->transferCommandPool, graphics->transferQueue, 6);

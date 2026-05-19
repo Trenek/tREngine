@@ -3,20 +3,6 @@
 #include "MY_ASSERT.h"
 #include "definitions.h"
 
-VkDescriptorSetLayout createDescriptorSetLayout(VkDevice device, size_t qBindings, VkDescriptorSetLayoutBinding bindings[qBindings]) {
-    VkDescriptorSetLayout descriptorSetLayout = NULL;
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo = {
-        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-        .bindingCount = qBindings,
-        .pBindings = bindings,
-    };
-
-    MY_ASSERT(VK_SUCCESS == vkCreateDescriptorSetLayout(device, &layoutInfo, NULL, &descriptorSetLayout));
-
-    return descriptorSetLayout;
-}
-
 VkDescriptorPool createDescriptorPool(VkDevice device, size_t qBuff, VkDescriptorType descriptorType) {
     VkDescriptorPool descriptorPool = NULL;
 

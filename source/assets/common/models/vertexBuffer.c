@@ -41,7 +41,7 @@ struct BufferObj *createVertexBuffer(struct GraphicsSetup *graphics, uint32_t ve
 }
 
 struct BufferObj *createIndexBuffer(struct GraphicsSetup *graphics, uint32_t indicesQuantity, uint32_t indices[static indicesQuantity]) {
-    size_t sizeOfIndex = sizeof(uint32_t);
+    constexpr size_t sizeOfIndex = sizeof(uint32_t);
 
     struct BufferObj *staging = createBufferObj((struct BufferBuilder) {
         .bufferUsage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,

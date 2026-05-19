@@ -9,9 +9,6 @@ struct DescriptorObjBuilder {
 
     size_t qDescriptorPoolSize;
     VkDescriptorPoolSize *descriptorPoolSize;
-    
-    void *info;
-    void (*cleanup)(void *);
 };
 
 struct DescriptorObj {
@@ -19,9 +16,6 @@ struct DescriptorObj {
 
     VkDescriptorPool descriptorPool;
     VkDescriptorSet descriptorSets[MAX_FRAMES_IN_FLIGHT];
-    
-    void *info;
-    void (*cleanup)(void *);
 };
 
 struct DescriptorObj *createDescriptorSetsObj(struct GraphicsSetup *graphics, struct DescriptorObjBuilder *builder);
