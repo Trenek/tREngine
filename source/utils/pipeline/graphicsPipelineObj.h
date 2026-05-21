@@ -32,6 +32,7 @@ struct GraphicsPipelineBuilder {
 struct ComputePipelineBuilder {
     const char *computeShader;
     VkPipelineLayout pipelineLayout;
+    const char * const debugName;
 };
 
 struct renderPipeline {

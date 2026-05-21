@@ -55,6 +55,15 @@ struct Pipeline *createComputePipelineObj(struct ComputePipelineBuilder builder,
         builder.computeShader
     );
 
+#ifndef NDEBUG
+    graphics->debugNamer(graphics->device, &(VkDebugUtilsObjectNameInfoEXT) {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+        .objectType = VK_OBJECT_TYPE_PIPELINE,
+        .objectHandle = (uint64_t)graphicsPipe->pipeline->pipeline,
+        .pObjectName = builder.debugName
+    });
+#endif
+
     return graphicsPipe;
 }
 

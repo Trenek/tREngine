@@ -5,7 +5,7 @@
 
 struct GraphicsSetup;
 
-struct graphicsPipelineLayoutBuilder {
+struct PipelineLayoutBuilder {
     size_t qDescriptorSetLayout;
     VkDescriptorSetLayout *descriptorSetLayout;
     uint32_t pushConstantRangeCount;
@@ -14,12 +14,12 @@ struct graphicsPipelineLayoutBuilder {
     const char * const debugName;
 };
 
-struct graphicsPipelineLayout {
+struct PipelineLayout {
     VkDevice device;
 
     VkPipelineLayout pipelineLayout;
 };
-struct graphicsPipelineLayout *createGraphicPipelineLayout(struct graphicsPipelineLayoutBuilder builder, struct GraphicsSetup *graphics);
+struct PipelineLayout *createPipelineLayout(struct PipelineLayoutBuilder builder, struct GraphicsSetup *graphics);
 void destroyPipelineLayoutObj(void *pipePtr);
 
 #endif

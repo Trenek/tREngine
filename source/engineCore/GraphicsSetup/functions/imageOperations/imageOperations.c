@@ -75,6 +75,13 @@ void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayo
         barrier.srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         barrier.dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
     }
+    else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_GENERAL) {
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT | VK_ACCESS_2_SHADER_READ_BIT;
+
+        barrier.srcStageMask = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
+        barrier.dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+    }
     else {
         MY_ASSERT(1 == 0);
     }

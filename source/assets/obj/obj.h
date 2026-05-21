@@ -17,7 +17,7 @@ struct ObjVertex {
     unsigned int material;
 };
 
-struct descriptorSetLayout *defaultObjDescriptorSetLayout(VkDevice device);
+struct DescriptorSetLayout *defaultObjDescriptorSetLayout(VkDevice device);
 static inline struct Vert defaultObjVert() {
     static const VkVertexInputAttributeDescription vertexAttributeDescriptions[] = {
         [0] = {

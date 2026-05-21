@@ -5,8 +5,8 @@
 
 #include "MY_ASSERT.h"
 
-struct graphicsPipelineLayout *createGraphicPipelineLayout(struct graphicsPipelineLayoutBuilder builder, struct GraphicsSetup *graphics) {
-    struct graphicsPipelineLayout *graphicsPipeLayout = calloc(1, sizeof(struct graphicsPipelineLayout)); 
+struct PipelineLayout *createPipelineLayout(struct PipelineLayoutBuilder builder, struct GraphicsSetup *graphics) {
+    struct PipelineLayout *graphicsPipeLayout = calloc(1, sizeof(struct PipelineLayout)); 
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
@@ -16,7 +16,7 @@ struct graphicsPipelineLayout *createGraphicPipelineLayout(struct graphicsPipeli
         .pPushConstantRanges = builder.pPushConstantRanges,
     };
 
-    *graphicsPipeLayout = (struct graphicsPipelineLayout) {
+    *graphicsPipeLayout = (struct PipelineLayout) {
         .device = graphics->device,
     };
 
@@ -35,7 +35,7 @@ struct graphicsPipelineLayout *createGraphicPipelineLayout(struct graphicsPipeli
 }
 
 void destroyPipelineLayoutObj(void *pipePtr) {
-    struct graphicsPipelineLayout *pipeLayout = pipePtr;
+    struct PipelineLayout *pipeLayout = pipePtr;
     vkDeviceWaitIdle(pipeLayout->device);
 
     vkDestroyPipelineLayout(pipeLayout->device, pipeLayout->pipelineLayout, NULL);

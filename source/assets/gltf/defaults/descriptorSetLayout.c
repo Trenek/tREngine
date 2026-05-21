@@ -2,7 +2,7 @@
 
 #include "descriptorSetLayoutObj.h"
 
-struct descriptorSetLayout *defaultGltfDescriptorSetLayout(VkDevice device) {
+struct DescriptorSetLayout *defaultGltfDescriptorSetLayout(VkDevice device) {
     return createDescriptorSetLayoutObj(4, (VkDescriptorSetLayoutBinding []) {
             {
                 .binding = 0,

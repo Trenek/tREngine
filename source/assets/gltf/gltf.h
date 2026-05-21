@@ -61,7 +61,7 @@ struct ColisionBox {
 struct Entity;
 struct Model;
 void animate(struct Entity *, struct Model *, size_t, float);
-struct descriptorSetLayout *defaultGltfDescriptorSetLayout(VkDevice device);
+struct DescriptorSetLayout *defaultGltfDescriptorSetLayout(VkDevice device);
 
 struct GltfModelInfo {
     VkDevice device;

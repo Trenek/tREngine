@@ -12,6 +12,6 @@ struct CommandQueue {
 
 struct GraphicsSetup;
 
-struct CommandQueue *createCommandQueue(struct GraphicsSetup *graphics);
+struct CommandQueue *createCommandQueue(struct GraphicsSetup *graphics, const char * const debugName);
 void destroyCommandQueue(void *this);
 void recreateCommandQueue(struct CommandQueue *this);

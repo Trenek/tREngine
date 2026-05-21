@@ -33,6 +33,17 @@ void recreateSwapChainGraphics(GLFWwindow *window, struct GraphicsSetup *graphic
     createDepthResources(&graphics->depthImage, &graphics->depthImageMemory, &graphics->depthImageView, graphics->device, graphics->physicalDevice, graphics->swapChain.extent, graphics->msaaSamples, graphics->transferCommandPool, graphics->transferQueue);
 }
 
+void nameQueue(struct GraphicsSetup *graphics, VkQueue queue, const char * const debugName) {
+#ifndef NDEBUG
+    graphics->debugNamer(graphics->device, &(VkDebugUtilsObjectNameInfoEXT) {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+        .objectType = VK_OBJECT_TYPE_QUEUE,
+        .objectHandle = (uint64_t)queue,
+        .pObjectName = debugName
+    });
+#endif
+}
+
 struct GraphicsSetup setupGraphics(GLFWwindow *window) {
     struct GraphicsSetup graphics = { 0 };
 
@@ -46,9 +57,13 @@ struct GraphicsSetup setupGraphics(GLFWwindow *window) {
 #endif
 
     vkGetDeviceQueue(graphics.device, graphics.families.family[GRAPHICS_FAMILY].value, 0, &graphics.graphicsQueue);
+    nameQueue(&graphics, graphics.graphicsQueue, "Graphics Queue");
     vkGetDeviceQueue(graphics.device, graphics.families.family[PRESENT_FAMILY].value, 0, &graphics.presentQueue);
+    nameQueue(&graphics, graphics.presentQueue, "Present Queue");
     vkGetDeviceQueue(graphics.device, graphics.families.family[TRANSFER_FAMILY].value, 0, &graphics.transferQueue);
+    nameQueue(&graphics, graphics.transferQueue, "Transfer Queue");
     vkGetDeviceQueue(graphics.device, graphics.families.family[COMPUTE_FAMILY].value, 0, &graphics.computeQueue);
+    nameQueue(&graphics, graphics.computeQueue, "Compute Queue");
 
     graphics.swapChain = createSwapChain(window, graphics.surface, graphics.physicalDevice, graphics.device);
     graphics.swapChainImageViews = createImageViews(graphics.device, graphics.swapChain);

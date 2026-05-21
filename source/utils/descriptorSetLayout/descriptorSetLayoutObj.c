@@ -7,10 +7,10 @@
 
 #include "descriptorSetLayoutObj.h"
 
-struct descriptorSetLayout *createDescriptorSetLayoutObj(size_t qBinding, VkDescriptorSetLayoutBinding binding[qBinding], VkDevice device) {
-    struct descriptorSetLayout *result = calloc(1, sizeof(struct descriptorSetLayout));
+struct DescriptorSetLayout *createDescriptorSetLayoutObj(size_t qBinding, VkDescriptorSetLayoutBinding binding[qBinding], VkDevice device) {
+    struct DescriptorSetLayout *result = calloc(1, sizeof(struct DescriptorSetLayout));
 
-    *result = (struct descriptorSetLayout) {
+    *result = (struct DescriptorSetLayout) {
         .device = device
     };
 
@@ -24,7 +24,7 @@ struct descriptorSetLayout *createDescriptorSetLayoutObj(size_t qBinding, VkDesc
 }
 
 void destroyDescriptorSetLayout(void *layoutPtr) {
-    struct descriptorSetLayout *layout = layoutPtr;
+    struct DescriptorSetLayout *layout = layoutPtr;
 
     vkDestroyDescriptorSetLayout(layout->device, layout->descriptorSetLayout, NULL);
     free(layout);

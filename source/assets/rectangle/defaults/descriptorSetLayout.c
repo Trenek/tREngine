@@ -2,7 +2,7 @@
 
 #include "descriptorSetLayoutObj.h"
 
-struct descriptorSetLayout *defaultScreenDescriptorSetLayout(VkDevice device) {
+struct DescriptorSetLayout *defaultScreenDescriptorSetLayout(VkDevice device) {
     return createDescriptorSetLayoutObj(1, (VkDescriptorSetLayoutBinding []) {
             {
                 .binding = 0,
@@ -16,7 +16,7 @@ struct descriptorSetLayout *defaultScreenDescriptorSetLayout(VkDevice device) {
     );
 }
 
-struct descriptorSetLayout *defaultRecDescriptorSetLayout(VkDevice device) {
+struct DescriptorSetLayout *defaultRecDescriptorSetLayout(VkDevice device) {
     return createDescriptorSetLayoutObj(1, (VkDescriptorSetLayoutBinding []) {
             {
                 .binding = 0,

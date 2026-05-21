@@ -8,8 +8,8 @@ struct RecVertex {
     vec2 tex;
 };
 
-struct descriptorSetLayout *defaultRecDescriptorSetLayout(VkDevice device);
-struct descriptorSetLayout *defaultScreenDescriptorSetLayout(VkDevice device);
+struct DescriptorSetLayout *defaultRecDescriptorSetLayout(VkDevice device);
+struct DescriptorSetLayout *defaultScreenDescriptorSetLayout(VkDevice device);
 static inline struct Vert defaultRectVert() {
     static const VkVertexInputAttributeDescription vertexAttributeDescriptions[] = {
         [0] = {

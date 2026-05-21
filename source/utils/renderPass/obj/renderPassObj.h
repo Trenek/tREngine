@@ -20,7 +20,7 @@ struct pipelineConnection {
     VkPipeline pipeline;
     VkPipelineLayout pipelineLayout;
 
-    struct descriptor *texture;
+    VkDescriptorSet *texture;
 
     VkDescriptorSet **entitySet;
     size_t qEntity;
@@ -32,7 +32,7 @@ struct pipelineConnection {
 struct pipelineConnectionBuilder {
     size_t pipeNum;
     struct Pipeline *pipe;
-    struct descriptor *texture;
+    VkDescriptorSet *texture;
     struct Entity **entity;
     size_t qEntity;
 };

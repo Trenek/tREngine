@@ -2,7 +2,7 @@
 
 #include "descriptorSetLayoutObj.h"
 
-struct descriptorSetLayout *defaultCameraDescriptorSetLayout(VkDevice device) {
+struct DescriptorSetLayout *defaultCameraDescriptorSetLayout(VkDevice device) {
     return createDescriptorSetLayoutObj(1, (VkDescriptorSetLayoutBinding []){
             {
                 .binding = 0,

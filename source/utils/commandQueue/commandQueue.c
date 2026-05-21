@@ -9,7 +9,7 @@
 
 void createCommandBuffer(VkCommandBuffer commandBuffer[MAX_FRAMES_IN_FLIGHT], VkDevice device, VkCommandPool commandPool);
 
-struct CommandQueue *createCommandQueue(struct GraphicsSetup *graphics) {
+struct CommandQueue *createCommandQueue(struct GraphicsSetup *graphics, const char * const debugName) {
     struct CommandQueue *this = malloc(sizeof(struct CommandQueue));
     createCommandBuffer(this->commandBuffer, graphics->device, graphics->commandPool);
 
@@ -17,7 +17,16 @@ struct CommandQueue *createCommandQueue(struct GraphicsSetup *graphics) {
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
         this->inFlightFence[i] = createFence(graphics->device);
         this->semaphore[i] = createSemaphore(graphics->device);
+#ifndef NDEBUG
+        graphics->debugNamer(graphics->device, &(VkDebugUtilsObjectNameInfoEXT) {
+            .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+            .objectType = VK_OBJECT_TYPE_COMMAND_BUFFER,
+            .objectHandle = (uint64_t)this->commandBuffer[i],
+            .pObjectName = debugName
+        });
+#endif
     }
+
 
     return this;
 }

@@ -5,5 +5,6 @@ struct ComputePass {
     VkPipelineLayout pipelineLayout;
 
     size_t groupCountX;
+    size_t groupCountY;
     VkDescriptorSet *descriptor;
 };

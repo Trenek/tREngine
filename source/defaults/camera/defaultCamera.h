@@ -28,7 +28,7 @@ struct WindowManager;
 typedef struct VkExtent2D VkExtent2D;
 typedef struct VkDevice_T *VkDevice;
 
-struct descriptorSetLayout *defaultCameraDescriptorSetLayout(VkDevice device);
+struct DescriptorSetLayout *defaultCameraDescriptorSetLayout(VkDevice device);
 
 void moveThirdPersonCamera(struct WindowManager *windowControl, struct ThirdPerson *camera, float deltaTime);
 void moveFirstPersonCamera(struct WindowManager *windowControl, struct FirstPerson *cameraPtr, float deltaTime);

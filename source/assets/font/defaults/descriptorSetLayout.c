@@ -2,7 +2,7 @@
 
 #include "descriptorSetLayoutObj.h"
 
-struct descriptorSetLayout *defaultFontDescriptorSetLayout(VkDevice device) {
+struct DescriptorSetLayout *defaultFontDescriptorSetLayout(VkDevice device) {
     return createDescriptorSetLayoutObj(2, (VkDescriptorSetLayoutBinding []) {
             {
                 .binding = 0,

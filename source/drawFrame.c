@@ -107,7 +107,7 @@ VkResult queueCompute(struct CommandQueue *commandQueue, struct EngineCore *vulk
         for (size_t i = 0; i < qComputePass; i += 1) {
             vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePass[i].pipeline);
             vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePass[i].pipelineLayout, 0, 1, &computePass[i].descriptor[currentFrame], 0, 0);
-            vkCmdDispatch(commandBuffer, computePass[i].groupCountX, 1, 1);
+            vkCmdDispatch(commandBuffer, computePass[i].groupCountX, computePass[i].groupCountY, 1);
         }
 
         MY_ASSERT(VK_SUCCESS == vkEndCommandBuffer(commandBuffer));

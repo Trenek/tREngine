@@ -3,12 +3,12 @@
 
 #include <vulkan/vulkan_core.h>
 
-struct descriptorSetLayout {
+struct DescriptorSetLayout {
     VkDevice device;
     VkDescriptorSetLayout descriptorSetLayout;
 };
 
-struct descriptorSetLayout *createDescriptorSetLayoutObj(size_t qBinding, VkDescriptorSetLayoutBinding binding[qBinding], VkDevice device);
+struct DescriptorSetLayout *createDescriptorSetLayoutObj(size_t qBinding, VkDescriptorSetLayoutBinding binding[qBinding], VkDevice device);
 void destroyDescriptorSetLayout(void *layoutPtr);
 
 #endif
