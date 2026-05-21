@@ -114,8 +114,6 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
 
         .drawCallQuantity = builder.meshQuantity,
         .drawCall = calloc(builder.meshQuantity, sizeof(struct DrawCall)),
-
-        .object.descriptorPool = builder.qBuff > 0 ? createDescriptorPool(graphics->device, builder.qBuff, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER) : NULL,
     };
 
     if (builder.qBuff > 0) {
@@ -130,9 +128,18 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
             }
         }
 
-        createDescriptorSets(result->object.descriptorSets, graphics->device, result->object.descriptorPool, builder.objectLayout);
+        result->object = createDescriptorSetsObj(graphics, &(struct DescriptorObjBuilder) {
+            .layout = builder.objectLayout,
+            .qDescriptorPoolSize = 1,
+            .descriptorPoolSize = (VkDescriptorPoolSize []) {
+                {
+                    .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                    .descriptorCount = MAX_FRAMES_IN_FLIGHT * builder.qBuff
+                }
+            },
+        });
 
-        bindBuffersToDescriptorSets(result->object.descriptorSets, graphics->device, builder.qBuff, builder.buff, builder.range, builder.isSingle, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+        bindBuffersToDescriptorSets(result->object, graphics->device, builder.qBuff, builder.buff, builder.range, builder.isSingle, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     }
 
     for (size_t i = 0; i < builder.meshQuantity; i += 1) {
@@ -170,7 +177,9 @@ void destroyEntity(void *modelPtr) {
     free(model->mapp);
     free(model->drawCall);
 
-    vkDestroyDescriptorPool(model->device, model->object.descriptorPool, NULL);
+    if (model->object) {
+        destroyDescriptorSets(model->object);
+    }
 
     free(model);
 }

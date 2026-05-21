@@ -3,7 +3,8 @@
 #include "myMalloc.h"
 #include "textureFunctions.h"
 #include "imageOperations.h"
-#include "descriptor.h"
+#include "descriptorSetLayoutObj.h"
+#include "descriptorObj.h"
 
 VkImage createCubeMapTexture(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, const char *texturePath[6], struct GraphicsSetup *graphics);
 
@@ -43,17 +44,31 @@ struct Textures *loadCubeMaps(struct GraphicsSetup *graphics, const char *textur
         .device = graphics->device,
         .data = calloc(1, sizeof(struct Data)),
         .quantity = 1,
-        .descriptor = {
-            .descriptorSetLayout = createTextureDescriptorSetLayout(graphics->device, 1),
-            .descriptorPool = createTextureDescriptorPool(graphics->device, 1)
-        }
+        .descriptorLayout = createDescriptorSetLayoutObj(1, (VkDescriptorSetLayoutBinding []) {
+            {
+                .binding = 0,
+                .descriptorCount = 1,
+                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .pImmutableSamplers = NULL,
+                .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+            }
+        }, graphics->device),
     };
-    struct descriptor *desc = &texture->descriptor;
 
     texture->data[0] = loadCubeMap(texturePath, graphics);
 
-    createDescriptorSets(desc->descriptorSets, graphics->device, desc->descriptorPool, desc->descriptorSetLayout);
-    bindTextureBuffersToDescriptorSets(desc->descriptorSets, graphics->device, 1, texture);
+    texture->descriptor = createDescriptorSetsObj(graphics, &(struct DescriptorObjBuilder) {
+        .layout = texture->descriptorLayout->descriptorSetLayout,
+        .qDescriptorPoolSize = 1,
+        .descriptorPoolSize = (VkDescriptorPoolSize []) {
+            {
+                .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .descriptorCount = MAX_FRAMES_IN_FLIGHT
+            }
+        }
+    });
+
+    bindTextureBuffersToDescriptorSets(texture->descriptor->descriptorSets, graphics->device, 1, texture);
 
     return texture;
 }
@@ -64,19 +79,33 @@ struct Textures *loadTextures(struct GraphicsSetup *graphics, uint32_t texturesQ
         .device = graphics->device,
         .data = calloc(texturesQuantity, sizeof(struct Data)),
         .quantity = texturesQuantity,
-        .descriptor = {
-            .descriptorSetLayout = createTextureDescriptorSetLayout(graphics->device, texturesQuantity),
-            .descriptorPool = createTextureDescriptorPool(graphics->device, texturesQuantity)
-        }
+        .descriptorLayout = createDescriptorSetLayoutObj(1, (VkDescriptorSetLayoutBinding []) {
+            {
+                .binding = 0,
+                .descriptorCount = texturesQuantity,
+                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .pImmutableSamplers = NULL,
+                .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+            }
+        }, graphics->device),
     };
-    struct descriptor *desc = &texture->descriptor;
 
     for (uint32_t i = 0; i < texturesQuantity; i += 1) {
         texture->data[i] = loadTexture(texturePath[i], graphics);
     }
 
-    createDescriptorSets(desc->descriptorSets, graphics->device, desc->descriptorPool, desc->descriptorSetLayout);
-    bindTextureBuffersToDescriptorSets(desc->descriptorSets, graphics->device, texturesQuantity, texture);
+    texture->descriptor = createDescriptorSetsObj(graphics, &(struct DescriptorObjBuilder) {
+        .layout = texture->descriptorLayout->descriptorSetLayout,
+        .qDescriptorPoolSize = 1,
+        .descriptorPoolSize = (VkDescriptorPoolSize []) {
+            {
+                .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .descriptorCount = texturesQuantity * MAX_FRAMES_IN_FLIGHT
+            }
+        }
+    });
+
+    bindTextureBuffersToDescriptorSets(texture->descriptor->descriptorSets, graphics->device, texturesQuantity, texture);
 
     return texture;
 }
@@ -87,19 +116,33 @@ struct Textures *loadUintTextures(struct GraphicsSetup *graphics, uint32_t textu
         .device = graphics->device,
         .data = calloc(texturesQuantity, sizeof(struct Data)),
         .quantity = texturesQuantity,
-        .descriptor = {
-            .descriptorSetLayout = createTextureDescriptorSetLayout(graphics->device, texturesQuantity),
-            .descriptorPool = createTextureDescriptorPool(graphics->device, texturesQuantity)
-        }
+        .descriptorLayout = createDescriptorSetLayoutObj(1, (VkDescriptorSetLayoutBinding []) {
+            {
+                .binding = 0,
+                .descriptorCount = texturesQuantity,
+                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .pImmutableSamplers = NULL,
+                .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+            }
+        }, graphics->device),
     };
-    struct descriptor *desc = &texture->descriptor;
 
     for (uint32_t i = 0; i < texturesQuantity; i += 1) {
         texture->data[i] = loadUintTexture(texturePath[i], graphics);
     }
 
-    createDescriptorSets(desc->descriptorSets, graphics->device, desc->descriptorPool, desc->descriptorSetLayout);
-    bindTextureBuffersToDescriptorSets(desc->descriptorSets, graphics->device, texturesQuantity, texture);
+    texture->descriptor = createDescriptorSetsObj(graphics, &(struct DescriptorObjBuilder) {
+        .layout = texture->descriptorLayout->descriptorSetLayout,
+        .qDescriptorPoolSize = 1,
+        .descriptorPoolSize = (VkDescriptorPoolSize []) {
+            {
+                .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .descriptorCount = texturesQuantity * MAX_FRAMES_IN_FLIGHT
+            }
+        }
+    });
+
+    bindTextureBuffersToDescriptorSets(texture->descriptor->descriptorSets, graphics->device, texturesQuantity, texture);
 
     return texture;
 }
@@ -116,8 +159,8 @@ void unloadTextures(void *texturePtr) {
 
     free(texture->data);
 
-    vkDestroyDescriptorSetLayout(texture->device, texture->descriptor.descriptorSetLayout, NULL);
-    vkDestroyDescriptorPool(texture->device, texture->descriptor.descriptorPool, NULL);
+    destroyDescriptorSetLayout(texture->descriptorLayout);
+    destroyDescriptorSets(texture->descriptor);
 
     free(texture);
 }

@@ -1,7 +1,6 @@
 #include <vulkan/vulkan.h>
 
 #include "renderPassObj.h"
-#include "bufferObj.h"
 #include "entity.h"
 
 static void drawEntity(VkCommandBuffer commandBuffer, size_t qDraw, struct DrawCall *draw, VkPipelineLayout pipelineLayout) {
@@ -31,14 +30,14 @@ void drawRenderPass(VkCommandBuffer commandBuffer, uint32_t currentFrame, struct
 
         // TODO: use vkCmdBindDescriptorSets2 in the future as it's nicer
         if (NULL != renderPass->cameraBuffer) {
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipelineLayout, 0, 1, &renderPass->cameraDescriptorSet[currentFrame], 0, NULL);
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipelineLayout, 0, 1, &renderPass->cameraDescriptor->descriptorSets[currentFrame], 0, NULL);
         }
         if (NULL != renderPass->data[i].texture) {
             vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipelineLayout, 1 - one, 1, &renderPass->data[i].texture[currentFrame], 0, NULL);
         }
 
         for (uint32_t j = 0; j < renderPass->data[i].qEntity; j += 1) {
-            if (renderPass->data[i].entitySet[j][currentFrame]) {
+            if (renderPass->data[i].entitySet[j]) {
                 vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipelineLayout, 2 - two, 1, &renderPass->data[i].entitySet[j][currentFrame], 0, NULL);
             }
             drawEntity(commandBuffer, renderPass->data[i].qDrawData[j], renderPass->data[i].drawData[j], renderPass->data[i].pipelineLayout);

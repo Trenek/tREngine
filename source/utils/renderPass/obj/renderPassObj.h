@@ -69,8 +69,7 @@ struct renderPassObj {
 
     void *cameraMapped[MAX_FRAMES_IN_FLIGHT];
     struct BufferObj *cameraBuffer;
-    VkDescriptorPool cameraDescriptorPool;
-    VkDescriptorSet cameraDescriptorSet[MAX_FRAMES_IN_FLIGHT];
+    struct DescriptorObj *cameraDescriptor;
 
     void (*drawRenderPass)(VkCommandBuffer, uint32_t, struct renderPassObj *);
 };

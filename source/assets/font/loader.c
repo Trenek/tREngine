@@ -11,6 +11,8 @@
 
 #include "font.h"
 
+#include "definitions.h"
+
 #define IF(x, y) if (!(x)) printf("%s", y); else
 
 static void lerp_l(vec2 out, FT_Vector from, FT_Vector to, float t) {

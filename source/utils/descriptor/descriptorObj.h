@@ -20,3 +20,4 @@ struct DescriptorObj {
 
 struct DescriptorObj *createDescriptorSetsObj(struct GraphicsSetup *graphics, struct DescriptorObjBuilder *builder);
 void destroyDescriptorSets(void *thisPtr);
+void bindBuffersToDescriptorSets(struct DescriptorObj *descriptor, VkDevice device, size_t qBuff, VkBuffer buff[qBuff], size_t range[qBuff], bool isSingle[qBuff], VkDescriptorType descriptorType);

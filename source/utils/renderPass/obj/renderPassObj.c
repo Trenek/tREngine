@@ -9,7 +9,6 @@
 #include "graphicsSetup.h"
 #include "definitions.h"
 
-#include "descriptor.h"
 #include "graphicsPipelineObj.h"
 
 #include "entity.h"
@@ -42,7 +41,6 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
         .renderPass = builder.renderPass,
         .data = malloc(sizeof(struct pipelineConnection) * builder.qData),
         .qData = builder.qData,
-        .cameraDescriptorPool = createDescriptorPool(graphics->device, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER),
         .updateCameraBuffer = builder.camera.updateBuffer,
         .camera = malloc(builder.camera.size),
         .drawRenderPass = builder.drawRenderPass,
@@ -63,12 +61,14 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
 
         result->data[i].drawData = malloc(sizeof(void *) * result->data[i].qEntity);
         result->data[i].qDrawData = malloc(sizeof(size_t) * result->data[i].qEntity);
-        result->data[i].entitySet = malloc(sizeof(VkDescriptorSet) * result->data[i].qEntity);
+        result->data[i].entitySet = calloc(result->data[i].qEntity, sizeof(VkDescriptorSet));
 
         for (size_t j = 0; j < builder.data[i].qEntity; j += 1) {
             result->data[i].qDrawData[j] = builder.data[i].entity[j]->drawCallQuantity;
             result->data[i].drawData[j] = builder.data[i].entity[j]->drawCall;
-            result->data[i].entitySet[j] = builder.data[i].entity[j]->object.descriptorSets;
+            if (builder.data[i].entity[j]->object) {
+                result->data[i].entitySet[j] = builder.data[i].entity[j]->object->descriptorSets;
+            }
 
             result->qBuffersToUpdate += builder.data[i].entity[j]->qBuff;
         } 
@@ -92,9 +92,19 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
             result->cameraMapped[i] = (char *)result->cameraMapped[i - 1] + result->cameraBuffer->range;
         }
 
-        createDescriptorSets(result->cameraDescriptorSet, graphics->device, result->cameraDescriptorPool, builder.cameraDescriptorSetLayout);
+        result->cameraDescriptor = createDescriptorSetsObj(graphics, &(struct DescriptorObjBuilder) {
+            .layout = builder.cameraDescriptorSetLayout,
+            .qDescriptorPoolSize = 1,
+            .descriptorPoolSize = (VkDescriptorPoolSize []) {
+                {
+                    .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                    .descriptorCount = MAX_FRAMES_IN_FLIGHT
+                }
+            },
+        });
+
         bindBuffersToDescriptorSets(
-            result->cameraDescriptorSet, 
+            result->cameraDescriptor, 
             graphics->device, 
             1, 
             (VkBuffer []) { result->cameraBuffer->buffer }, 
@@ -109,7 +119,10 @@ struct renderPassObj *createRenderPassObj(struct renderPassBuilder builder, stru
 
 void destroyRenderPassObj(void *renderPassPtr) {
     struct renderPassObj *renderPass = renderPassPtr;
-    vkDestroyDescriptorPool(renderPass->device, renderPass->cameraDescriptorPool, NULL);
+
+    if (renderPass->cameraDescriptor) {
+        destroyDescriptorSets(renderPass->cameraDescriptor);
+    }
 
     if (renderPass->cameraBuffer) {
         destroyBufferObj(renderPass->cameraBuffer);

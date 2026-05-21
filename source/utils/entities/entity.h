@@ -3,7 +3,7 @@
 
 #include <vulkan/vulkan.h>
 
-#include "descriptor.h"
+#include "descriptorObj.h"
 #include "entityBuilder.h"
 #include "instanceBuilder.h"
 #include "definitions.h"
@@ -45,7 +45,7 @@ struct Entity {
     uint32_t drawCallQuantity;
     void *drawCall;
 
-    struct descriptor object;
+    struct DescriptorObj *object;
 
     void *additional;
     void (*cleanup)(void *);

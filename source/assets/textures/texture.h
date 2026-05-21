@@ -1,4 +1,5 @@
-#include "descriptor.h"
+#include "descriptorSetLayoutObj.h"
+
 struct GraphicsSetup;
 
 struct TextureData {
@@ -13,7 +14,9 @@ struct TextureData {
 
 struct Textures {
     VkDevice device;
-    struct descriptor descriptor;
+    
+    struct DescriptorSetLayout *descriptorLayout;
+    struct DescriptorObj *descriptor;
 
     size_t quantity;
     struct Data {
