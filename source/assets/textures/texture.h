@@ -22,7 +22,6 @@ struct Textures {
     struct Data {
         VkImage image;
         VkDeviceMemory imageMemory;
-        uint32_t mipLevels;
         VkImageView imageView;
         VkSampler sampler;
     } *data;

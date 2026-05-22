@@ -144,7 +144,7 @@ void queueDraw(struct CommandQueue *commandQueue, struct EngineCore *vulkan, siz
     MY_ASSERT(VK_SUCCESS == vkQueueSubmit(vulkan->graphics.graphicsQueue, 1, &submitInfo, commandQueue->inFlightFence[currentFrame]));
 }
 
-void presentFrame(struct EngineCore *vulkan, size_t qRenderPassCore, struct renderPassCore **renderPassCore, size_t , struct CommandQueue **queue) {
+void presentFrame(struct EngineCore *vulkan, size_t qRenderPassCore, struct renderPassCore **renderPassCore, size_t qQueue, struct CommandQueue **queue) {
     switch (vkQueuePresentKHR(vulkan->graphics.presentQueue, &(VkPresentInfoKHR) {
         .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
         .waitSemaphoreCount = 1,
@@ -174,7 +174,7 @@ void presentFrame(struct EngineCore *vulkan, size_t qRenderPassCore, struct rend
 
         recreateSwapChain(vulkan, qRenderPassCore, renderPassCore);
 
-        for (size_t i = 0; false; i += 1) {
+        for (size_t i = 0; i < qQueue; i += 1) {
             recreateCommandQueue(queue[i]);
         }
     }

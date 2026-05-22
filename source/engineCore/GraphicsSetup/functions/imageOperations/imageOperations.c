@@ -25,6 +25,18 @@ static bool hasStencilComponent(VkFormat format) {
            format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
+void transitionImageLayout2(VkImageMemoryBarrier2 *barrier, VkDevice device, VkCommandPool commandPool, VkQueue queue) {
+    VkCommandBuffer commandBuffer = beginSingleTimeCommands(device, commandPool);
+
+    vkCmdPipelineBarrier2(commandBuffer, &(VkDependencyInfo) {
+        .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+        .imageMemoryBarrierCount = 1,
+        .pImageMemoryBarriers = barrier
+    });
+
+    endSingleTimeCommands(commandBuffer, device, commandPool, queue);
+}
+
 void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, VkDevice device, VkCommandPool commandPool, VkQueue queue, uint32_t layerCount) {
     VkCommandBuffer commandBuffer = beginSingleTimeCommands(device, commandPool);
 
@@ -95,7 +107,7 @@ void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayo
     endSingleTimeCommands(commandBuffer, device, commandPool, queue);
 }
 
-void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, VkDevice device, VkCommandPool commandPool, VkQueue queue, uint32_t layerCount) {
+void copyBufferToImage(VkBuffer buffer, VkImage image, VkExtent2D extent, VkDevice device, VkCommandPool commandPool, VkQueue queue, uint32_t layerCount) {
     VkCommandBuffer commandBuffer = beginSingleTimeCommands(device, commandPool);
 
     vkCmdCopyBufferToImage2(commandBuffer, &(VkCopyBufferToImageInfo2) {
@@ -117,8 +129,8 @@ void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t 
             },
             .imageOffset = { .x = 0, .y = 0, .z = 0 },
             .imageExtent = {
-                .width = width,
-                .height = height,
+                .width = extent.width,
+                .height = extent.height,
                 .depth = 1
             }
         },

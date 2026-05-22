@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include "graphicsSetup.h"
 
 #include "myMalloc.h"
@@ -5,35 +7,60 @@
 #include "imageOperations.h"
 #include "descriptorSetLayoutObj.h"
 #include "descriptorObj.h"
+#include "bufferObj.h"
 
-VkImage createCubeMapTexture(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, const char *texturePath[6], struct GraphicsSetup *graphics);
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
+
+VkImage createCubeMapTexture(VkDeviceMemory *textureImageMemory, uint32_t mipLevels, struct BufferObj *staging, VkExtent2D extent, struct GraphicsSetup *graphics);
+VkImage createTextureBufferPixels(VkDeviceMemory *textureImageMemory, uint32_t mipLevels, struct BufferObj *staging, VkExtent2D extent, VkFormat textureFormat, VkFilter textureFilter, struct GraphicsSetup *graphics);
+
+struct BufferObj *loadNormalImageToBuffer(struct TextureData texturePath, VkExtent2D *extent, struct GraphicsSetup *graphics);
+struct BufferObj *loadCubeMapImageToBuffer(const char *texturePath[6], struct GraphicsSetup *graphics, VkExtent2D *extent);
 
 static struct Data loadCubeMap(const char *texturePath[6], struct GraphicsSetup *graphics) {
     struct Data result = { 0 };
 
-    result.image = createCubeMapTexture(&result.imageMemory, &result.mipLevels, texturePath, graphics);
-    result.imageView = createImageView(graphics->device, result.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, result.mipLevels, VK_IMAGE_VIEW_TYPE_CUBE, 6);
-    result.sampler = createTextureSampler(graphics->device, graphics->physicalDevice, VK_FILTER_LINEAR, result.mipLevels, VK_SAMPLER_MIPMAP_MODE_LINEAR, VK_TRUE);
+    VkExtent2D extent;
+    struct BufferObj *staging = loadCubeMapImageToBuffer(texturePath, graphics, &extent);
+    uint32_t mipLevels = 1;
+
+    result.image = createCubeMapTexture(&result.imageMemory, mipLevels, staging, extent, graphics);
+    result.imageView = createImageView(graphics->device, result.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels, VK_IMAGE_VIEW_TYPE_CUBE, 6);
+    result.sampler = createTextureSampler(graphics->device, graphics->physicalDevice, VK_FILTER_LINEAR, mipLevels, VK_SAMPLER_MIPMAP_MODE_LINEAR, VK_TRUE);
+
+    destroyBufferObj(staging);
 
     return result;
 }
 
 static struct Data loadTexture(struct TextureData texturePath, struct GraphicsSetup *graphics) {
     struct Data result = { 0 };
+    VkExtent2D extent;
+    struct BufferObj *staging = loadNormalImageToBuffer(texturePath, &extent, graphics);
 
-    result.image = createTextureBuffer(&result.imageMemory, &result.mipLevels, texturePath, VK_FORMAT_R8G8B8A8_SRGB, VK_FILTER_LINEAR, graphics);
-    result.imageView = createImageView(graphics->device, result.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, result.mipLevels, VK_IMAGE_VIEW_TYPE_2D, 1);
-    result.sampler = createTextureSampler(graphics->device, graphics->physicalDevice, VK_FILTER_LINEAR, result.mipLevels, VK_SAMPLER_MIPMAP_MODE_LINEAR, VK_TRUE);
+    uint32_t mipLevels = floor(log2(MAX(extent.width, extent.height))) + 1;
+
+    result.image = createTextureBufferPixels(&result.imageMemory, mipLevels, staging, extent, VK_FORMAT_R8G8B8A8_SRGB, VK_FILTER_LINEAR, graphics);
+    result.imageView = createImageView(graphics->device, result.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels, VK_IMAGE_VIEW_TYPE_2D, 1);
+    result.sampler = createTextureSampler(graphics->device, graphics->physicalDevice, VK_FILTER_LINEAR, mipLevels, VK_SAMPLER_MIPMAP_MODE_LINEAR, VK_TRUE);
+
+    destroyBufferObj(staging);
 
     return result;
 }
 
 static struct Data loadUintTexture(struct TextureData texturePath, struct GraphicsSetup *graphics) {
     struct Data result = { 0 };
+    VkExtent2D extent;
+    struct BufferObj *staging = loadNormalImageToBuffer(texturePath, &extent, graphics);
 
-    result.image = createTextureBuffer(&result.imageMemory, &result.mipLevels, texturePath, VK_FORMAT_R8G8B8A8_UINT, VK_FILTER_NEAREST, graphics);
-    result.imageView = createImageView(graphics->device, result.image, VK_FORMAT_R8G8B8A8_UINT, VK_IMAGE_ASPECT_COLOR_BIT, result.mipLevels, VK_IMAGE_VIEW_TYPE_2D, 1);
+    uint32_t mipLevels = floor(log2(MAX(extent.width, extent.height))) + 1;
+
+    result.image = createTextureBufferPixels(&result.imageMemory, mipLevels, staging, extent, VK_FORMAT_R8G8B8A8_UINT, VK_FILTER_NEAREST, graphics);
+    result.imageView = createImageView(graphics->device, result.image, VK_FORMAT_R8G8B8A8_UINT, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels, VK_IMAGE_VIEW_TYPE_2D, 1);
     result.sampler = createTextureSampler(graphics->device, graphics->physicalDevice, VK_FILTER_NEAREST, 0.0f, VK_SAMPLER_MIPMAP_MODE_NEAREST, VK_FALSE);
+
+    destroyBufferObj(staging);
 
     return result;
 }
