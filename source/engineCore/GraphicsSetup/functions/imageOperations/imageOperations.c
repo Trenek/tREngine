@@ -25,6 +25,14 @@ static bool hasStencilComponent(VkFormat format) {
            format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
+void transitionImageLayout2(VkCommandBuffer commandBuffer, VkImageMemoryBarrier2 *barrier) {
+    vkCmdPipelineBarrier2(commandBuffer, &(VkDependencyInfo) {
+        .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+        .imageMemoryBarrierCount = 1,
+        .pImageMemoryBarriers = barrier
+    });
+}
+
 void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, VkDevice device, VkCommandPool commandPool, VkQueue queue, uint32_t layerCount) {
     VkCommandBuffer commandBuffer = beginSingleTimeCommands(device, commandPool);
 
@@ -95,9 +103,7 @@ void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayo
     endSingleTimeCommands(commandBuffer, device, commandPool, queue);
 }
 
-void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, VkDevice device, VkCommandPool commandPool, VkQueue queue, uint32_t layerCount) {
-    VkCommandBuffer commandBuffer = beginSingleTimeCommands(device, commandPool);
-
+void copyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, VkExtent2D extent, uint32_t layerCount, VkDeviceSize prev) {
     vkCmdCopyBufferToImage2(commandBuffer, &(VkCopyBufferToImageInfo2) {
         .sType = VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2,
         .srcBuffer = buffer,
@@ -106,7 +112,7 @@ void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t 
         .regionCount = 1,
         .pRegions = &(VkBufferImageCopy2) {
             .sType = VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2,
-            .bufferOffset = 0,
+            .bufferOffset = prev,
             .bufferRowLength = 0,
             .bufferImageHeight = 0,
             .imageSubresource = {
@@ -117,170 +123,10 @@ void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t 
             },
             .imageOffset = { .x = 0, .y = 0, .z = 0 },
             .imageExtent = {
-                .width = width,
-                .height = height,
+                .width = extent.width,
+                .height = extent.height,
                 .depth = 1
             }
         },
     });
-
-    endSingleTimeCommands(commandBuffer, device, commandPool, queue);
-}
-
-void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t width, int32_t height, uint32_t mipLevels, VkFilter imageFilter, VkDevice device, VkPhysicalDevice physicalDevice, VkCommandPool commandPool, VkQueue queue) {
-    VkCommandBuffer commandBuffer = beginSingleTimeCommands(device, commandPool);
-
-    int32_t mipWidth = width;
-    int32_t mipHeight = height;
-
-    VkFormatProperties formatProperties; {
-        vkGetPhysicalDeviceFormatProperties(physicalDevice, imageFormat, &formatProperties);
-    }
-
-    MY_ASSERT(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT);
-
-    for (uint32_t i = 1; i < mipLevels; i += 1) {
-        vkCmdPipelineBarrier2(commandBuffer, &(VkDependencyInfo) {
-            .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-            .imageMemoryBarrierCount = 1,
-            .pImageMemoryBarriers = &(VkImageMemoryBarrier2) {
-                .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-                .image = image,
-                .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-
-                .srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT,
-                .dstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT,
-                .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-                .dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
-                .oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                .newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                .subresourceRange = {
-                    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                    .baseArrayLayer = 0,
-                    .layerCount = 1,
-                    .levelCount = 1,
-                    .baseMipLevel = i - 1
-                }
-            }
-        });
-
-        VkImageBlit2 blit = {
-            .sType = VK_STRUCTURE_TYPE_IMAGE_BLIT_2,
-            .srcOffsets = {
-                [0] = { 0, 0, 0 },
-                [1] = { mipWidth, mipHeight, 1 }
-            },
-            .srcSubresource = {
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                .mipLevel = i - 1,
-                .baseArrayLayer = 0,
-                .layerCount = 1
-            },
-            .dstOffsets = {
-                [0] = { 0, 0, 0 },
-                [1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 }
-            },
-            .dstSubresource = {
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                .mipLevel = i,
-                .baseArrayLayer = 0,
-                .layerCount = 1
-            }
-        };
-
-        vkCmdBlitImage2(commandBuffer, &(VkBlitImageInfo2) {
-            .sType = VK_STRUCTURE_TYPE_BLIT_IMAGE_INFO_2,
-            .srcImage = image,
-            .dstImage = image,
-            .srcImageLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            .dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            .regionCount = 1,
-            .pRegions = &blit,
-            .filter = imageFilter,
-        });
-
-        vkCmdPipelineBarrier2(commandBuffer, &(VkDependencyInfo) {
-            .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-            .imageMemoryBarrierCount = 1,
-            .pImageMemoryBarriers = &(VkImageMemoryBarrier2) {
-                .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-                .image = image,
-                .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-
-                .srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT,
-                .dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                .srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
-                .dstAccessMask = VK_ACCESS_SHADER_READ_BIT,
-                .oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                .newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-
-                .subresourceRange = {
-                    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                    .baseArrayLayer = 0,
-                    .layerCount = 1,
-                    .levelCount = 1,
-                    .baseMipLevel = i - 1
-                }
-            }
-        });
-
-        if (mipWidth > 1) mipWidth /= 2;
-        if (mipHeight > 1) mipHeight /= 2;
-    }
-
-    vkCmdPipelineBarrier2(commandBuffer, &(VkDependencyInfo) {
-        .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-        .imageMemoryBarrierCount = 1,
-        .pImageMemoryBarriers = &(VkImageMemoryBarrier2) {
-            .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-            .image = image,
-            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-
-            .srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT,
-            .dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-            .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-            .dstAccessMask = VK_ACCESS_SHADER_READ_BIT,
-            .oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            .newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-
-            .subresourceRange = {
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                .baseArrayLayer = 0,
-                .layerCount = 1,
-                .levelCount = 1,
-                .baseMipLevel = mipLevels - 1
-            }
-        }
-    });
-
-    endSingleTimeCommands(commandBuffer, device, commandPool, queue);
-}
-
-VkImageView createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels, VkImageViewType viewType, uint32_t layerCount) {
-    VkImageView imageView = NULL;
-
-    MY_ASSERT(VK_SUCCESS == vkCreateImageView(device, &(VkImageViewCreateInfo) {
-        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-        .image = image,
-        .viewType = viewType,
-        .format = format,
-        .components = {
-            .r = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .g = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .b = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .a = VK_COMPONENT_SWIZZLE_IDENTITY
-        },
-        .subresourceRange = {
-            .aspectMask = aspectFlags,
-            .baseMipLevel = 0,
-            .levelCount = mipLevels,
-            .baseArrayLayer = 0,
-            .layerCount = layerCount
-        }
-    }, NULL, &imageView));
-
-    return imageView;
 }

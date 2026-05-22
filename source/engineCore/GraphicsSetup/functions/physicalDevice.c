@@ -2,47 +2,34 @@
 #include <myMalloc.h>
 
 #include <vulkan/vulkan.h>
-#include <vulkan/vulkan_beta.h>
 
 #include "MY_ASSERT.h"
 #include "swapChainSupportDetails.h"
 #include "queueFamilyIndices.h"
-
-#include <stdio.h>
 
 const char *const deviceExtensions[] = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
     VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
 };
-const uint32_t deviceExtensionsCount = sizeof(deviceExtensions) / sizeof(const char *const);
+const size_t deviceExtensionsCount = sizeof(deviceExtensions) / sizeof(const char *const);
 
 static bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
+    bool isFound = true;
+
     uint32_t extensionCount = 0; {
         vkEnumerateDeviceExtensionProperties(device, NULL, &extensionCount, NULL);
     }
     VkExtensionProperties avaibleExtensions[extensionCount];
 
-    uint32_t i = 0;
-    uint32_t j = 0;
-    bool isFound = true;
-
     vkEnumerateDeviceExtensionProperties(device, NULL, &extensionCount, avaibleExtensions);
 
-    while (i < deviceExtensionsCount && isFound == true) {
-        bool isElemFound = false;
-        j = 0;
+    for (size_t i = 0; i < deviceExtensionsCount && isFound == true; i += 1) {
+        isFound = false;
 
-        while (isElemFound == false && j < extensionCount) {
-            if (strcmp(deviceExtensions[i], avaibleExtensions[j].extensionName) == 0) {
-                isElemFound = true;
-            }
-
-            j += 1;
+        for (size_t j = 0; isFound == false && j < extensionCount; j += 1) {
+            isFound = strcmp(deviceExtensions[i], avaibleExtensions[j].extensionName) == 0;
         }
-
-        isFound = isFound && isElemFound;
-        i += 1;
     }
 
     return isFound;
@@ -109,13 +96,12 @@ VkPhysicalDevice pickPhysicalDevice(VkSampleCountFlagBits *msaaSamples, VkInstan
         MY_ASSERT(deviceCount != 0);
     }
     VkPhysicalDevice devices[deviceCount];
-    uint32_t i = 0;
     uint32_t preferableScore = 0;
     uint32_t currentScore = 0;
 
     vkEnumeratePhysicalDevices(instance, &deviceCount, devices);
 
-    while (i < deviceCount) {
+    for (size_t i = 0; i < deviceCount; i += 1) {
         if (isDeviceSuitable(devices[i], surface)) {
             currentScore = isDevicePreferable(devices[i], surface);
             if (currentScore >= preferableScore) {
@@ -123,7 +109,6 @@ VkPhysicalDevice pickPhysicalDevice(VkSampleCountFlagBits *msaaSamples, VkInstan
                 physicalDevice = devices[i];
             }
         }
-        i += 1;
     }
 
     MY_ASSERT(physicalDevice != NULL);

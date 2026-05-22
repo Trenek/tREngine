@@ -137,10 +137,6 @@ struct Entity *createFont(struct FontBuilder builder, struct GraphicsSetup *grap
         info->localMesh->buffer
     };
 
-    bool isChangable[] = {
-        false,
-    };
-
     bool isSingle[] = {
         false,
     };
@@ -159,7 +155,6 @@ struct Entity *createFont(struct FontBuilder builder, struct GraphicsSetup *grap
 
         .buff = buff,
         .mapp = mapp,
-        .isChangable = isChangable,
         .isSingle = isSingle,
         .range = range,
         .qBuff = 1,

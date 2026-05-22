@@ -55,28 +55,28 @@ void destroyDescriptorSets(void *thisPtr) {
 }
 
 void bindBuffersToDescriptorSets(struct DescriptorObj *descriptor, VkDevice device, size_t qBuff, VkBuffer buff[qBuff], size_t range[qBuff], bool isSingle[qBuff], VkDescriptorType descriptorType) {
-    VkWriteDescriptorSet descriptorWrites[qBuff];
-    VkDescriptorBufferInfo bufferInfo[qBuff];
+    VkWriteDescriptorSet descriptorWrites[MAX_FRAMES_IN_FLIGHT][qBuff];
+    VkDescriptorBufferInfo bufferInfo[MAX_FRAMES_IN_FLIGHT][qBuff];
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i += 1) {
         for (size_t j = 0; j < qBuff; j += 1) {
-            bufferInfo[j] = (VkDescriptorBufferInfo) {
+            bufferInfo[i][j] = (VkDescriptorBufferInfo) {
                 .buffer = buff[j],
                 .offset = !isSingle[j] * i * range[j],
                 .range = range[j]
             };
-            descriptorWrites[j] = (VkWriteDescriptorSet){
+            descriptorWrites[i][j] = (VkWriteDescriptorSet){
                 .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                 .dstSet = descriptor->descriptorSets[i],
                 .dstBinding = j,
                 .dstArrayElement = 0,
                 .descriptorType = descriptorType,
                 .descriptorCount = 1,
-                .pBufferInfo = &bufferInfo[j],
+                .pBufferInfo = &bufferInfo[i][j],
                 .pTexelBufferView = NULL
             };
         }
-
-        vkUpdateDescriptorSets(device, qBuff, descriptorWrites, 0, NULL);
     }
+
+    vkUpdateDescriptorSets(device, MAX_FRAMES_IN_FLIGHT * qBuff, (void *)descriptorWrites, 0, NULL);
 }

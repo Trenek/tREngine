@@ -41,7 +41,6 @@ struct Entity *createInstancedEntity(struct EntityBuilder builder, struct Graphi
     size_t qBuff = builder.qBuff + 1;
     VkBuffer buff[qBuff];
     void *(*mapp[qBuff])[MAX_FRAMES_IN_FLIGHT];
-    bool isChangable[qBuff];
     bool isSingle[qBuff];
     size_t range[qBuff];
 
@@ -61,21 +60,18 @@ struct Entity *createInstancedEntity(struct EntityBuilder builder, struct Graphi
     mapp[0] = &info->instanceMapped;
     buff[0] = info->instanceBuffer->buffer;
     range[0] = info->instanceBuffer->range;
-    isChangable[0] = true;
     isSingle[0] = false;
 
     if (builder.qBuff > 0) {
         memcpy(buff + 1, builder.buff, sizeof(void *) * builder.qBuff);
         memcpy(range + 1, builder.range, sizeof(size_t) * builder.qBuff);
         memcpy(mapp + 1, builder.mapp, sizeof(void *) * builder.qBuff);
-        memcpy(isChangable + 1, builder.isChangable, sizeof(bool) * builder.qBuff);
         memcpy(isSingle + 1, builder.isSingle, sizeof(bool) * builder.qBuff);
     }
 
     builder.qBuff = qBuff;
     builder.buff = buff;
     builder.mapp = mapp;
-    builder.isChangable = isChangable;
     builder.isSingle = isSingle;
     builder.range = range;
     builder.additional = info;
@@ -84,11 +80,11 @@ struct Entity *createInstancedEntity(struct EntityBuilder builder, struct Graphi
     return createEntity(builder, graphics);
 }
 
-size_t countChangeableBuffers(size_t qBuff, bool buff[qBuff]) {
+size_t countChangeableBuffers(size_t qBuff, void *(*mapp[qBuff])[MAX_FRAMES_IN_FLIGHT]) {
     size_t result = 0;
 
     for (size_t i = 0; i < qBuff; i += 1) {
-        result += buff[i];
+        result += mapp[i] != NULL;
     }
 
     return result;
@@ -96,7 +92,7 @@ size_t countChangeableBuffers(size_t qBuff, bool buff[qBuff]) {
 
 struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *graphics) {
     struct Entity *result = calloc(1, sizeof(struct Entity));
-    size_t qBuff = countChangeableBuffers(builder.qBuff, builder.isChangable);
+    size_t qBuff = countChangeableBuffers(builder.qBuff, builder.mapp);
 
     *result = (struct Entity){
         .device = graphics->device,
@@ -118,7 +114,7 @@ struct Entity *createEntity(struct EntityBuilder builder, struct GraphicsSetup *
 
     if (builder.qBuff > 0) {
         for (size_t i = 0, j = 0; i < builder.qBuff; i += 1) {
-            if (builder.isChangable[i]) {
+            if (NULL != builder.mapp[i]) {
                 result->buffer[j] = calloc(1, builder.range[i]);
                 memcpy(result->buffer[j], (*builder.mapp[i])[0], builder.range[i]);
                 result->range[j] = builder.range[i];

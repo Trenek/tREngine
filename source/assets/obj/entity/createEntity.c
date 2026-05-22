@@ -34,10 +34,6 @@ struct Entity *createObj(struct ObjBuilder builder, struct GraphicsSetup *graphi
         NULL
     };
 
-    bool isChangable[] = {
-        false
-    };
-
     bool isSingle[] = {
         true
     };
@@ -59,7 +55,6 @@ struct Entity *createObj(struct ObjBuilder builder, struct GraphicsSetup *graphi
 
         .buff = buff,
         .mapp = mapp,
-        .isChangable = isChangable,
         .isSingle = isSingle,
         .range = range,
         .qBuff = qBuff,

@@ -7,38 +7,26 @@
 extern const char *const deviceExtensions[];
 extern const uint32_t deviceExtensionsCount;
 
-static int32_t removeDuplications(int32_t queueNumber, VkDeviceQueueCreateInfo a[]) {
-    int32_t i = 0;
-    int32_t j = 0;
+static size_t removeDuplications(size_t queueNumber, VkDeviceQueueCreateInfo a[]) {
+    size_t newSize = 0;
 
     bool found = false;
 
-    while (i < queueNumber) {
+    for (size_t i = 0; i < queueNumber; i += 1) {
         found = false;
 
-        j = i + 1;
-        while (found == false && j < queueNumber) {
+        for (size_t j = i + 1; found == false && j < queueNumber; j += 1) {
             found = a[i].queueFamilyIndex == a[j].queueFamilyIndex;
-
-            j += 1;
         }
 
-        if (found == true) {
-            j = i + 1;
-            while (j < queueNumber) {
-                a[j - 1] = a[j];
+        if (found == false) {
+            a[newSize] = a[i];
 
-                j += 1;
-            }
-
-            i -= 1;
-            queueNumber -= 1;
+            newSize += 1;
         }
-
-        i += 1;
     }
 
-    return queueNumber;
+    return newSize;
 }
 
 VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice, struct QueueFamilyIndices indices) {
@@ -78,7 +66,7 @@ VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice, struct QueueFamily
             .pNext = NULL
         }
     };
-    int32_t queueNumber = removeDuplications(sizeof(queueCreateInfo) / sizeof(VkDeviceQueueCreateInfo), queueCreateInfo);
+    size_t queueNumber = removeDuplications(sizeof(queueCreateInfo) / sizeof(VkDeviceQueueCreateInfo), queueCreateInfo);
 
     VkPhysicalDeviceDescriptorIndexingFeatures indexingFeature = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES,

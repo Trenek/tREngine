@@ -64,7 +64,9 @@ GLFWwindow *createWindow(struct windowData *data, const char *name, const char *
 
     result = glfwCreateWindow(WIDTH, HEIGHT, name, NULL, NULL);
 
-    setIcon(result, icon);
+    if (NULL != icon) {
+        setIcon(result, icon);
+    }
     glfwSetWindowUserPointer(result, data);
     glfwSetFramebufferSizeCallback(result, framebufferResizeCallback);
     glfwSetKeyCallback(result, keyCallback);

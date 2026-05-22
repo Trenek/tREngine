@@ -40,12 +40,6 @@ struct Entity *createGltf(struct GltfBuilder builder, struct GraphicsSetup *grap
         NULL,
     };
 
-    bool isChangable[] = {
-        false,
-        false,
-        true,
-    };
-
     bool isSingle[] = {
         true,
         true,
@@ -85,7 +79,6 @@ struct Entity *createGltf(struct GltfBuilder builder, struct GraphicsSetup *grap
 
         .buff = buff,
         .mapp = mapp,
-        .isChangable = isChangable,
         .isSingle = isSingle,
         .range = range,
         .qBuff = qBuff,

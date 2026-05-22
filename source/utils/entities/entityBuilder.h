@@ -19,7 +19,6 @@ struct EntityBuilder {
 
     VkBuffer *buff;
     void *(**mapp)[MAX_FRAMES_IN_FLIGHT];
-    bool *isChangable;
     bool *isSingle;
     size_t *range;
     size_t qBuff;

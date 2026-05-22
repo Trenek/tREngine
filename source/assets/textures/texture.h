@@ -19,13 +19,7 @@ struct Textures {
     struct DescriptorObj *descriptor;
 
     size_t quantity;
-    struct Data {
-        VkImage image;
-        VkDeviceMemory imageMemory;
-        uint32_t mipLevels;
-        VkImageView imageView;
-        VkSampler sampler;
-    } *data;
+    struct ImageObj **data;
 };
 
 struct Textures *loadCubeMaps(struct GraphicsSetup *graphics, const char *texturePath[6]);

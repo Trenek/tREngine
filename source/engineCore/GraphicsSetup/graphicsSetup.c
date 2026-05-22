@@ -65,11 +65,11 @@ struct GraphicsSetup setupGraphics(GLFWwindow *window) {
     vkGetDeviceQueue(graphics.device, graphics.families.family[COMPUTE_FAMILY].value, 0, &graphics.computeQueue);
     nameQueue(&graphics, graphics.computeQueue, "Compute Queue");
 
-    graphics.swapChain = createSwapChain(window, graphics.surface, graphics.physicalDevice, graphics.device);
-    graphics.swapChainImageViews = createImageViews(graphics.device, graphics.swapChain);
-
     graphics.commandPool = createCommandPool(graphics.device, graphics.families);
     graphics.transferCommandPool = createTransferCommandPool(graphics.device, graphics.families);
+
+    graphics.swapChain = createSwapChain(window, graphics.surface, graphics.physicalDevice, graphics.device);
+    graphics.swapChainImageViews = createImageViews(graphics.device, graphics.swapChain);
 
     createColorResources(&graphics.colorImage, &graphics.colorImageMemory, &graphics.colorImageView, graphics.device, graphics.physicalDevice, graphics.swapChain.extent, graphics.swapChain.imageFormat, graphics.msaaSamples);
     createDepthResources(&graphics.depthImage, &graphics.depthImageMemory, &graphics.depthImageView, graphics.device, graphics.physicalDevice, graphics.swapChain.extent, graphics.msaaSamples, graphics.transferCommandPool, graphics.transferQueue);

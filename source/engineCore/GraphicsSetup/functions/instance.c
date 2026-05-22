@@ -8,18 +8,26 @@
 #include "MY_ASSERT.h"
 
 #ifdef NDEBUG
-static const bool enableValidationLayers = false;
+static constexpr bool enableValidationLayers = false;
 #else
-static const bool enableValidationLayers = true;
+static constexpr bool enableValidationLayers = true;
 #endif
 
-static const char *const validationLayers[] = {
+static const char *const layers[] = {
+#ifndef NDEBUG
     "VK_LAYER_KHRONOS_validation",
+#endif
 };
-static const uint32_t validationLayersCount = sizeof(validationLayers) / sizeof(const char *);
+static constexpr uint32_t layersCount = sizeof(layers) / sizeof(const char *);
 
-[[maybe_unused]]
-static bool checkValidationLayerSupport(void) {
+static const char *const extensions[] = {
+#ifndef NDEBUG
+    VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+#endif
+};
+static constexpr uint32_t extensionCount = sizeof(extensions) / sizeof(const char *);
+
+static bool checkLayerSupport(void) {
     bool layerFound = true;
 
     uint32_t layerCount = 0; {
@@ -27,24 +35,14 @@ static bool checkValidationLayerSupport(void) {
     }
     VkLayerProperties avaibleLayers[layerCount];
 
-    uint32_t i = 0;
-    uint32_t j = 0;
-
     vkEnumerateInstanceLayerProperties(&layerCount, avaibleLayers);
 
-    while (i < validationLayersCount && layerFound == true) {
+    for (uint32_t i = 0; i < layersCount && layerFound == true; i += 1) {
         layerFound = false;
 
-        j = 0;
-        while (j < layerCount && layerFound == false) {
-            if (strcmp(validationLayers[i], avaibleLayers[j].layerName) == 0) {
-                layerFound = true;
-            }
-
-            j += 1;
+        for (uint32_t j = 0; j < layerCount && layerFound == false; j += 1) {
+            layerFound = strcmp(layers[i], avaibleLayers[j].layerName) == 0;
         }
-
-        i += 1;
     }
 
     return layerFound;
@@ -90,25 +88,24 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
     }
 }
 
-static const char **getRequiredExtensions(uint32_t *extensionCount) {
-    const char **glfwExtensions = glfwGetRequiredInstanceExtensions(extensionCount);
+static const char **getRequiredExtensions(uint32_t *outExtensionCount) {
+    uint32_t qGlfwExtensions = 0;
+    const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&qGlfwExtensions);
 
-    uint32_t newSize = *extensionCount + (enableValidationLayers ? 1 : 0);
+    uint32_t newSize = qGlfwExtensions + extensionCount;
     
-    const char **extensions = malloc(sizeof(const char *) * newSize);
-    memcpy(extensions, glfwExtensions, sizeof(const char *) * *extensionCount);
-    
-    if (enableValidationLayers) {
-        extensions[*extensionCount] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
-    }
-    
-    *extensionCount = newSize;
+    const char **realExtensions = malloc(sizeof(const char *) * newSize);
 
-    return extensions;
+    memcpy(realExtensions, glfwExtensions, sizeof(const char *) * qGlfwExtensions);
+    memcpy(realExtensions + qGlfwExtensions, extensions, sizeof(const char *) * extensionCount);
+    
+    *outExtensionCount = newSize;
+
+    return realExtensions;
 }
 
 VkInstance createInstance([[maybe_unused]] VkDebugUtilsMessengerEXT *debugMessenger) {
-    assert(true == checkValidationLayerSupport());
+    MY_ASSERT(true == checkLayerSupport());
 
     VkInstance instance = NULL;
 
@@ -122,8 +119,8 @@ VkInstance createInstance([[maybe_unused]] VkDebugUtilsMessengerEXT *debugMessen
         .apiVersion = VK_API_VERSION_1_3
     };
 
-    uint32_t extensionCount = 0;
-    const char **extensions = getRequiredExtensions(&extensionCount);
+    uint32_t realExtensionCount = 0;
+    const char **realExtensions = getRequiredExtensions(&realExtensionCount);
     
     [[maybe_unused]]
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {
@@ -146,16 +143,16 @@ VkInstance createInstance([[maybe_unused]] VkDebugUtilsMessengerEXT *debugMessen
         .pNext = enableValidationLayers ? &debugCreateInfo : NULL,
         .flags = 0,
         .pApplicationInfo = &appInfo,
-        .enabledLayerCount = enableValidationLayers ? validationLayersCount : 0,
-        .ppEnabledLayerNames = enableValidationLayers ? validationLayers : NULL,
-        .enabledExtensionCount = extensionCount,
-        .ppEnabledExtensionNames = extensions
+        .enabledLayerCount = layersCount,
+        .ppEnabledLayerNames = layers,
+        .enabledExtensionCount = realExtensionCount,
+        .ppEnabledExtensionNames = realExtensions
     };
 
     MY_ASSERT(VK_SUCCESS == vkCreateInstance(&createInfo, NULL, &instance));
     assert(VK_SUCCESS == CreateDebugUtilsMessengerEXT(instance, &debugCreateInfo, NULL, debugMessenger));
 
-    if (enableValidationLayers) free(extensions);
+    if (enableValidationLayers) free(realExtensions);
 
     return instance;
 }

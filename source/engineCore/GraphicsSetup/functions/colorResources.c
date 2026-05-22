@@ -27,5 +27,18 @@ void createColorResources(VkImage *colorImage, VkDeviceMemory *colorImageMemory,
     }, NULL, colorImage));
 
     *colorImageMemory = createImageMemory(device, physicalDevice, *colorImage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    *colorImageView = createImageView(device, *colorImage, swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1, VK_IMAGE_VIEW_TYPE_2D, 1);
+
+    MY_ASSERT(VK_SUCCESS == vkCreateImageView(device, &(VkImageViewCreateInfo) {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .image = *colorImage,
+        .viewType = VK_IMAGE_VIEW_TYPE_2D,
+        .format = swapChainImageFormat,
+        .subresourceRange = {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1
+        }
+    }, NULL, colorImageView));
 }

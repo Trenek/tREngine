@@ -27,7 +27,20 @@ void createDepthResources(VkImage *depthImage, VkDeviceMemory *depthImageMemory,
         .flags = 0
     }, NULL, depthImage));
     *depthImageMemory = createImageMemory(device, physicalDevice, *depthImage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    *depthImageView = createImageView(device, *depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1, VK_IMAGE_VIEW_TYPE_2D, 1);
+
+    MY_ASSERT(VK_SUCCESS == vkCreateImageView(device, &(VkImageViewCreateInfo) {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .image = *depthImage,
+        .viewType = VK_IMAGE_VIEW_TYPE_2D,
+        .format = depthFormat,
+        .subresourceRange = {
+            .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1
+        }
+    }, NULL, depthImageView));
 
     transitionImageLayout(*depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, device, commandPool, queue, 1);
 }

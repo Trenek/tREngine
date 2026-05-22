@@ -8,7 +8,7 @@ static void drawEntity(VkCommandBuffer commandBuffer, size_t qDraw, struct DrawC
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, &draw[i].vertexBuffer, (VkDeviceSize[]){ 0 });
         vkCmdBindIndexBuffer(commandBuffer, draw[i].indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-        if (0 != draw->pushConstantsSize) {
+        if (0 != draw[i].pushConstantsSize) {
             vkCmdPushConstants(commandBuffer, pipelineLayout, draw[i].pushConstantsStage, 0, draw[i].pushConstantsSize, draw[i].pushConstans);
         }
 
@@ -22,23 +22,33 @@ static void drawEntity(VkCommandBuffer commandBuffer, size_t qDraw, struct DrawC
 }
 
 void drawRenderPass(VkCommandBuffer commandBuffer, uint32_t currentFrame, struct renderPassObj *renderPass) {
-    int one = renderPass->cameraBuffer == NULL;
+    VkDescriptorSet descriptors[2];
+    size_t q1 = 0;
 
-    for (uint32_t i = 0; i < renderPass->qData; i += 1) {
-        int two = one + (renderPass->data[i].texture == NULL);
+    if (renderPass->cameraDescriptor != NULL) {
+        descriptors[0] = renderPass->cameraDescriptor->descriptorSets[currentFrame];
+        q1 += 1;
+    }
+
+    for (size_t i = 0; i < renderPass->qData; i += 1) {
+        size_t q2 = q1;
+
+        if (NULL != renderPass->data[i].texture) {
+            descriptors[q1] = renderPass->data[i].texture[currentFrame];
+            
+            q2 = q1 + 1;
+        }
+
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipeline);
 
         // TODO: use vkCmdBindDescriptorSets2 in the future as it's nicer
-        if (NULL != renderPass->cameraBuffer) {
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipelineLayout, 0, 1, &renderPass->cameraDescriptor->descriptorSets[currentFrame], 0, NULL);
-        }
-        if (NULL != renderPass->data[i].texture) {
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipelineLayout, 1 - one, 1, &renderPass->data[i].texture[currentFrame], 0, NULL);
+        if (0 != q2) {
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipelineLayout, 0, q2, descriptors, 0, NULL);
         }
 
-        for (uint32_t j = 0; j < renderPass->data[i].qEntity; j += 1) {
+        for (size_t j = 0; j < renderPass->data[i].qEntity; j += 1) {
             if (renderPass->data[i].entitySet[j]) {
-                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipelineLayout, 2 - two, 1, &renderPass->data[i].entitySet[j][currentFrame], 0, NULL);
+                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->data[i].pipelineLayout, q2, 1, &renderPass->data[i].entitySet[j][currentFrame], 0, NULL);
             }
             drawEntity(commandBuffer, renderPass->data[i].qDrawData[j], renderPass->data[i].drawData[j], renderPass->data[i].pipelineLayout);
         }

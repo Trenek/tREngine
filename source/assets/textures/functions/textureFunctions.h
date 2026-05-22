@@ -1,8 +1,16 @@
+#include <stb_image.h>
+
 #include "texture.h"
 
-VkDescriptorSetLayout createTextureDescriptorSetLayout(VkDevice device, uint32_t textureQuantity);
-VkDescriptorPool createTextureDescriptorPool(VkDevice device, uint32_t texturesCount);
-void bindTextureBuffersToDescriptorSets(VkDescriptorSet descriptorSets[], VkDevice device, uint32_t texturesQuantity, struct Textures *texture);
+struct TextureLoaded {
+    stbi_uc *pixels;
 
-VkImage createTextureBuffer(VkDeviceMemory *textureImageMemory, uint32_t *mipLevels, struct TextureData texturePath, VkFormat textureFormat, VkFilter textureFilter, struct GraphicsSetup *graphics);
-VkSampler createTextureSampler(VkDevice device, VkPhysicalDevice physicalDevice, VkFilter magFilter, uint32_t mipLevels, VkSamplerMipmapMode mipMapMode, VkBool32 asinotropyEnable);
+    VkExtent3D extent;
+    int channels;
+};
+
+void loadTextureFiles(size_t qTexture, struct TextureData texture[qTexture], struct TextureLoaded loaded[qTexture]);
+struct BufferObj *loadImagesToBuffer(size_t qTexture, struct TextureLoaded texture[qTexture], struct GraphicsSetup *graphics);
+
+void copyTextureBufferPixels(VkCommandBuffer commandBuffer, VkImage textureImage, uint32_t mipLevels, struct BufferObj *staging, VkExtent3D extent, VkFilter textureFilter, struct GraphicsSetup *graphics, VkDeviceSize prev);
+void copyCubeMapTexture(VkCommandBuffer commandBuffer, VkImage textureImage, uint32_t mipLevels, struct BufferObj *staging, VkExtent2D extent);
