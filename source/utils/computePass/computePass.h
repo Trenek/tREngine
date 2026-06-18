@@ -6,5 +6,7 @@ struct ComputePass {
 
     size_t groupCountX;
     size_t groupCountY;
-    VkDescriptorSet *descriptor;
+
+    size_t qDescriptor;
+    VkDescriptorSet **descriptor;
 };

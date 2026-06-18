@@ -105,8 +105,11 @@ VkResult queueCompute(struct CommandQueue *commandQueue, struct EngineCore *vulk
         }));
 
         for (size_t i = 0; i < qComputePass; i += 1) {
+            VkDescriptorSet set[computePass[i].qDescriptor]; for (size_t j = 0; j < computePass[i].qDescriptor; j += 1) {
+                set[j] = computePass[i].descriptor[j][currentFrame];
+            }
             vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePass[i].pipeline);
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePass[i].pipelineLayout, 0, 1, &computePass[i].descriptor[currentFrame], 0, 0);
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePass[i].pipelineLayout, 0, computePass[i].qDescriptor, set, 0, 0);
             vkCmdDispatch(commandBuffer, computePass[i].groupCountX, computePass[i].groupCountY, 1);
         }
 
