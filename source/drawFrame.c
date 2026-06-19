@@ -121,6 +121,59 @@ VkResult queueCompute(struct CommandQueue *commandQueue, struct EngineCore *vulk
     return result;
 }
 
+VkResult queueComputeQP(struct CommandQueue *commandQueue, struct EngineCore *vulkan, size_t qComputePass, struct ComputePass *computePass, VkQueryPool qp) {
+    struct GraphicsSetup *graphics = &vulkan->graphics;
+    int currentFrame = vulkan->currentFrame;
+    VkCommandBuffer commandBuffer = commandQueue->commandBuffer[currentFrame];
+
+    VkResult result = vkWaitForFences(graphics->device, 1, &commandQueue->inFlightFence[currentFrame], VK_TRUE, UINT64_MAX);
+
+    VkSemaphore signalSemaphores[] = {
+        commandQueue->semaphore[currentFrame],
+    };
+
+    VkSubmitInfo submitInfo = {
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .commandBufferCount = 1,
+        .pCommandBuffers = &commandBuffer,
+        .signalSemaphoreCount = sizeof(signalSemaphores) / sizeof(VkSemaphore),
+        .pSignalSemaphores = signalSemaphores
+    };
+
+    if (VK_SUCCESS == result) {
+        vkResetFences(graphics->device, 1, &commandQueue->inFlightFence[currentFrame]);
+
+        vkResetCommandBuffer(commandBuffer, 0);
+        MY_ASSERT(VK_SUCCESS == vkBeginCommandBuffer(commandBuffer, &(VkCommandBufferBeginInfo) {
+            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+            .flags = 0,
+            .pInheritanceInfo = NULL,
+            .pNext = NULL
+        }));
+
+        for (size_t i = 0; i < qComputePass; i += 1) {
+            VkDescriptorSet set[computePass[i].qDescriptor]; for (size_t j = 0; j < computePass[i].qDescriptor; j += 1) {
+                set[j] = computePass[i].descriptor[j][currentFrame];
+            }
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePass[i].pipeline);
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePass[i].pipelineLayout, 0, computePass[i].qDescriptor, set, 0, 0);
+
+            vkCmdResetQueryPool(commandBuffer, qp, 0, 2);
+            vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, qp, 0);
+ 
+            vkCmdDispatch(commandBuffer, computePass[i].groupCountX, computePass[i].groupCountY, 1);
+
+            vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, qp, 1);
+        }
+
+        MY_ASSERT(VK_SUCCESS == vkEndCommandBuffer(commandBuffer));
+
+        MY_ASSERT(VK_SUCCESS == vkQueueSubmit(graphics->computeQueue, 1, &submitInfo, commandQueue->inFlightFence[currentFrame]));
+    }
+
+    return result;
+}
+
 void queueDraw(struct CommandQueue *commandQueue, struct EngineCore *vulkan, size_t qRenderPass, struct renderPassObj **renderPass, size_t qWait, VkSemaphore waitSemaphores[qWait], VkPipelineStageFlags waitStages[qWait]) {
     int currentFrame = vulkan->currentFrame;
     uint32_t imageIndex = vulkan->imageIndex;

@@ -29,6 +29,7 @@ struct CommandQueue;
 void engineUpdate(struct EngineCore *vulkan, size_t qRenderPass, struct renderPassObj **renderPass);
 void aquireNextImage(struct EngineCore *vulkan, VkFence *inFlightFence, VkSemaphore *semaphore);
 VkResult queueCompute(struct CommandQueue *commandQueue, struct EngineCore *vulkan, size_t qComputePass, struct ComputePass *computePass);
+VkResult queueComputeQP(struct CommandQueue *commandQueue, struct EngineCore *vulkan, size_t qComputePass, struct ComputePass *computePass, VkQueryPool qp);
 void queueDraw(struct CommandQueue *commandQueue, struct EngineCore *vulkan, size_t qRenderPass, struct renderPassObj **renderPass, size_t qWait, VkSemaphore waitSem[qWait], VkPipelineStageFlags waitStage[qWait]);
 
 void presentFrame(struct EngineCore *vulkan, size_t qRenderPassCore, struct renderPassCore **renderPassCore, size_t qQueue, struct CommandQueue **queue);
