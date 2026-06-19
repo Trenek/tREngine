@@ -33,7 +33,7 @@ void recreateSwapChainGraphics(GLFWwindow *window, struct GraphicsSetup *graphic
     createDepthResources(&graphics->depthImage, &graphics->depthImageMemory, &graphics->depthImageView, graphics->device, graphics->physicalDevice, graphics->swapChain.extent, graphics->msaaSamples, graphics->transferCommandPool, graphics->transferQueue);
 }
 
-void nameQueue(struct GraphicsSetup *graphics, VkQueue queue, const char * const debugName) {
+void nameQueue([[maybe_unused]] struct GraphicsSetup *graphics, [[maybe_unused]] VkQueue queue, [[maybe_unused]] const char * const debugName) {
 #ifndef NDEBUG
     graphics->debugNamer(graphics->device, &(VkDebugUtilsObjectNameInfoEXT) {
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,

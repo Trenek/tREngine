@@ -17,15 +17,17 @@ static const char *const layers[] = {
 #ifndef NDEBUG
     "VK_LAYER_KHRONOS_validation",
 #endif
+    NULL,
 };
-static constexpr uint32_t layersCount = sizeof(layers) / sizeof(const char *);
+static const uint32_t layersCount = sizeof(layers) / sizeof(const char *) - 1;
 
 static const char *const extensions[] = {
 #ifndef NDEBUG
     VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
+    NULL,
 };
-static constexpr uint32_t extensionCount = sizeof(extensions) / sizeof(const char *);
+static constexpr uint32_t extensionCount = sizeof(extensions) / sizeof(const char *) - 1;
 
 static bool checkLayerSupport(void) {
     bool layerFound = true;

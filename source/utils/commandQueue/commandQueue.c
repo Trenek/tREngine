@@ -9,7 +9,7 @@
 
 void createCommandBuffer(VkCommandBuffer commandBuffer[MAX_FRAMES_IN_FLIGHT], VkDevice device, VkCommandPool commandPool);
 
-struct CommandQueue *createCommandQueue(struct GraphicsSetup *graphics, const char * const debugName) {
+struct CommandQueue *createCommandQueue(struct GraphicsSetup *graphics, [[maybe_unused]] const char * const debugName) {
     struct CommandQueue *this = malloc(sizeof(struct CommandQueue));
     createCommandBuffer(this->commandBuffer, graphics->device, graphics->commandPool);
 
